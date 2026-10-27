@@ -14,3 +14,8 @@ data
 .env
 .env.*
 !.env.example
+
+# Large models, indexes, and ignored directories
+pytorch/
+*.faiss
+*.pkl
