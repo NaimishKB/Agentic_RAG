@@ -73,18 +73,15 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-01 | Ingest & parse PDF (native + scanned OCR), DOCX/DOC, PPTX/PPT, XLSX/XLS, TXT, PNG/JPG → Markdown | [x] Operational (54/54 docs, 0 failures) |
 | FR-02 | Chunk Markdown into semantic segments and embed with `Qwen3-Embedding-0.6B` | [x] Operational (4,064 chunks, 1024-dim vectors) |
 | FR-03 | Store & retrieve vectors from self-hosted QDrant with metadata filtering | [x] Operational (4,064 points, dual-mode engine) |
-| FR-04 | Query Intent & Scope Router: `direct_answer` / `rag_retrieval` / `out_of_scope` | [ ] Testing Next |
-| FR-05 | Retrieval Verification & Metadata Filtering: Top-K vector retrieval with table/doc filters | [ ] Testing Next |
-| FR-06 | Document Relevance Grader: Filter irrelevant chunks prior to generation | [ ] Testing Next |
-| FR-07 | **Planner Agent**: Query reconstruction, intent extraction, and multi-query decomposition | [ ] Planned |
-| FR-08 | **Orchestrator Agent & Sub-Agents**: Dynamic dispatch of specialized sub-queries against Qdrant | [ ] Planned |
-| FR-09 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, and citation re-ranking | [ ] Planned |
-| FR-10 | **Pre-Generation Guardrail (Deepeval)**: Contextual Precision, Recall, and Relevancy validation | [ ] Planned |
-| FR-11 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
-| FR-12 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
-| FR-13 | **Feedback Agent**: Diagnostic reflection on low metrics, formulating targeted remediation for Planner | [ ] Planned |
-| FR-14 | Fallback Circuit Breaker: Graceful cannot-answer response upon exceeding max retry cycles (3) | [ ] Planned |
-| FR-15 | Persistent conversation memory via LangGraph checkpointing (SQLite) | [ ] Planned |
+| FR-04 | **Planner Agent**: Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition with Metadata Filters, and Feedback Absorption | [x] Operational (src/agents/planner/) |
+| FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic dispatch of specialized sub-queries against Qdrant | [ ] Next Step |
+| FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, and citation re-ranking | [ ] Planned |
+| FR-07 | **Pre-Generation Guardrail (Deepeval)**: Contextual Precision, Recall, and Relevancy validation | [ ] Planned |
+| FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
+| FR-09 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
+| FR-10 | **Feedback Agent**: Diagnostic reflection on low metrics, formulating targeted remediation for Planner | [ ] Planned |
+| FR-11 | Fallback Circuit Breaker: Graceful cannot-answer response upon exceeding max retry cycles (3) | [ ] Planned |
+| FR-12 | Persistent conversation memory via LangGraph checkpointing (SQLite) | [ ] Planned |
 
 #### Non-Functional Requirements
 
@@ -106,7 +103,7 @@ The `AgentState` TypedDict is the **single source of truth** flowing through the
 
 ```python
 # FILE: src/graph/state.py  — FROZEN SPEC (Multi-Agent Architecture)
-from typing import Annotated, Dict, List, Literal, Optional, Any
+from typing import Annotated, Any, Literal
 from langchain_core.messages import BaseMessage
 from langgraph.graph.message import add_messages
 from typing_extensions import TypedDict
@@ -118,7 +115,7 @@ class DocumentChunk(TypedDict):
     content: str                      # Full markdown text of the chunk (with breadcrumbs)
     source_file: str                  # Source filename (e.g. HDP_AHN511.ppt)
     file_type: str                    # Document type (PDF, PPT, DOCX, XLS)
-    page_or_slide: Optional[int]      # Page number or slide index
+    page_or_slide: int | None         # Page number or slide index
     breadcrumb: str                   # Section path (e.g. Doc > Section > Table)
     is_table: bool                    # Flag indicating structured table data
     score: float                      # Qdrant cosine similarity score
@@ -128,7 +125,7 @@ class SubQuery(TypedDict):
     """A decomposed sub-query planned for targeted retrieval."""
     sub_query_id: str                 # Identifier (e.g. "sq_1")
     query_text: str                   # Specific search query
-    target_filter: Optional[Dict[str, Any]] # Qdrant filter (e.g. {"is_table": "true"})
+    target_filter: dict[str, Any] | None # Qdrant filter (e.g. {"is_table": "true"})
     rationale: str                    # Why this sub-query was formed
 
 
@@ -139,18 +136,18 @@ class FeedbackDiagnosis(TypedDict):
         "HALLUCINATION_DETECTED",     # Answer contains ungrounded claims
         "OFF_TOPIC_ANSWER"            # Low answer relevancy
     ]
-    missing_aspects: List[str]        # Specific engineering facts/tables missing
+    missing_aspects: list[str]        # Specific engineering facts/tables missing
     critique: str                     # Human-readable explanation of the defect
     remediation_hint: str             # Actionable suggestion for the Planner Agent
 
 
 class AgentState(TypedDict):
     # ── Core Conversation ──────────────────────────────────────────────
-    messages: Annotated[List[BaseMessage], add_messages]  # Chat message history
+    messages: Annotated[list[BaseMessage], add_messages]  # Chat message history
     query: str                                             # Current active user query
     original_query: str                                    # Unmodified user input
 
-    # ── Router & Intent ────────────────────────────────────────────────
+    # ── Planner Decision & Intent ──────────────────────────────────────
     routing_decision: Literal[
         "rag_retrieval",              # Complex technical SHP question requiring RAG
         "direct_answer",              # Conversational greeting or simple factual question
@@ -158,26 +155,26 @@ class AgentState(TypedDict):
     ]
 
     # ── Planning & Multi-Agent Orchestration ───────────────────────────
-    plan: List[str]                   # High-level steps formulated by Planner Agent
-    sub_queries: List[SubQuery]       # Decomposed queries for sub-agents
-    sub_agent_results: Dict[str, List[DocumentChunk]] # Results keyed by sub_query_id
+    plan: list[str]                   # High-level steps formulated by Planner Agent
+    sub_queries: list[SubQuery]       # Decomposed queries for sub-agents
+    sub_agent_results: dict[str, list[DocumentChunk]] # Results keyed by sub_query_id
 
     # ── Synthesis & Fusion ─────────────────────────────────────────────
-    documents: List[DocumentChunk]     # Deduplicated, synthesized, and re-ranked chunks
-    synthesized_context: str           # Clean context block assembled for LLM generation
+    documents: list[DocumentChunk]    # Deduplicated, synthesized, and re-ranked chunks
+    synthesized_context: str          # Clean context block assembled for LLM generation
 
     # ── Guardrails & Evaluation Metrics (Deepeval) ─────────────────────
-    retrieval_metrics: Dict[str, float] # {"precision": 0.88, "recall": 0.91, "relevancy": 0.85}
-    generation_metrics: Dict[str, float]# {"faithfulness": 0.94, "answer_relevancy": 0.92}
-    is_retrieval_valid: bool           # True if pre-gen retrieval metrics pass threshold
-    is_grounded: bool                  # True if post-gen faithfulness passes threshold
+    retrieval_metrics: dict[str, float] # {"precision": 0.88, "recall": 0.91, "relevancy": 0.85}
+    generation_metrics: dict[str, float]# {"faithfulness": 0.94, "answer_relevancy": 0.92}
+    is_retrieval_valid: bool          # True if pre-gen retrieval metrics pass threshold
+    is_grounded: bool                 # True if post-gen faithfulness passes threshold
 
     # ── Feedback & Self-Correction Loop ────────────────────────────────
-    feedback_diagnosis: Optional[FeedbackDiagnosis] # Analysis fed back to Planner
-    cycle_count: int                   # Number of full plan-retrieve-evaluate loops (max: 3)
+    feedback_diagnosis: FeedbackDiagnosis | None # Analysis fed back to Planner
+    cycle_count: int                  # Number of full plan-retrieve-evaluate loops (max: 3)
 
     # ── Final Output ───────────────────────────────────────────────────
-    final_response: str                # Final verified answer returned to user
+    final_response: str               # Final verified answer returned to user
 ```
 
 ---
@@ -188,8 +185,7 @@ class AgentState(TypedDict):
 
 | Node | Type / Role | Input Fields (State) | Output Fields (State) | Responsibilities & Fallback |
 | :--- | :--- | :--- | :--- | :--- |
-| `router` | Intent Classifier | `query` | `routing_decision` | Classifies query into `rag_retrieval`, `direct_answer`, or `out_of_scope`. Default → `rag_retrieval`. |
-| `planner` | **Planner Agent** | `query`, `feedback_diagnosis`, `cycle_count` | `plan`, `sub_queries` | Analyzes complex questions, incorporates feedback critiques, decomposes into 1–3 targeted `SubQuery` specs. |
+| `planner` | **Planner Agent** | `query`, `feedback_diagnosis`, `cycle_count` | `routing_decision`, `plan`, `sub_queries`, `final_response` | Unified entry point: classifies intent (`direct_answer`/`out_of_scope`/`rag_retrieval`), decomposes multi-part technical queries into 1–3 `SubQuery` specs with metadata filters, incorporates feedback diagnostics. |
 | `orchestrator` | **Orchestrator Agent** | `sub_queries` | `sub_agent_results` | Dispatches retrieval sub-agents concurrently to Qdrant with specific metadata filters (`is_table`, `file_type`). |
 | `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `query` | `documents`, `synthesized_context` | Fuses chunks across all sub-queries, eliminates duplicates, resolves conflicts, and generates cohesive context with citations. |
 | `retrieval_guardrail` | Pre-Gen Evaluator | `query`, `documents` | `retrieval_metrics`, `is_retrieval_valid` | Evaluates Context Recall & Precision using Deepeval/self-eval. If invalid → routes to `feedback_agent`. |
@@ -201,11 +197,12 @@ class AgentState(TypedDict):
 #### Routing & Conditional Edges
 
 ```
-router → "rag_retrieval"  ──> planner
-router → "direct_answer"  ──> generator (direct generation, no RAG)
-router → "out_of_scope"   ──> fallback
+START                     ──> planner
 
-planner                   ──> orchestrator
+planner → "direct_answer" ──> END (returns direct answer immediately)
+planner → "out_of_scope"  ──> fallback (returns polite domain refusal)
+planner → "rag_retrieval" ──> orchestrator
+
 orchestrator              ──> synthesizer
 synthesizer               ──> retrieval_guardrail
 
@@ -568,15 +565,13 @@ The architecture operates as a **Plan-Orchestrate-Synthesize-Guard-Reflect Multi
 
 ```mermaid
 flowchart TD
-    Start([User Query]) --> Router{Router Node\nqwen3.5:9b}
+    Start([User Query]) --> Planner["🎯 Planner Agent (qwen3.5:9b)\nUnified Intent Classification &\nSub-Query Decomposition"]
 
-    Router -->|direct_answer| DirectGen[Direct Generator] --> Final([Return Answer])
-    Router -->|out_of_scope| Fallback[Fallback Node\nTransparent Explanation] --> Final
-
-    Router -->|rag_retrieval| Planner["🎯 Planner Agent\nQuery Clarification &\nMulti-Query Decomposition"]
+    Planner -->|direct_answer| Final([Return Direct Response])
+    Planner -->|out_of_scope| Fallback[Fallback Node\nTransparent Explanation] --> Final
 
     subgraph Orchestration ["Orchestration & Retrieval Layer"]
-        Planner --> Orchestrator["⚡ Orchestrator Agent\nDynamic Sub-Agent Dispatch"]
+        Planner -->|rag_retrieval| Orchestrator["⚡ Orchestrator Agent\nDynamic Sub-Agent Dispatch"]
         Orchestrator --> SubAgent1["Sub-Agent 1\n(e.g., Table Retrieval)"]
         Orchestrator --> SubAgent2["Sub-Agent 2\n(e.g., Technical Guidelines)"]
         Orchestrator --> SubAgentN["Sub-Agent N\n(e.g., Cost Calculations)"]
@@ -609,45 +604,49 @@ flowchart TD
 ```text
 Agentic_RAG/
 ├── src/
-│   ├── graph/
-│   │   ├── state.py           # AgentState TypedDict (Spec 02 Multi-Agent)
-│   │   ├── graph_builder.py   # LangGraph StateGraph wiring
-│   │   └── edges.py           # Conditional edge routing logic (Spec 03)
-│   ├── nodes/
-│   │   ├── router.py          # Query intent classification node
-│   │   ├── planner.py         # Planner Agent (query decomposition & plan)
-│   │   ├── orchestrator.py    # Orchestrator & dynamic sub-agent dispatcher
-│   │   ├── synthesizer.py     # Synthesizer Agent (fusion & deduplication)
-│   │   ├── retrieval_guardrail.py # Pre-Gen Deepeval / Precision-Recall check
-│   │   ├── generator.py       # Grounded answer generation node (qwen3.5:9b)
-│   │   ├── generation_guardrail.py # Post-Gen Faithfulness & Hallucination check
-│   │   ├── feedback_agent.py  # Feedback Agent (diagnostic self-reflection)
-│   │   └── fallback.py        # Fallback / circuit-breaker node
-│   ├── ingestion/
-│   │   ├── parser.py          # Smart Multi-Tier Document Parser (Operational)
-│   │   ├── chunker.py         # Markdown-aware semantic text splitting (Operational)
-│   │   ├── embedder.py        # Qwen3-Embedding-0.6B via Ollama (Operational)
-│   │   └── indexer.py         # QDrant collection manager & upsert (Operational)
 │   ├── prompts/
-│   │   ├── router_prompt.py
-│   │   ├── planner_prompt.py
-│   │   ├── synthesizer_prompt.py
-│   │   ├── generator_prompt.py
-│   │   └── feedback_prompt.py
+│   │   ├── planner_agent_system.jinja2   # Planner Agent system prompt
+│   │   ├── planner_agent_user.jinja2     # Planner Agent user prompt + few-shots
+│   │   ├── synthesizer_system.jinja2     # Synthesizer Agent system prompt
+│   │   ├── generator_system.jinja2       # Grounded Generator system prompt
+│   │   └── feedback_system.jinja2        # Feedback diagnostic system prompt
+│   ├── states/
+│   │   ├── planneragent_state.py         # Planner Agent TypedDict & Pydantic models
+│   │   ├── orchestrator_state.py         # Orchestrator sub-agent state schemas
+│   │   └── agent_state.py                # Global unified AgentState
+│   ├── agents/
+│   │   ├── planner/
+│   │   │   ├── agentnodes.py             # Planner node (Jinja2 + Ollama qwen3.5:9b)
+│   │   │   ├── agentgraph.py             # Planner LangGraph StateGraph
+│   │   │   └── planner.py                # Public facade API
+│   │   ├── orchestrator/
+│   │   │   ├── agentnodes.py             # Sub-agent dispatch & Qdrant retrieval
+│   │   │   └── agentgraph.py             # Orchestrator LangGraph workflow
+│   │   ├── synthesizer/
+│   │   │   ├── agentnodes.py             # Fusion, deduplication & citation re-ranking
+│   │   │   └── agentgraph.py             # Synthesizer LangGraph workflow
+│   │   └── feedback/
+│   │       ├── agentnodes.py             # Diagnostic reflection on guardrail failures
+│   │       └── agentgraph.py             # Feedback Agent workflow
+│   ├── ingestion/
+│   │   ├── parser.py                     # Smart Multi-Tier Document Parser (Operational)
+│   │   ├── chunker.py                    # Markdown-aware semantic text splitting (Operational)
+│   │   ├── embedder.py                   # Qwen3-Embedding-0.6B via Ollama (Operational)
+│   │   └── indexer.py                    # QDrant collection manager & upsert (Operational)
 │   ├── evals/
-│   │   ├── golden_dataset.json    # Hand-labeled SHP QA pairs (LLMTestCase format)
-│   │   └── run_deepeval.py        # Deepeval evaluation runner
-│   └── main.py                    # CLI entry point
+│   │   ├── golden_dataset.json           # Hand-labeled SHP QA pairs (LLMTestCase format)
+│   │   └── run_deepeval.py               # Deepeval evaluation runner
+│   └── main.py                           # CLI entry point
 ├── data/
-│   ├── raw/                   # Raw SHP documents (PDF, DOCX, PPTX, XLS, etc.)
-│   ├── parsed/                # Structured Markdown output + metadata.json
-│   ├── chunks/                # Semantic chunks JSONL + summary
-│   ├── embeddings/            # 1024-dim vectors JSONL + summary
-│   ├── qdrant_db/             # Local embedded Qdrant vector store
-│   └── checkpoints.db         # LangGraph SQLite checkpoint store
-├── .env.example               # Environment variable template
-├── pyproject.toml             # uv project dependencies
-└── README.md                  # This file — Project spec & documentation
+│   ├── raw/                              # Raw SHP documents (PDF, DOCX, PPTX, XLS, etc.)
+│   ├── parsed/                           # Structured Markdown output + metadata.json
+│   ├── chunks/                           # Semantic chunks JSONL + summary
+│   ├── embeddings/                       # 1024-dim vectors JSONL + summary
+│   ├── qdrant_db/                        # Local embedded Qdrant vector store
+│   └── checkpoints.db                    # LangGraph SQLite checkpoint store
+├── .env.example                          # Environment variable template
+├── pyproject.toml                        # uv project dependencies
+└── README.md                             # This file — Project spec & documentation
 ```
 
 ---
@@ -746,9 +745,9 @@ LANGSMITH_PROJECT=agentic-rag-shp
 |---|---|---|
 | **Phase 0: Spec Freeze** | Finalize all 6 specs in this README; review & sign off | ✅ Complete |
 | **Phase 1: Ingestion Pipeline** | Multi-Tier Document Parser (54/54) → Semantic Chunker (4,064 chunks) → Embedder (qwen3-embedding) → Qdrant Indexer | ✅ Complete (4,064 pts indexed) |
-| **Phase 2: Retrieval Primitives Testing** | Rigorous verification tests on FR-04, FR-05, FR-06 against the 4,064 indexed chunks | 🔄 Next Step |
-| **Phase 3: Multi-Agent Core Nodes** | Implement Planner Agent, Orchestrator, Synthesizer Agent, and Generator matching Spec 03 | [ ] |
-| **Phase 4: Dual Guardrails & Feedback Loop** | Implement Deepeval Pre-Gen Recall/Precision Guardrail + Post-Gen Faithfulness Guardrail + Feedback Agent | [ ] |
-| **Phase 5: Graph Wiring & Memory** | Connect StateGraph, conditional edges, cycle counter circuit breaker, and SQLite checkpointing | [ ] |
-| **Phase 6: Evaluation Benchmark** | Build 50+ golden `LLMTestCase` dataset; run Deepeval benchmarks against Spec 06 criteria | [ ] |
-| **Phase 7: Hardening & CLI** | Logging (loguru), error handling, retry policies, rich interactive terminal CLI | [ ] |
+| **Phase 2: Planner Agent** | Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition, and Feedback Absorption (`src/agents/planner/`) | ✅ Complete & Verified |
+| **Phase 3: Orchestrator Agent & Sub-Agents** | Dynamic dispatch of specialized sub-queries against Qdrant (`src/agents/orchestrator/`) | 🔄 Next Step |
+| **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, and citation re-ranking (`src/agents/synthesizer/`) | [ ] Planned |
+| **Phase 5: Dual Guardrails & Feedback Loop** | Deepeval Pre-Gen Recall/Precision Guardrail + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | [ ] Planned |
+| **Phase 6: Graph Wiring & Memory** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and SQLite checkpointing | [ ] Planned |
+| **Phase 7: Evaluation Benchmark & CLI** | Build 50+ golden `LLMTestCase` dataset; run Deepeval benchmarks against Spec 06 criteria; rich interactive CLI | [ ] Planned |
