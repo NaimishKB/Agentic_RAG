@@ -363,7 +363,7 @@ flowchart TD
     RouteExt -->|.png / .jpg / .jpeg| DoclingGPU
 
     %% Output
-    PlainText --> OutMd[data/parsed/{stem}__{hash}.md]
+    PlainText --> OutMd["data/parsed/{stem}__{hash}.md"]
     DocxParser --> OutMd
     DocCOM --> OutMd
     SlideOCR --> OutMd
@@ -374,7 +374,7 @@ flowchart TD
     PyMuPDFOut --> OutMd
     DoclingGPU --> OutMd
 
-    OutMd --> MetaIndex[Upsert data/parsed/metadata.json]
+    OutMd --> MetaIndex["Upsert data/parsed/metadata.json"]
 ```
 
 ---
