@@ -10,6 +10,8 @@ wheels/
 .venv
 data
 logs
+.vscode
+.ruff_cache
 
 # Environment variables & secrets
 .env

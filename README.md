@@ -187,7 +187,11 @@ class AgentState(TypedDict):
 | Node | Type / Role | Input Fields (State) | Output Fields (State) | Responsibilities & Fallback |
 | :--- | :--- | :--- | :--- | :--- |
 | `planner` | **Planner Agent** | `query`, `feedback_diagnosis`, `cycle_count` | `routing_decision`, `plan`, `sub_queries`, `final_response` | Unified entry point: classifies intent (`direct_answer`/`out_of_scope`/`rag_retrieval`), decomposes multi-part technical queries into 1–3 `SubQuery` specs with metadata filters, incorporates feedback diagnostics. |
-| `orchestrator` | **Orchestrator Agent** | `sub_queries` | `sub_agent_results` | Dispatches retrieval sub-agents concurrently to Qdrant with specific metadata filters (`is_table`, `file_type`). |
+| `plan_orchestration` | **Orchestrator Agent** | `user_query`, `sub_queries` | `tasks`, `coordination_strategy` | Formulates worker tasks; dynamically spawns specialized sub-agents via LangGraph's `Send()` API. |
+| `narrative_worker` | Sub-Agent (Manuals) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Dense semantic retrieval over turbine principles, guidelines, and maintenance text in Qdrant (`filter: is_table=false`). |
+| `tabular_worker` | Sub-Agent (Tables) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Structured retrieval over monthly discharge, head-flow matrices, and cost tables in Qdrant (`filter: is_table=true`). |
+| `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
+| `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
 | `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `query` | `documents`, `synthesized_context` | Fuses chunks across all sub-queries, eliminates duplicates, resolves conflicts, and generates cohesive context with citations. |
 | `retrieval_guardrail` | Pre-Gen Evaluator | `query`, `documents` | `retrieval_metrics`, `is_retrieval_valid` | Evaluates Context Recall & Precision using Deepeval/self-eval. If invalid → routes to `feedback_agent`. |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b`. |
@@ -202,9 +206,13 @@ START                     ──> planner
 
 planner → "direct_answer" ──> END (returns direct answer immediately)
 planner → "out_of_scope"  ──> fallback (returns polite domain refusal)
-planner → "rag_retrieval" ──> orchestrator
+planner → "rag_retrieval" ──> plan_orchestration
 
-orchestrator              ──> synthesizer
+plan_orchestration ──(Send)──> narrative_worker ──> aggregate_results
+plan_orchestration ──(Send)──> tabular_worker   ──> aggregate_results
+plan_orchestration ──(Send)──> mcp_worker       ──> aggregate_results
+
+aggregate_results         ──> synthesizer
 synthesizer               ──> retrieval_guardrail
 
 retrieval_guardrail → is_retrieval_valid = True                     ──> generator
@@ -571,15 +579,17 @@ flowchart TD
     Planner -->|direct_answer| Final([Return Direct Response])
     Planner -->|out_of_scope| Fallback[Fallback Node\nTransparent Explanation] --> Final
 
-    subgraph Orchestration ["Orchestration & Retrieval Layer"]
-        Planner -->|rag_retrieval| Orchestrator["⚡ Orchestrator Agent\nDynamic Sub-Agent Dispatch"]
-        Orchestrator --> SubAgent1["Sub-Agent 1\n(e.g., Table Retrieval)"]
-        Orchestrator --> SubAgent2["Sub-Agent 2\n(e.g., Technical Guidelines)"]
-        Orchestrator --> SubAgentN["Sub-Agent N\n(e.g., Cost Calculations)"]
-        SubAgent1 & SubAgent2 & SubAgentN --> Qdrant[(Qdrant Vector DB\nshp_knowledge\n4,064 Chunks)]
+    subgraph Orchestration ["Orchestration & Retrieval Layer (LangGraph Send Map-Reduce)"]
+        Planner -->|rag_retrieval| Orchestrator["⚡ plan_orchestration Node\nTask Allocation & Strategy"]
+        Orchestrator -->|Send| SubAgent1["Sub-Agent 1: narrative_worker\n(Technical Guidelines & Manuals)"]
+        Orchestrator -->|Send| SubAgent2["Sub-Agent 2: tabular_worker\n(Hydrology & Discharge Tables)"]
+        Orchestrator -->|Send| SubAgent3["Sub-Agent 3: mcp_worker\n(FastAPI MCP Power & SCADA Tools)"]
+        SubAgent1 & SubAgent2 --> Qdrant[(Qdrant Vector DB\nshp_knowledge\n4,064 Chunks)]
+        SubAgent3 --> MCPServer["🛠️ FastAPI MCP Server\n(Hydro Power, Ns, Penstock, SCADA)"]
+        SubAgent1 & SubAgent2 & SubAgent3 --> Aggregator["📦 aggregate_results Node\nFan-In, Deduplicate & Sort"]
     end
 
-    Qdrant --> Synthesizer["🧩 Synthesizer Agent\nChunk Fusion, Deduplication &\nCitation Re-Ranking"]
+    Aggregator --> Synthesizer["🧩 Synthesizer Agent\nChunk Fusion, Deduplication &\nCitation Re-Ranking"]
 
     Synthesizer --> PreGuard{"🛡️ Pre-Gen Guardrail\nDeepeval Context Recall &\nPrecision Check"}
 
