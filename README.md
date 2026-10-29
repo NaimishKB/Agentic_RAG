@@ -17,6 +17,7 @@
   - [Spec 06: Evaluation & Acceptance Criteria](#spec-06-evaluation--acceptance-criteria)
 - [4. Multi-Tier Document Parsing Pipeline](#4-multi-tier-document-parsing-pipeline)
 - [5. System Architecture & Workflow](#5-system-architecture--workflow)
+  - [5.1 Model Context Protocol (MCP) Server](#51-model-context-protocol-mcp-server-srcmcp_server)
 - [6. Project Directory Structure](#6-project-directory-structure)
 - [7. Setup & Installation](#7-setup--installation)
 - [8. Configuration (.env)](#8-configuration-env)
@@ -74,8 +75,8 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-02 | Chunk Markdown into semantic segments and embed with `Qwen3-Embedding-0.6B` | [x] Operational (4,064 chunks, 1024-dim vectors) |
 | FR-03 | Store & retrieve vectors from self-hosted QDrant with metadata filtering | [x] Operational (4,064 points, dual-mode engine) |
 | FR-04 | **Planner Agent**: Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition with Metadata Filters, and Feedback Absorption | [x] Operational (src/agents/planner/) |
-| FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic dispatch of specialized sub-queries against Qdrant | [ ] Next Step |
-| FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, and citation re-ranking | [ ] Planned |
+| FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic dispatch of specialized sub-queries against Qdrant (`narrative_retriever`, `tabular_retriever`) | [x] Operational (src/agents/orchestrator/) |
+| FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, and citation re-ranking | [ ] Next Step |
 | FR-07 | **Pre-Generation Guardrail (Deepeval)**: Contextual Precision, Recall, and Relevancy validation | [ ] Planned |
 | FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
 | FR-09 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
@@ -233,7 +234,7 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 | **Text Splitter** | `RecursiveCharacterTextSplitter` (Markdown-aware) | `chunk_size: 1000`, `chunk_overlap: 150` |
 | **Retriever** | QDrant vector search | `top_k: 6`, `score_threshold: 0.65` |
 | **Checkpointing** | `langgraph-checkpoint-sqlite` | `db_path: ./data/checkpoints.db` |
-| **External Tools** | None (on-prem only) | Web search disabled for air-gap mode |
+| **MCP Tool Server** | FastAPI SHP MCP Server (`src/mcp_server/`) | Port 8000 (FastAPI + Uvicorn): JSON-RPC 2.0 (`/mcp`), REST endpoints (`/tools`, `/api/v1/...`), Swagger UI (`/docs`) |
 
 ---
 
@@ -599,35 +600,72 @@ flowchart TD
 
 ---
 
+### 5.1 Model Context Protocol (MCP) FastAPI Server (`src/mcp_server`)
+
+The system includes a high-performance **FastAPI-powered Model Context Protocol (MCP) server** providing dual interfaces:
+1. **JSON-RPC 2.0 MCP Endpoint (`POST /mcp`)**: Conforms to the open Model Context Protocol specification for integration with Orchestrator sub-agents, Antigravity, and Claude Desktop.
+2. **REST API & Swagger UI (`/docs`, `/api/v1/...`)**: Interactive OpenAPI documentation enabling engineers to test calculations and SCADA queries directly in their browser at `http://localhost:8000/docs`.
+
+While dense vector retrieval covers manuals and historical records, the MCP server provides deterministic mathematical solvers and plant sensor access to eliminate LLM arithmetic hallucinations and enable live telemetry queries.
+
+#### Registered MCP Engineering Tools:
+
+| Tool Name | Endpoint / Parameters | Engineering Purpose / Formula |
+| :--- | :--- | :--- |
+| `calculate_hydro_power` | `POST /api/v1/calculate/hydro-power`<br>`discharge_m3s`, `net_head_m`, `efficiency=0.88`, `capacity_factor=0.65` | Solves $P = 9.81 \cdot Q \cdot H_{\text{net}} \cdot \eta$ (kW/MW) and annual generation (MWh). |
+| `calculate_specific_speed` | `POST /api/v1/calculate/specific-speed`<br>`rotational_speed_rpm`, `power_kw`, `net_head_m` | Computes metric specific speed $N_s = \frac{N \sqrt{P}}{H^{5/4}}$ and recommends optimal runner (Pelton, Francis, Kaplan, Crossflow). |
+| `calculate_penstock_diameter` | `POST /api/v1/calculate/penstock-diameter`<br>`design_discharge_m3s` | Computes economic internal diameter via Sarkaria formula $D = 0.62 \cdot Q^{0.43}$ and validates velocity within 2.5–5.0 m/s. |
+| `query_plant_scada` | `POST /api/v1/scada/query`<br>`plant_id`, `sensor_tag` | Inspects real-time or simulated plant sensors (forebay level, penstock pressure, generator bearing temp, runner vibration). |
+
+#### Client Integration:
+The Orchestrator Agent utilizes [`FastAPIMCPClient`](file:///d:/GenAi_Code/Agentic_RAG/src/mcp_server/client.py) which can execute in-process with zero network latency, or connect over HTTP (`http://127.0.0.1:8000`) when running as a standalone microservice:
+
+```powershell
+# Launch FastAPI MCP Server with Uvicorn
+python -m src.mcp_server.server
+
+# Interactive Swagger Documentation
+http://localhost:8000/docs
+```
+
+---
+
 ## 6. Project Directory Structure
 
 ```text
 Agentic_RAG/
 ├── src/
 │   ├── prompts/
-│   │   ├── planner_agent_system.jinja2   # Planner Agent system prompt
-│   │   ├── planner_agent_user.jinja2     # Planner Agent user prompt + few-shots
-│   │   ├── synthesizer_system.jinja2     # Synthesizer Agent system prompt
-│   │   ├── generator_system.jinja2       # Grounded Generator system prompt
-│   │   └── feedback_system.jinja2        # Feedback diagnostic system prompt
+│   │   ├── planner_agent_system.jinja2      # Planner Agent system prompt
+│   │   ├── planner_agent_user.jinja2        # Planner Agent user prompt + few-shots
+│   │   ├── orchestrator_agent_system.jinja2 # Orchestrator Agent worker allocation prompt
+│   │   ├── orchestrator_agent_user.jinja2   # Orchestrator sub-query assignment prompt
+│   │   ├── synthesizer_system.jinja2        # Synthesizer Agent system prompt
+│   │   ├── generator_system.jinja2          # Grounded Generator system prompt
+│   │   └── feedback_system.jinja2           # Feedback diagnostic system prompt
 │   ├── states/
-│   │   ├── planneragent_state.py         # Planner Agent TypedDict & Pydantic models
-│   │   ├── orchestrator_state.py         # Orchestrator sub-agent state schemas
-│   │   └── agent_state.py                # Global unified AgentState
+│   │   ├── planneragent_state.py            # Planner Agent TypedDict & Pydantic models
+│   │   ├── orchestratoragent_state.py       # Orchestrator & worker task schemas
+│   │   └── agent_state.py                   # Global unified AgentState
+│   ├── mcp_server/
+│   │   ├── __init__.py                      # Package exports (LocalMCPClient, tools)
+│   │   ├── server.py                        # MCP JSON-RPC 2.0 tool server (Power, Ns, Penstock, SCADA)
+│   │   └── client.py                        # MCP in-process & stdio client for Orchestrator
 │   ├── agents/
 │   │   ├── planner/
-│   │   │   ├── agentnodes.py             # Planner node (Jinja2 + Ollama qwen3.5:9b)
-│   │   │   ├── agentgraph.py             # Planner LangGraph StateGraph
-│   │   │   └── planner.py                # Public facade API
+│   │   │   ├── agentnodes.py                # Planner node (Jinja2 + Ollama qwen3.5:9b)
+│   │   │   ├── agentgraph.py                # Planner LangGraph StateGraph
+│   │   │   └── planner.py                   # Public facade API
 │   │   ├── orchestrator/
-│   │   │   ├── agentnodes.py             # Sub-agent dispatch & Qdrant retrieval
-│   │   │   └── agentgraph.py             # Orchestrator LangGraph workflow
+│   │   │   ├── agentnodes.py                # Sub-agent dispatch & Qdrant retrieval
+│   │   │   ├── agentgraph.py                # Orchestrator LangGraph workflow
+│   │   │   └── orchestrator.py              # Public facade API
 │   │   ├── synthesizer/
-│   │   │   ├── agentnodes.py             # Fusion, deduplication & citation re-ranking
-│   │   │   └── agentgraph.py             # Synthesizer LangGraph workflow
+│   │   │   ├── agentnodes.py                # Fusion, deduplication & citation re-ranking
+│   │   │   └── agentgraph.py                # Synthesizer LangGraph workflow
 │   │   └── feedback/
-│   │       ├── agentnodes.py             # Diagnostic reflection on guardrail failures
-│   │       └── agentgraph.py             # Feedback Agent workflow
+│   │       ├── agentnodes.py                # Diagnostic reflection on guardrail failures
+│   │       └── agentgraph.py                # Feedback Agent workflow
 │   ├── ingestion/
 │   │   ├── parser.py                     # Smart Multi-Tier Document Parser (Operational)
 │   │   ├── chunker.py                    # Markdown-aware semantic text splitting (Operational)
@@ -746,8 +784,8 @@ LANGSMITH_PROJECT=agentic-rag-shp
 | **Phase 0: Spec Freeze** | Finalize all 6 specs in this README; review & sign off | ✅ Complete |
 | **Phase 1: Ingestion Pipeline** | Multi-Tier Document Parser (54/54) → Semantic Chunker (4,064 chunks) → Embedder (qwen3-embedding) → Qdrant Indexer | ✅ Complete (4,064 pts indexed) |
 | **Phase 2: Planner Agent** | Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition, and Feedback Absorption (`src/agents/planner/`) | ✅ Complete & Verified |
-| **Phase 3: Orchestrator Agent & Sub-Agents** | Dynamic dispatch of specialized sub-queries against Qdrant (`src/agents/orchestrator/`) | 🔄 Next Step |
-| **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, and citation re-ranking (`src/agents/synthesizer/`) | [ ] Planned |
+| **Phase 3: Orchestrator Agent & Sub-Agents** | Dynamic dispatch of specialized sub-queries against Qdrant (`narrative_retriever`, `tabular_retriever`) with concurrent threading (`src/agents/orchestrator/`) | ✅ Complete & Verified |
+| **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, and citation re-ranking (`src/agents/synthesizer/`) | 🔄 Next Step |
 | **Phase 5: Dual Guardrails & Feedback Loop** | Deepeval Pre-Gen Recall/Precision Guardrail + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | [ ] Planned |
 | **Phase 6: Graph Wiring & Memory** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and SQLite checkpointing | [ ] Planned |
 | **Phase 7: Evaluation Benchmark & CLI** | Build 50+ golden `LLMTestCase` dataset; run Deepeval benchmarks against Spec 06 criteria; rich interactive CLI | [ ] Planned |
