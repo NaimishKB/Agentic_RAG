@@ -34,13 +34,12 @@ import time
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import List, Optional
 
 import torch
+
 from loguru import logger
 
 # Specialized lightweight parsers
-import pypdf
 import pymupdf
 import pymupdf4llm
 import docx
@@ -134,7 +133,7 @@ class ParsedDocument:
     parsed_at: float = field(default_factory=time.time)  # Unix timestamp
     parse_duration_s: float = 0.0                        # Wall-clock parse time
     parsed_md_path: str = ""    # Path where the .md output was saved
-    error: Optional[str] = None # Non-None if parsing failed (partial result)
+    error: str | None = None    # Non-None if parsing failed (partial result)
 
 
 @dataclass
@@ -144,8 +143,9 @@ class ParseBatchResult:
     succeeded: int = 0
     failed: int = 0
     skipped: int = 0            # Already parsed (cache hit)
-    documents: List[ParsedDocument] = field(default_factory=list)
-    failed_files: List[str] = field(default_factory=list)
+    documents: list[ParsedDocument] = field(default_factory=list)
+    failed_files: list[str] = field(default_factory=list)
+
 
 
 # ── Markdown Table Utility ────────────────────────────────────────────────────
@@ -870,7 +870,7 @@ def parse_directory(
     parsed_dir: Path = DEFAULT_PARSED_DIR,
     force: bool = False,
     workers: int = 1,
-    extensions: Optional[list[str]] = None,
+    extensions: list[str] | None = None,
 ) -> ParseBatchResult:
     """
     Parse all supported documents in raw_dir using the smart multi-tier pipeline.
@@ -990,7 +990,7 @@ def _sha256(path: Path) -> str:
     return h.hexdigest()
 
 
-def get_supported_files(raw_dir: Path = DEFAULT_RAW_DIR) -> List[Path]:
+def get_supported_files(raw_dir: Path = DEFAULT_RAW_DIR) -> list[Path]:
     """Return list of all supported files in raw_dir."""
     return [
         f for f in Path(raw_dir).iterdir()

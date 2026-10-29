@@ -19,7 +19,7 @@ import urllib.error
 import urllib.request
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
 
 from loguru import logger
 

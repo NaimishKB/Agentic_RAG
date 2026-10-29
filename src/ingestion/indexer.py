@@ -21,18 +21,17 @@ Features:
 
 import argparse
 import json
-import logging
 import os
 import sys
 import time
 import uuid
+from collections.abc import Generator
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional, Tuple
+from typing import Any
 
 import requests
 from loguru import logger
 from qdrant_client import QdrantClient, models
-from qdrant_client.http.exceptions import UnexpectedResponse
 
 from src.ingestion.embedder import OllamaEmbeddingClient
 
@@ -83,8 +82,8 @@ class QdrantIndexManager:
     def __init__(
         self,
         collection_name: str = DEFAULT_COLLECTION_NAME,
-        url: Optional[str] = DEFAULT_QDRANT_URL,
-        local_path: Optional[str] = DEFAULT_LOCAL_PATH,
+        url: str | None = DEFAULT_QDRANT_URL,
+        local_path: str | None = DEFAULT_LOCAL_PATH,
         prefer_local: bool = False,
         vector_dim: int = DEFAULT_VECTOR_DIM,
     ):
@@ -97,10 +96,10 @@ class QdrantIndexManager:
 
     def _init_client(
         self,
-        url: Optional[str],
-        local_path: Optional[str],
+        url: str | None,
+        local_path: str | None,
         prefer_local: bool,
-    ) -> Tuple[QdrantClient, str]:
+    ) -> tuple[QdrantClient, str]:
         """Initializes client connecting to server if reachable, or disk storage fallback."""
         if not prefer_local and url:
             try:
@@ -175,7 +174,7 @@ class QdrantIndexManager:
         except Exception:
             return 0
 
-    def upsert_batch(self, points: List[models.PointStruct]) -> None:
+    def upsert_batch(self, points: list[models.PointStruct]) -> None:
         """Upserts a batch of points into the collection."""
         self.client.upsert(
             collection_name=self.collection_name,
@@ -185,11 +184,11 @@ class QdrantIndexManager:
 
     def search(
         self,
-        query_vector: List[float],
+        query_vector: list[float],
         top_k: int = 5,
-        filter_dict: Optional[Dict[str, Any]] = None,
-        score_threshold: Optional[float] = None,
-    ) -> List[models.ScoredPoint]:
+        filter_dict: dict[str, Any] | None = None,
+        score_threshold: float | None = None,
+    ) -> list[models.ScoredPoint]:
         """Performs vector similarity search with optional metadata filtering."""
         query_filter = None
         if filter_dict:
@@ -227,7 +226,7 @@ class QdrantIndexManager:
 # ---------------------------------------------------------------------------
 def stream_embedded_chunks(
     file_path: Path,
-) -> Generator[Dict[str, Any], None, None]:
+) -> Generator[dict[str, Any], None, None]:
     """Yields parsed JSON records from embedded chunks JSONL file."""
     with open(file_path, "r", encoding="utf-8") as f:
         for line in f:
@@ -245,9 +244,9 @@ def build_index(
     batch_size: int = DEFAULT_BATCH_SIZE,
     recreate: bool = False,
     prefer_local: bool = False,
-    qdrant_url: Optional[str] = DEFAULT_QDRANT_URL,
+    qdrant_url: str | None = DEFAULT_QDRANT_URL,
     summary_path: str = DEFAULT_INDEX_SUMMARY_FILE,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Reads embedded chunks from JSONL and indexes all points into Qdrant."""
     embeddings_file = Path(embeddings_path)
     if not embeddings_file.exists():
@@ -262,7 +261,7 @@ def build_index(
     manager.ensure_collection(recreate=recreate)
 
     start_time = time.time()
-    points_buffer: List[models.PointStruct] = []
+    points_buffer: list[models.PointStruct] = []
     indexed_count = 0
     total_embedded_chunks = 0
 
@@ -369,9 +368,9 @@ def verify_search(
     query_text: str,
     collection_name: str = DEFAULT_COLLECTION_NAME,
     top_k: int = 5,
-    filter_is_table: Optional[bool] = None,
-    filter_file_type: Optional[str] = None,
-    qdrant_url: Optional[str] = DEFAULT_QDRANT_URL,
+    filter_is_table: bool | None = None,
+    filter_file_type: str | None = None,
+    qdrant_url: str | None = DEFAULT_QDRANT_URL,
     prefer_local: bool = False,
 ) -> None:
     """Embeds query via Ollama and retrieves top-k matches with formatted citations."""

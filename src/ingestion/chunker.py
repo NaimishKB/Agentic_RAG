@@ -20,7 +20,8 @@ import sys
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any
+
 
 from loguru import logger
 import tiktoken
@@ -80,8 +81,9 @@ class Chunk:
     raw_content: str           # Raw section text without breadcrumb banner
     breadcrumb: str            # Hierarchical section path (e.g. Doc > Section > Sub)
     section_hierarchy: list[str] = field(default_factory=list)
-    page_or_slide: Optional[int] = None
+    page_or_slide: int | None = None
     chunk_index: int = 1
+
     total_chunks: int = 1
     is_table: bool = False
     char_count: int = 0
@@ -248,7 +250,8 @@ def chunk_markdown(
     sections: list[dict[str, Any]] = []
     current_headings = {1: None, 2: None, 3: None, 4: None}
     current_section_lines: list[str] = []
-    current_page_or_slide: Optional[int] = None
+    current_page_or_slide: int | None = None
+
 
     def _flush_section():
         nonlocal current_section_lines
