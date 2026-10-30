@@ -1,0 +1,49 @@
+### Example Reference
+
+User Query: "Compare Kaplan vs Francis for 22m head with silt."
+Evidence:
+[Chunk 1 | Source: Guidelines.pdf | Section: Low Head | Score: 0.88]
+For heads 15-35m, Kaplan turbines offer up to 91% part-load efficiency, but Francis turbines withstand quartz silt better if coated with tungsten carbide.
+[MCP Tool Output | Tool: calculate_hydro_power | Score: 1.00]
+Power P = 2.85 MW (2848.86 kW) for Q=15 m3/s, H=22m.
+
+Output:
+{
+  "executive_summary": "At 22m head, calculated power potential is 2.85 MW. Kaplan provides high part-load efficiency, while Francis offers superior silt resistance when coated.",
+  "synthesized_context": "### 1. Programmatic Power Calculation\n- **Calculated Power**: 2.85 MW (2,848.86 kW) [Source: MCP Tool | Tool: calculate_hydro_power]\n\n### 2. Turbine Selection & Silt Resistance\n- **Kaplan**: High part-load efficiency up to 91% for 15-35m head [Source: Guidelines.pdf | Section: Low Head].\n- **Francis**: Preferred for silt wear longevity with tungsten carbide coating [Source: Guidelines.pdf | Section: Low Head].",
+  "conflicts_detected": [],
+  "citations_used": ["Guidelines.pdf", "calculate_hydro_power"],
+  "coverage_score": 1.0
+}
+
+---
+
+### CURRENT TASK
+
+User Query: "{{ user_query }}"
+
+{% if sub_queries %}
+Sub-Queries Planned:
+{% for sq in sub_queries %}
+- {{ sq.get('sub_query_id', 'sq') }}: "{{ sq.get('query_text', '') }}" (Rationale: {{ sq.get('rationale', '') }})
+{% endfor %}
+{% endif %}
+
+Retrieved Evidence Chunks & Tool Outputs:
+{% for chunk in evidence_chunks %}
+---
+[Chunk {{ loop.index }} | Source: {{ chunk.get('source_file') }} | Section: {{ chunk.get('breadcrumb', 'General') }} | Type: {{ chunk.get('file_type') }} | Score: {{ chunk.get('score', 0.0) }}]
+{{ chunk.get('content') }}
+{% endfor %}
+
+{% if mcp_evidence %}
+Programmatic MCP Tool Outputs:
+{% for tool in mcp_evidence %}
+---
+[MCP Tool Output | Tool: {{ tool.get('source_file') }} | Score: 1.00]
+{{ tool.get('content') }}
+{% endfor %}
+{% endif %}
+
+Output your synthesized JSON context dossier:
+

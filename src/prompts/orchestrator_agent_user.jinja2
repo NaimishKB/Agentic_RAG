@@ -1,0 +1,81 @@
+### Input Data
+
+User Query:
+"{{ user_query }}"
+
+Planned Sub-Queries from Planner Agent:
+{% for sq in sub_queries %}
+- ID: {{ sq.sub_query_id }}
+  Query Text: "{{ sq.query_text }}"
+  Target Filter: {{ sq.target_filter }}
+  Rationale: "{{ sq.rationale }}"
+{% endfor %}
+
+---
+
+### Few-Shot Reference
+
+#### Example 1: Multi-part query requiring both narrative and tabular workers
+Input Sub-Queries:
+- ID: sq_1, Query: "Pelton turbine runner bucket erosion mechanisms and cavitation limits", Target Filter: null
+- ID: sq_2, Query: "Khari Khola monthly discharge flow data and design discharge table", Target Filter: {"is_table": true}
+
+Output:
+{
+  "coordination_strategy": "Dispatch sq_1 to narrative_retriever for turbine cavitation principles, and sq_2 to tabular_retriever for hydrological flow tables.",
+  "tasks": [
+    {
+      "sub_query_id": "sq_1",
+      "query_text": "Pelton turbine runner bucket erosion mechanisms and cavitation limits",
+      "worker_type": "narrative_retriever",
+      "target_filter": {"is_table": false},
+      "top_k": 4,
+      "score_threshold": 0.40,
+      "rationale": "Requires narrative maintenance manual text describing physical erosion causes."
+    },
+    {
+      "sub_query_id": "sq_2",
+      "query_text": "Khari Khola monthly discharge flow data and design discharge table",
+      "worker_type": "tabular_retriever",
+      "target_filter": {"is_table": true},
+      "top_k": 3,
+      "score_threshold": 0.35,
+      "rationale": "Requires structured discharge table data for hydrology analysis."
+    }
+  ]
+}
+
+#### Example 2: Mathematical power calculation and turbine sizing
+Input Sub-Queries:
+- ID: sq_1, Query: "Calculate theoretical power output for discharge 5.2 m3/s and head 135m", Target Filter: null
+- ID: sq_2, Query: "Francis turbine efficiency curve and operational head limits", Target Filter: null
+
+Output:
+{
+  "coordination_strategy": "Dispatch sq_1 to mcp_tool_worker for deterministic hydro power formula execution, and sq_2 to narrative_retriever for turbine operational head limits.",
+  "tasks": [
+    {
+      "sub_query_id": "sq_1",
+      "query_text": "Calculate power output for discharge 5.2 m3/s and head 135m",
+      "worker_type": "mcp_tool_worker",
+      "target_filter": {"discharge_m3s": 5.2, "net_head_m": 135.0},
+      "top_k": 1,
+      "score_threshold": 1.0,
+      "rationale": "Direct mathematical formula execution required via calculate_hydro_power MCP tool."
+    },
+    {
+      "sub_query_id": "sq_2",
+      "query_text": "Francis turbine efficiency curve and operational head limits",
+      "worker_type": "narrative_retriever",
+      "target_filter": {"is_table": false},
+      "top_k": 4,
+      "score_threshold": 0.40,
+      "rationale": "Technical guidelines and efficiency characteristics from engineering manuals."
+    }
+  ]
+}
+
+---
+
+### Task Instructions
+Now, assign workers and retrieval parameters for the given sub-queries. Return ONLY the JSON object.

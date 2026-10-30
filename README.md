@@ -57,7 +57,7 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 
 1. **Specify** — Define typed state schemas, node input/output contracts, and all routing conditions in this README. **Nothing is built until the spec is signed off.**
 2. **Implement** — Build discrete LangGraph nodes that strictly match the written contract. No scope creep.
-3. **Verify** — Run automated RAGAS evaluations and LangSmith traces to validate every node against acceptance criteria.
+3. **Verify** — Run automated Deepeval evaluations and traces to validate every node against acceptance criteria.
 
 > **Rule**: If a behavior is not in the spec, it is not built. If the spec is wrong, the spec is updated first, then the code.
 
@@ -74,9 +74,9 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-01 | Ingest & parse PDF (native + scanned OCR), DOCX/DOC, PPTX/PPT, XLSX/XLS, TXT, PNG/JPG → Markdown | [x] Operational (54/54 docs, 0 failures) |
 | FR-02 | Chunk Markdown into semantic segments and embed with `Qwen3-Embedding-0.6B` | [x] Operational (4,064 chunks, 1024-dim vectors) |
 | FR-03 | Store & retrieve vectors from self-hosted QDrant with metadata filtering | [x] Operational (4,064 points, dual-mode engine) |
-| FR-04 | **Planner Agent**: Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition with Metadata Filters, and Feedback Absorption | [x] Operational (src/agents/planner/) |
-| FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic dispatch of specialized sub-queries against Qdrant (`narrative_retriever`, `tabular_retriever`) | [x] Operational (src/agents/orchestrator/) |
-| FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, and citation re-ranking | [ ] Next Step |
+| FR-04 | **Planner Agent**: Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Domain-Specific Query Elaboration for high-level prompts, Dynamic Sub-Query Decomposition (1–3 focused sub-queries or atomic single sub-query) with Metadata Filters, and Feedback Absorption | [x] Operational (src/agents/planner/) |
+| FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic Map-Reduce dispatch (`Send`) of specialized sub-agents (`narrative_worker`, `tabular_worker`, `mcp_worker`) | [x] Operational (src/agents/orchestrator/) |
+| FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, fair-share sub-query balancing, citation packaging, and conflict detection | [x] Operational (src/agents/synthesizer/) |
 | FR-07 | **Pre-Generation Guardrail (Deepeval)**: Contextual Precision, Recall, and Relevancy validation | [ ] Planned |
 | FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
 | FR-09 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
@@ -89,9 +89,9 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | # | Requirement | Target |
 |---|---|---|
 | NFR-01 | End-to-end query latency (p95) | < 5.0s on CPU/local GPU |
-| NFR-02 | Faithfulness score (RAGAS) | > 0.90 |
-| NFR-03 | Answer Relevance score (RAGAS) | > 0.88 |
-| NFR-04 | Context Recall | > 0.85 |
+| NFR-02 | Faithfulness score (Deepeval) | > 0.90 |
+| NFR-03 | Answer Relevance score (Deepeval) | > 0.88 |
+| NFR-04 | Context Recall (Deepeval) | > 0.85 |
 | NFR-05 | Zero dependency on external LLM APIs | ✅ Ollama only |
 | NFR-06 | All data stays on-prem; no telemetry | ✅ Air-gap ready |
 | NFR-07 | Max query rewrite attempts before fallback | 3 |
@@ -163,6 +163,8 @@ class AgentState(TypedDict):
     # ── Synthesis & Fusion ─────────────────────────────────────────────
     documents: list[DocumentChunk]    # Deduplicated, synthesized, and re-ranked chunks
     synthesized_context: str          # Clean context block assembled for LLM generation
+    executive_summary: str | None     # High-level technical briefing across all sub-queries
+    conflicts_detected: list[str] | None # Cross-document discrepancies or conflicting parameters flagged
 
     # ── Guardrails & Evaluation Metrics (Deepeval) ─────────────────────
     retrieval_metrics: dict[str, float] # {"precision": 0.88, "recall": 0.91, "relevancy": 0.85}
@@ -186,13 +188,13 @@ class AgentState(TypedDict):
 
 | Node | Type / Role | Input Fields (State) | Output Fields (State) | Responsibilities & Fallback |
 | :--- | :--- | :--- | :--- | :--- |
-| `planner` | **Planner Agent** | `query`, `feedback_diagnosis`, `cycle_count` | `routing_decision`, `plan`, `sub_queries`, `final_response` | Unified entry point: classifies intent (`direct_answer`/`out_of_scope`/`rag_retrieval`), decomposes multi-part technical queries into 1–3 `SubQuery` specs with metadata filters, incorporates feedback diagnostics. |
+| `planner` | **Planner Agent** | `query`, `feedback_diagnosis`, `cycle_count` | `routing_decision`, `plan`, `sub_queries`, `final_response` | Unified entry point: classifies intent (`direct_answer`/`out_of_scope`/`rag_retrieval`), elaborates high-level queries with domain concepts while preserving intent, decomposes technical queries into 1–3 `SubQuery` specs (or 1 atomic sub-query if indivisible) with metadata filters, incorporates feedback diagnostics. |
 | `plan_orchestration` | **Orchestrator Agent** | `user_query`, `sub_queries` | `tasks`, `coordination_strategy` | Formulates worker tasks; dynamically spawns specialized sub-agents via LangGraph's `Send()` API. |
 | `narrative_worker` | Sub-Agent (Manuals) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Dense semantic retrieval over turbine principles, guidelines, and maintenance text in Qdrant (`filter: is_table=false`). |
 | `tabular_worker` | Sub-Agent (Tables) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Structured retrieval over monthly discharge, head-flow matrices, and cost tables in Qdrant (`filter: is_table=true`). |
 | `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
 | `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
-| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `query` | `documents`, `synthesized_context` | Fuses chunks across all sub-queries, eliminates duplicates, resolves conflicts, and generates cohesive context with citations. |
+| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, resolves conflicting metrics, and assembles structured, citation-anchored context for Pre-Gen Guardrail and Generator. |
 | `retrieval_guardrail` | Pre-Gen Evaluator | `query`, `documents` | `retrieval_metrics`, `is_retrieval_valid` | Evaluates Context Recall & Precision using Deepeval/self-eval. If invalid → routes to `feedback_agent`. |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b`. |
 | `generation_guardrail` | Post-Gen Evaluator | `query`, `final_response`, `documents` | `generation_metrics`, `is_grounded` | Evaluates Faithfulness and Hallucination metrics. If ungrounded → routes to `feedback_agent`. |

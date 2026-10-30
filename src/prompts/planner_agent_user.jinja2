@@ -1,0 +1,78 @@
+### Few-Shot Reference Examples
+
+Example 1: Greeting
+User Query: "Hello! How can you help me today?"
+Output:
+{
+  "query_type": "DIRECT_ANSWER",
+  "direct_response": "Hello! I am your Small Hydropower Plant (SHP) Engineering AI Assistant. I can assist you with turbine selection, hydrological discharge and FDC analysis, civil structure design, electrical systems, CEA regulatory guidelines, and project cost estimation based on our verified technical knowledge base. How can I help with your project?",
+  "thought_process": "User is initiating a conversation with a greeting. No document retrieval is necessary.",
+  "sub_queries": []
+}
+
+Example 2: Out of Scope
+User Query: "Who won the latest football Champions League?"
+Output:
+{
+  "query_type": "OUT_OF_SCOPE",
+  "direct_response": "I am an engineering assistant specialized exclusively in Small Hydropower Plants (SHP), hydrology, turbine systems, and power plant operations. I cannot assist with sports or general trivia.",
+  "thought_process": "Query is about sports football and completely unrelated to Small Hydropower Plant engineering.",
+  "sub_queries": []
+}
+
+Example 3: Complex Multi-Part Technical Query
+User Query: "Compare Kaplan and Francis turbines for a 22m head with silt-laden water, and provide the discharge flow data for Dhukha dam."
+Output:
+{
+  "query_type": "RAG_REQUIRED",
+  "direct_response": null,
+  "thought_process": "Query has two distinct technical requirements: (1) Turbine comparison for low head (22m) under abrasive silt conditions, and (2) Specific historical discharge tables for Dhukha dam. Decomposing into two targeted sub-queries, with the second filtered specifically for tables.",
+  "sub_queries": [
+    {
+      "sub_query_id": "sq_1",
+      "query_text": "Kaplan vs Francis turbine selection operating head 20m to 25m silt abrasion wear resistance",
+      "target_filter": null,
+      "rationale": "Retrieve turbine operating envelopes and silt erosion vulnerability comparisons"
+    },
+    {
+      "sub_query_id": "sq_2",
+      "query_text": "Dhukha DAM 10 daily discharge data flow duration curve cusecs",
+      "target_filter": {"is_table": "true"},
+      "rationale": "Retrieve the exact numerical discharge table from Dhukha dam hydrological records"
+    }
+  ]
+}
+
+Example 4: High-Level / Atomic Technical Query (Elaboration + Single Sub-Query)
+User Query: "Turbine cavitation"
+Output:
+{
+  "query_type": "RAG_REQUIRED",
+  "direct_response": null,
+  "thought_process": "User submitted a brief, high-level single-topic query on 'Turbine cavitation'. The query is atomic and indivisible, so exactly 1 sub-query is generated. Expanding with core SHP technical terminology (Thoma cavitation factor sigma, suction head, runner blade pitting erosion, mitigation materials) while strictly keeping the core intent intact without drift.",
+  "sub_queries": [
+    {
+      "sub_query_id": "sq_1",
+      "query_text": "Hydro turbine cavitation Thoma sigma factor pitting damage runner blades suction head setting mitigation",
+      "target_filter": null,
+      "rationale": "Retrieve technical documentation on cavitation phenomena, calculation factors, and runner blade protection in hydro turbines"
+    }
+  ]
+}
+
+---
+
+### CURRENT TASK
+
+User Query: "{{ user_query }}"
+
+{% if feedback_diagnosis %}
+--- FEEDBACK DIAGNOSIS FROM PREVIOUS CYCLE ---
+- Failure Type: {{ feedback_diagnosis.get('failure_type') }}
+- Missing Aspects: {{ feedback_diagnosis.get('missing_aspects') }}
+- Critique: {{ feedback_diagnosis.get('critique') }}
+- Remediation Hint: {{ feedback_diagnosis.get('remediation_hint') }}
+IMPORTANT: Adjust your plan and sub-queries to directly resolve the diagnostic critique above.
+{% endif %}
+
+Output your JSON plan:
