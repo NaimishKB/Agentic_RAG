@@ -77,10 +77,11 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-04 | **Planner Agent**: Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Domain-Specific Query Elaboration for high-level prompts, Dynamic Sub-Query Decomposition (1–3 focused sub-queries or atomic single sub-query) with Metadata Filters, and Feedback Absorption | [x] Operational (src/agents/planner/) |
 | FR-05 | **Orchestrator Agent & Sub-Agents**: Dynamic Map-Reduce dispatch (`Send`) of specialized sub-agents (`narrative_worker`, `tabular_worker`, `mcp_worker`) | [x] Operational (src/agents/orchestrator/) |
 | FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, fair-share sub-query balancing, citation packaging, and conflict detection | [x] Operational (src/agents/synthesizer/) |
-| FR-07 | **Pre-Generation Guardrail (Deepeval)**: Contextual Precision, Recall, and Relevancy validation | [ ] Planned |
+| FR-07 | **Retrieval Sufficiency Grader (Production CRAG)**: Zero-reference retrieval sufficiency and relevance evaluator using `qwen3.5:9b`. Validates whether synthesized context contains complete engineering facts, parameters, and formulas to answer the user query and planned sub-queries before generation | [x] Operational (src/agents/retrieval_grader/) |
+| FR-07-QA | **Offline Retrieval Benchmark Harness (DeepEval)**: Offline QA benchmarking tool measuring Contextual Precision and Contextual Recall against curated golden reference answers (`expected_output`) for regression testing | [x] Operational (src/utils/deepeval_evaluator.py) |
 | FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
 | FR-09 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
-| FR-10 | **Feedback Agent**: Diagnostic reflection on low metrics, formulating targeted remediation for Planner | [ ] Planned |
+| FR-10 | **Feedback Agent**: Diagnostic reflection on retrieval or generation defects, formulating actionable remediation hints for the Planner Agent and advancing cycle count (loops back if cycle < 3, routes to fallback if cycle >= 3) | [x] Operational (src/agents/feedback/) |
 | FR-11 | Fallback Circuit Breaker: Graceful cannot-answer response upon exceeding max retry cycles (3) | [ ] Planned |
 | FR-12 | Persistent conversation memory via LangGraph checkpointing (SQLite) | [ ] Planned |
 
@@ -166,10 +167,15 @@ class AgentState(TypedDict):
     executive_summary: str | None     # High-level technical briefing across all sub-queries
     conflicts_detected: list[str] | None # Cross-document discrepancies or conflicting parameters flagged
 
-    # ── Guardrails & Evaluation Metrics (Deepeval) ─────────────────────
-    retrieval_metrics: dict[str, float] # {"precision": 0.88, "recall": 0.91, "relevancy": 0.85}
+    # ── Retrieval Quality & Sufficiency Grader (Production CRAG) ───────
+    is_retrieval_sufficient: bool     # True if retrieved context has sufficient data to answer query
+    missing_aspects: list[str]        # Specific missing engineering parameters or topics if insufficient
+    retrieval_critique: str           # Detailed reasoning explaining sufficiency or deficit
+    retrieval_confidence: float | None# Confidence score (0.0 to 1.0)
+    retrieval_metrics: dict[str, float] | None # Offline DeepEval metrics {"precision": ..., "recall": ...} during benchmarking
+
+    # ── Post-Generation Guardrail & Faithfulness ───────────────────────
     generation_metrics: dict[str, float]# {"faithfulness": 0.94, "answer_relevancy": 0.92}
-    is_retrieval_valid: bool          # True if pre-gen retrieval metrics pass threshold
     is_grounded: bool                 # True if post-gen faithfulness passes threshold
 
     # ── Feedback & Self-Correction Loop ────────────────────────────────
@@ -195,10 +201,10 @@ class AgentState(TypedDict):
 | `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
 | `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
 | `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, resolves conflicting metrics, and assembles structured, citation-anchored context for Pre-Gen Guardrail and Generator. |
-| `retrieval_guardrail` | Pre-Gen Evaluator | `query`, `documents` | `retrieval_metrics`, `is_retrieval_valid` | Evaluates Context Recall & Precision using Deepeval/self-eval. If invalid → routes to `feedback_agent`. |
+| `retrieval_grader` | **Retrieval Sufficiency Grader** (Production CRAG) | `query`, `sub_queries`, `synthesized_context`, `documents` | `is_retrieval_sufficient`, `missing_aspects`, `retrieval_critique`, `retrieval_confidence` | Zero-reference evaluator using `qwen3.5:9b`. Analyzes whether synthesized context contains all required technical parameters, formulas, equipment curves, and operational facts to answer the user query and sub-queries. If sufficient → `generator`. If insufficient and `cycle_count < 3` → `feedback_agent`. If insufficient and `cycle_count >= 3` → `fallback`. |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b`. |
 | `generation_guardrail` | Post-Gen Evaluator | `query`, `final_response`, `documents` | `generation_metrics`, `is_grounded` | Evaluates Faithfulness and Hallucination metrics. If ungrounded → routes to `feedback_agent`. |
-| `feedback_agent` | **Feedback Agent** | `query`, `retrieval_metrics`, `generation_metrics`, `cycle_count` | `feedback_diagnosis`, `cycle_count` | Diagnoses defect root cause, formulates actionable query remediation, increments `cycle_count`. If `cycle_count >= 3` → routes to `fallback`. |
+| `feedback_agent` | **Feedback Agent** | `query`, `retrieval_metrics`, `generation_metrics`, `cycle_count`, `missing_aspects`, `retrieval_critique` | `feedback_diagnosis`, `cycle_count` | Diagnoses defect root cause, formulates actionable query remediation, increments `cycle_count`. If `cycle_count >= 3` → routes to `fallback`. |
 | `fallback` | Circuit Breaker | `original_query`, `feedback_diagnosis` | `final_response` | Formulates transparent, helpful "cannot answer" message detailing what specific data was missing. |
 
 #### Routing & Conditional Edges
@@ -215,11 +221,11 @@ plan_orchestration ──(Send)──> tabular_worker   ──> aggregate_result
 plan_orchestration ──(Send)──> mcp_worker       ──> aggregate_results
 
 aggregate_results         ──> synthesizer
-synthesizer               ──> retrieval_guardrail
+synthesizer               ──> retrieval_grader
 
-retrieval_guardrail → is_retrieval_valid = True                     ──> generator
-retrieval_guardrail → is_retrieval_valid = False AND cycle_count < 3 ──> feedback_agent
-retrieval_guardrail → is_retrieval_valid = False AND cycle_count >= 3 ──> fallback
+retrieval_grader → is_retrieval_sufficient = True                     ──> generator
+retrieval_grader → is_retrieval_sufficient = False AND cycle_count < 3 ──> feedback_agent
+retrieval_grader → is_retrieval_sufficient = False AND cycle_count >= 3 ──> fallback
 
 generator                 ──> generation_guardrail
 
@@ -250,17 +256,46 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 
 ### Spec 05: Guardrails, Quality Checks & Feedback Agent
 
-#### 1. Pre-Generation Guardrail (Retrieval Evaluation)
-- **Mechanism**: LLM-as-judge (Deepeval / local JSON structured eval) using `qwen3.5:9b`.
-- **Inputs**: `query` + `sub_queries` + `documents` (synthesized retrieved context).
-- **Evaluated Metrics**:
-  - `Contextual Precision` (Target ≥ 0.85): Checks whether retrieved chunks are relevant to the specific technical sub-queries.
-  - `Contextual Recall` (Target ≥ 0.85): Checks whether all facets of the query plan are covered by the chunks.
+#### 1. Production Retrieval Sufficiency & Relevance Grader (Reference-Free CRAG)
+- **Module**: `src/agents/retrieval_grader/`
+- **Role**: **Runtime Pre-Generation Gatekeeper** in the live production LangGraph workflow.
+- **Mechanism**: LLM-as-judge using `qwen3.5:9b` executing **Reference-Free Corrective RAG (CRAG)** grading.
+- **Why Reference-Free**: In live production, unseen end-user queries do not have known ground-truth answers. The system cannot rely on reference answers to determine if retrieval succeeded. Instead, the Grader inspects the user query, planned sub-queries, and synthesized context to evaluate whether all technical dimensions and data points are present to formulate a complete answer.
+- **Inputs**:
+  - `query`: The user's primary engineering query.
+  - `sub_queries`: Decomposed technical sub-queries with targets and rationales from the Planner.
+  - `synthesized_context`: Clean context block assembled by the Synthesizer Agent (including tables, narrative chunks, and MCP calculations).
+- **Grading Dimensions**:
+  1. **Technical Sufficiency**: Does the context contain the specific formulas, equipment ratings, head/flow ranges, or site data required?
+  2. **Sub-Query Coverage**: Are all sub-queries planned by the Planner Agent addressed by the retrieved evidence?
+  3. **Relevance & Signal-to-Noise**: Is the context technically relevant to Small Hydropower engineering, rather than generic filler?
+- **Outputs**: Structured Pydantic `RetrievalGraderOutput`:
+  ```json
+  {
+    "is_sufficient": true,
+    "missing_aspects": [],
+    "critique": "Retrieved context thoroughly provides net head (120m), discharge requirements, and efficiency curves for both Pelton and Francis turbines.",
+    "confidence_score": 0.95
+  }
+  ```
 - **Decision Contract**:
-  - If both metrics ≥ 0.85 → `is_retrieval_valid = True` → Route to `generator`.
-  - Else → `is_retrieval_valid = False` → Route to `feedback_agent`.
+  - If `is_retrieval_sufficient == True` → Route to `generator` node.
+  - If `is_retrieval_sufficient == False` AND `cycle_count < 3` → Route to `feedback_agent` with `missing_aspects` and `critique`.
+  - If `is_retrieval_sufficient == False` AND `cycle_count >= 3` → Route to `fallback` (circuit breaker).
 
-#### 2. Post-Generation Guardrail (Answer Groundedness Evaluation)
+#### 2. Offline Retrieval Benchmark Harness (DeepEval Precision & Recall)
+- **Module**: `src/utils/deepeval_evaluator.py`
+- **Role**: **Offline QA & Regression Testing Suite** for evaluation against curated golden datasets.
+- **Mechanism**: DeepEval (`ContextualPrecisionMetric`, `ContextualRecallMetric`) powered by local Ollama (`qwen3.5:9b`) via `OllamaDeepEvalModel(DeepEvalBaseLLM)` with zero cloud dependencies.
+- **Requirement**: Requires a **ground-truth reference answer (`expected_output`)** for each query in the evaluation dataset.
+- **Intended Usage**:
+  - **For QA Engineers & Testers**: Systematically benchmarks vector index retrieval quality, chunking strategies, and re-ranking performance.
+  - **Not in Live Production Workflow**: Because production queries have no known reference answer, this harness is executed independently during CI/CD or offline regression testing.
+- **Evaluated Metrics**:
+  - `Contextual Precision` (Threshold ≥ 0.85): Evaluates whether retrieved chunks are relevant and whether the most critical evidence is ranked at the top.
+  - `Contextual Recall` (Threshold ≥ 0.85): Evaluates whether all key facts and numbers in the golden `expected_output` are covered by the retrieved chunks.
+
+#### 3. Post-Generation Guardrail (Answer Groundedness Evaluation)
 - **Mechanism**: LLM-as-judge using `qwen3.5:9b` with chain-of-thought verification.
 - **Inputs**: `query` + `final_response` + `documents`.
 - **Evaluated Metrics**:
@@ -270,20 +305,38 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
   - If Faithfulness ≥ 0.90 and Answer Relevancy ≥ 0.88 → `is_grounded = True` → Route to `END` (deliver to user).
   - Else → `is_grounded = False` → Route to `feedback_agent`.
 
-#### 3. Feedback Agent (Reflection & Remediation Engine)
-- **Role**: Rather than a blind re-try, the Feedback Agent acts as a diagnostic inspector when any guardrail fails.
-- **Inputs**: Current `query`, `retrieval_metrics`, `generation_metrics`, and `cycle_count`.
-- **Outputs**: Pydantic structured `FeedbackDiagnosis`:
+#### 4. Feedback Agent (Reflection & Remediation Loop)
+- **Module**: `src/agents/feedback/`
+- **Role**: Rather than a blind retry, the Feedback Agent acts as an intelligent diagnostic inspector whenever the **Retrieval Sufficiency Grader** or **Post-Generation Guardrail** rejects a run.
+- **Inputs**:
+  - `query`: Current engineering query.
+  - Pre-Gen Failure Inputs (from `retrieval_grader`): `is_retrieval_sufficient: False`, `missing_aspects: list[str]`, `retrieval_critique: str`.
+  - Post-Gen Failure Inputs (from `generation_guardrail`): `is_grounded: False`, `generation_metrics: dict`, `final_response: str`.
+  - `cycle_count`: Current loop execution count.
+- **Diagnostic Logic & Loop Back**:
+  1. **Dual Failure Detection**:
+     - If triggered after `retrieval_grader` $\to$ sets `failure_type = "INSUFFICIENT_RETRIEVAL"`, packages `missing_aspects`, and writes a targeted `remediation_hint` for the Planner Agent.
+     - If triggered after `generation_guardrail` $\to$ sets `failure_type = "HALLUCINATION_DETECTED"` or `"OFF_TOPIC_ANSWER"`, identifies unverified statements, and directs the Planner or Generator on how to constrain claims.
+  2. **Cycle Advancement & Loop Control**:
+     - Increments `cycle_count` by 1 (`cycle_count + 1`).
+     - **If `cycle_count < 3`**: Passes `feedback_diagnosis` back to the `planner` node. The Planner Agent absorbs the diagnosis, modifies search terms, adds missing formulas or technical parameters, adjusts Qdrant metadata filters (`is_table`), or allocates the MCP tool worker.
+     - **If `cycle_count >= 3`**: The circuit breaker trips and routes to `fallback` (graceful refusal with full transparency on what data was missing).
+- **Outputs**: Structured Pydantic `FeedbackDiagnosis`:
   ```json
   {
     "failure_type": "INSUFFICIENT_RETRIEVAL | HALLUCINATION_DETECTED | OFF_TOPIC_ANSWER",
-    "missing_aspects": ["Specific discharge data for monsoon months", "CEA environmental norms"],
-    "critique": "Retrieved chunks cover turbine heads but completely lack the environmental flow guidelines requested.",
-    "remediation_hint": "Formulate a dedicated sub-query for CEA environmental flow regulations with PDF keyword filter."
+    "missing_aspects": [
+      "Sarkaria formula for economic penstock diameter calculation",
+      "Penstock shell wall thickness equations (IS 11639 / ASCE)"
+    ],
+    "critique": "Retrieved context only covered civil intake structures and lacked penstock hydraulic sizing data.",
+    "remediation_hint": "Decompose into a dedicated sub-query for penstock diameter using calculate_penstock_diameter MCP tool and a narrative sub-query for steel plate thickness.",
+    "target_recommendations": [
+      "mcp_worker:calculate_penstock_diameter",
+      "narrative_retriever"
+    ]
   }
   ```
-- **Action**: Passes `FeedbackDiagnosis` back to the `planner` node and increments `cycle_count`.
-- **Circuit Breaker**: If `cycle_count >= 3`, terminates loop to avoid infinite execution and routes to `fallback`.
 
 
 ---
@@ -593,11 +646,11 @@ flowchart TD
 
     Aggregator --> Synthesizer["🧩 Synthesizer Agent\nChunk Fusion, Deduplication &\nCitation Re-Ranking"]
 
-    Synthesizer --> PreGuard{"🛡️ Pre-Gen Guardrail\nDeepeval Context Recall &\nPrecision Check"}
+    Synthesizer --> PreGuard{"🛡️ Retrieval Sufficiency Grader\n(Reference-Free CRAG:\nSufficient Engineering Data?)"}
 
-    PreGuard -->|Metrics >= Threshold| Generator["✍️ Generator Node\nqwen3.5:9b\nStrictly Grounded Generation"]
+    PreGuard -->|is_sufficient = True| Generator["✍️ Generator Node\nqwen3.5:9b\nStrictly Grounded Generation"]
 
-    PreGuard -->|Metrics < Threshold\nand cycle < 3| Feedback["🔁 Feedback Agent\nDiagnostic Analysis &\nRemediation Formulation"]
+    PreGuard -->|is_sufficient = False\nand cycle < 3| Feedback["🔁 Feedback Agent\nDiagnostic Analysis &\nRemediation Formulation"]
 
     Generator --> PostGuard{"🛡️ Post-Gen Guardrail\nDeepeval Faithfulness &\nHallucination Check"}
 
@@ -606,7 +659,7 @@ flowchart TD
 
     Feedback -->|"Re-plan with Diagnostic Hints\n(cycle_count += 1)"| Planner
 
-    PreGuard -->|cycle >= 3| Fallback
+    PreGuard -->|is_sufficient = False\nand cycle >= 3| Fallback
     PostGuard -->|cycle >= 3| Fallback
 ```
 
@@ -652,17 +705,25 @@ Agentic_RAG/
 │   │   ├── planner_agent_user.jinja2        # Planner Agent user prompt + few-shots
 │   │   ├── orchestrator_agent_system.jinja2 # Orchestrator Agent worker allocation prompt
 │   │   ├── orchestrator_agent_user.jinja2   # Orchestrator sub-query assignment prompt
-│   │   ├── synthesizer_system.jinja2        # Synthesizer Agent system prompt
-│   │   ├── generator_system.jinja2          # Grounded Generator system prompt
-│   │   └── feedback_system.jinja2           # Feedback diagnostic system prompt
+│   │   ├── synthesizer_agent_system.jinja2  # Synthesizer Agent fusion & citation prompt
+│   │   ├── synthesizer_agent_user.jinja2    # Synthesizer Agent user prompt + few-shots
+│   │   ├── retrieval_grader_system.jinja2   # Reference-Free Retrieval Grader system prompt
+│   │   ├── retrieval_grader_user.jinja2     # Reference-Free Retrieval Grader user prompt + few-shots
+│   │   ├── generator_agent_system.jinja2    # Grounded Generator system prompt
+│   │   ├── generator_agent_user.jinja2      # Grounded Generator user prompt
+│   │   ├── feedback_agent_system.jinja2     # Feedback diagnostic system prompt
+│   │   └── feedback_agent_user.jinja2       # Feedback diagnostic remediation prompt
 │   ├── states/
 │   │   ├── planneragent_state.py            # Planner Agent TypedDict & Pydantic models
 │   │   ├── orchestratoragent_state.py       # Orchestrator & worker task schemas
+│   │   ├── synthesizeragent_state.py        # Synthesizer Agent output & state schemas
+│   │   ├── retrieval_grader_state.py        # Retrieval Grader output & state schemas
+│   │   ├── generatoragent_state.py          # Generator output & state schemas
 │   │   └── agent_state.py                   # Global unified AgentState
 │   ├── mcp_server/
-│   │   ├── __init__.py                      # Package exports (LocalMCPClient, tools)
+│   │   ├── __init__.py                      # Package exports (FastAPIMCPClient, tools)
 │   │   ├── server.py                        # MCP JSON-RPC 2.0 tool server (Power, Ns, Penstock, SCADA)
-│   │   └── client.py                        # MCP in-process & stdio client for Orchestrator
+│   │   └── client.py                        # MCP in-process & HTTP client for Orchestrator
 │   ├── agents/
 │   │   ├── planner/
 │   │   │   ├── agentnodes.py                # Planner node (Jinja2 + Ollama qwen3.5:9b)
@@ -674,19 +735,32 @@ Agentic_RAG/
 │   │   │   └── orchestrator.py              # Public facade API
 │   │   ├── synthesizer/
 │   │   │   ├── agentnodes.py                # Fusion, deduplication & citation re-ranking
-│   │   │   └── agentgraph.py                # Synthesizer LangGraph workflow
+│   │   │   ├── agentgraph.py                # Synthesizer LangGraph workflow
+│   │   │   └── synthesizer.py               # Public facade API
+│   │   ├── retrieval_grader/
+│   │   │   ├── agentnodes.py                # Reference-Free CRAG Grader (Ollama qwen3.5:9b)
+│   │   │   ├── agentgraph.py                # Retrieval Grader LangGraph workflow
+│   │   │   └── retrieval_grader.py          # Public facade API
+│   │   ├── generator/
+│   │   │   ├── agentnodes.py                # Grounded answer synthesis node
+│   │   │   ├── agentgraph.py                # Generator LangGraph workflow
+│   │   │   └── generator.py                 # Public facade API
 │   │   └── feedback/
 │   │       ├── agentnodes.py                # Diagnostic reflection on guardrail failures
-│   │       └── agentgraph.py                # Feedback Agent workflow
+│   │       ├── agentgraph.py                # Feedback Agent workflow
+│   │       └── feedback.py                  # Public facade API
+│   ├── utils/
+│   │   ├── deepeval_evaluator.py            # Offline DeepEval retrieval benchmark harness (QA)
+│   │   └── logging.py                       # Loguru centralized logger configuration
 │   ├── ingestion/
-│   │   ├── parser.py                     # Smart Multi-Tier Document Parser (Operational)
-│   │   ├── chunker.py                    # Markdown-aware semantic text splitting (Operational)
-│   │   ├── embedder.py                   # Qwen3-Embedding-0.6B via Ollama (Operational)
-│   │   └── indexer.py                    # QDrant collection manager & upsert (Operational)
+│   │   ├── parser.py                        # Smart Multi-Tier Document Parser (Operational)
+│   │   ├── chunker.py                       # Markdown-aware semantic text splitting (Operational)
+│   │   ├── embedder.py                      # Qwen3-Embedding-0.6B via Ollama (Operational)
+│   │   └── indexer.py                       # QDrant collection manager & upsert (Operational)
 │   ├── evals/
-│   │   ├── golden_dataset.json           # Hand-labeled SHP QA pairs (LLMTestCase format)
-│   │   └── run_deepeval.py               # Deepeval evaluation runner
-│   └── main.py                           # CLI entry point
+│   │   ├── golden_dataset.json              # Hand-labeled SHP QA pairs (LLMTestCase format)
+│   │   └── run_deepeval.py                  # Deepeval evaluation runner
+│   └── main.py                              # CLI entry point
 ├── data/
 │   ├── raw/                              # Raw SHP documents (PDF, DOCX, PPTX, XLS, etc.)
 │   ├── parsed/                           # Structured Markdown output + metadata.json
@@ -797,7 +871,7 @@ LANGSMITH_PROJECT=agentic-rag-shp
 | **Phase 1: Ingestion Pipeline** | Multi-Tier Document Parser (54/54) → Semantic Chunker (4,064 chunks) → Embedder (qwen3-embedding) → Qdrant Indexer | ✅ Complete (4,064 pts indexed) |
 | **Phase 2: Planner Agent** | Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition, and Feedback Absorption (`src/agents/planner/`) | ✅ Complete & Verified |
 | **Phase 3: Orchestrator Agent & Sub-Agents** | Dynamic dispatch of specialized sub-queries against Qdrant (`narrative_retriever`, `tabular_retriever`) with concurrent threading (`src/agents/orchestrator/`) | ✅ Complete & Verified |
-| **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, and citation re-ranking (`src/agents/synthesizer/`) | 🔄 Next Step |
-| **Phase 5: Dual Guardrails & Feedback Loop** | Deepeval Pre-Gen Recall/Precision Guardrail + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | [ ] Planned |
+| **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, fair-share sub-query balancing, and citation re-ranking (`src/agents/synthesizer/`) | ✅ Complete & Verified |
+| **Phase 5: Retrieval Grader, Generator & Guardrails** | Reference-Free Retrieval Sufficiency Grader (CRAG) + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | 🔄 In Progress |
 | **Phase 6: Graph Wiring & Memory** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and SQLite checkpointing | [ ] Planned |
 | **Phase 7: Evaluation Benchmark & CLI** | Build 50+ golden `LLMTestCase` dataset; run Deepeval benchmarks against Spec 06 criteria; rich interactive CLI | [ ] Planned |
