@@ -79,11 +79,11 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-06 | **Synthesizer Agent**: Multi-source chunk fusion, deduplication, fair-share sub-query balancing, citation packaging, and conflict detection | [x] Operational (src/agents/synthesizer/) |
 | FR-07 | **Retrieval Sufficiency Grader (Production CRAG)**: Zero-reference retrieval sufficiency and relevance evaluator using `qwen3.5:9b`. Validates whether synthesized context contains complete engineering facts, parameters, and formulas to answer the user query and planned sub-queries before generation | [x] Operational (src/agents/retrieval_grader/) |
 | FR-07-QA | **Offline Retrieval Benchmark Harness (DeepEval)**: Offline QA benchmarking tool measuring Contextual Precision and Contextual Recall against curated golden reference answers (`expected_output`) for regression testing | [x] Operational (src/utils/deepeval_evaluator.py) |
-| FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b` | [ ] Planned |
-| FR-09 | **Post-Generation Guardrail (Deepeval)**: Hallucination detection & Faithfulness grading | [ ] Planned |
+| FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b`, multi-source evidence synthesis, and inline citation anchoring | [x] Operational (src/agents/generator/) |
+| FR-09 | **Post-Generation Guardrail (DeepEval)**: Reference-free Faithfulness & Hallucination detection using `FaithfulnessMetric` and `qwen3.5:9b`. Validates every claim against context; passes unfaithful statements to Feedback Agent upon failure | [x] Operational (src/agents/generation_guardrail/) |
 | FR-10 | **Feedback Agent**: Diagnostic reflection on retrieval or generation defects, formulating actionable remediation hints for the Planner Agent and advancing cycle count (loops back if cycle < 3, routes to fallback if cycle >= 3) | [x] Operational (src/agents/feedback/) |
 | FR-11 | Fallback Circuit Breaker: Graceful cannot-answer response upon exceeding max retry cycles (3) | [ ] Planned |
-| FR-12 | Persistent conversation memory via LangGraph checkpointing (SQLite) | [ ] Planned |
+| FR-12 | Session conversation memory via LangGraph checkpointing (In-Memory `MemorySaver` in RAM for single active session; swappable to SQLite for persistent tracing) | [ ] Planned |
 
 #### Non-Functional Requirements
 
@@ -200,7 +200,7 @@ class AgentState(TypedDict):
 | `tabular_worker` | Sub-Agent (Tables) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Structured retrieval over monthly discharge, head-flow matrices, and cost tables in Qdrant (`filter: is_table=true`). |
 | `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
 | `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
-| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, resolves conflicting metrics, and assembles structured, citation-anchored context for Pre-Gen Guardrail and Generator. |
+| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, and assembles structured, citation-anchored context. Features high-speed deterministic fusion (0.02s) to eliminate redundant LLM generation cycles on memory-constrained GPUs, with optional LLM synthesis toggle (`SYNTHESIZER_USE_LLM=true`). |
 | `retrieval_grader` | **Retrieval Sufficiency Grader** (Production CRAG) | `query`, `sub_queries`, `synthesized_context`, `documents` | `is_retrieval_sufficient`, `missing_aspects`, `retrieval_critique`, `retrieval_confidence` | Zero-reference evaluator using `qwen3.5:9b`. Analyzes whether synthesized context contains all required technical parameters, formulas, equipment curves, and operational facts to answer the user query and sub-queries. If sufficient → `generator`. If insufficient and `cycle_count < 3` → `feedback_agent`. If insufficient and `cycle_count >= 3` → `fallback`. |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b`. |
 | `generation_guardrail` | Post-Gen Evaluator | `query`, `final_response`, `documents` | `generation_metrics`, `is_grounded` | Evaluates Faithfulness and Hallucination metrics. If ungrounded → routes to `feedback_agent`. |
@@ -249,7 +249,7 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 | **Document Parser** | Docling | Input: PDF, DOCX, TXT, JPEG, PNG → Output: Markdown |
 | **Text Splitter** | `RecursiveCharacterTextSplitter` (Markdown-aware) | `chunk_size: 1000`, `chunk_overlap: 150` |
 | **Retriever** | QDrant vector search | `top_k: 6`, `score_threshold: 0.65` |
-| **Checkpointing** | `langgraph-checkpoint-sqlite` | `db_path: ./data/checkpoints.db` |
+| **Checkpointing** | LangGraph `MemorySaver` (In-Memory RAM for active session); upgradeable to `SqliteSaver` (`./data/checkpoints.db`) | In-RAM thread checkpointing during session execution; zero disk overhead; persistent cross-session audit tracing via SQLite |
 | **MCP Tool Server** | FastAPI SHP MCP Server (`src/mcp_server/`) | Port 8000 (FastAPI + Uvicorn): JSON-RPC 2.0 (`/mcp`), REST endpoints (`/tools`, `/api/v1/...`), Swagger UI (`/docs`) |
 
 ---
@@ -292,18 +292,28 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
   - **For QA Engineers & Testers**: Systematically benchmarks vector index retrieval quality, chunking strategies, and re-ranking performance.
   - **Not in Live Production Workflow**: Because production queries have no known reference answer, this harness is executed independently during CI/CD or offline regression testing.
 - **Evaluated Metrics**:
-  - `Contextual Precision` (Threshold ≥ 0.85): Evaluates whether retrieved chunks are relevant and whether the most critical evidence is ranked at the top.
-  - `Contextual Recall` (Threshold ≥ 0.85): Evaluates whether all key facts and numbers in the golden `expected_output` are covered by the retrieved chunks.
+  - `Contextual Precision` (Threshold ≥ 0.85):
+    $$\text{Precision} = \frac{\text{Relevant Chunks Retrieved}}{\text{Total Chunks Retrieved}}$$
+    *Meaning*: Of all the chunks the retriever returned, how many were actually relevant? High precision prevents polluting the LLM context with irrelevant noise. DeepEval's metric also weights rank position to ensure the most critical evidence is ranked at the very top.
+  - `Contextual Recall` (Threshold ≥ 0.85):
+    $$\text{Recall} = \frac{\text{Relevant Chunks Retrieved}}{\text{Total Relevant Chunks Existing in Knowledge Base}}$$
+    *Meaning*: Of all the relevant chunks that exist in the knowledge base to answer the query, how many did the retriever successfully locate? Evaluated against the golden reference answer by verifying whether all facts in `expected_output` are covered by the retrieved chunks.
 
-#### 3. Post-Generation Guardrail (Answer Groundedness Evaluation)
-- **Mechanism**: LLM-as-judge using `qwen3.5:9b` with chain-of-thought verification.
-- **Inputs**: `query` + `final_response` + `documents`.
-- **Evaluated Metrics**:
-  - `Faithfulness` (Target ≥ 0.90): Every factual statement, formula, numerical value, or turbine parameter must be explicitly supported by context.
-  - `Answer Relevancy` (Target ≥ 0.88): The answer directly answers the engineering intent without extraneous drift.
+#### 3. Post-Generation Guardrail (Single-Pass Groundedness Evaluation at Runtime)
+- **Module**: `src/agents/generation_guardrail/`
+- **Role**: **Runtime Post-Generation Gatekeeper** validating answer faithfulness and eliminating hallucinations before delivery.
+- **Mechanism (Runtime)**: High-speed, **Single-Pass Local LLM Judge (`qwen3.5:9b`)** via Jinja2 templates (`src/prompts/generation_guardrail_*.jinja2`) with constrained token prediction (`num_predict=512`). Evaluates factual consistency across numbers, formulas, and turbine specifications in **one single inference (~5–10 seconds)** rather than multi-minute claim-by-claim loops.
+- **Offline Benchmarking Integration**: DeepEval's full multi-step `FaithfulnessMetric` and `ContextualRecallMetric` are maintained in `src/evals/run_deepeval.py` for comprehensive offline evaluation against the 52-case golden dataset.
+- **Why Reference-Free (Runs in Production)**: Unlike retrieval recall metrics that require a golden reference answer (`expected_output`), faithfulness evaluation checks `actual_output` strictly against `synthesized_context` (the retrieved evidence dossier). It requires zero ground-truth answers and operates seamlessly at live inference time.
+- **Inputs**: `query` + `final_response` + `synthesized_context` (or `documents`).
+- **Evaluated Metric**:
+  - `Faithfulness` (Threshold ≥ 0.90):
+    $$\text{Faithfulness} = \frac{\text{Factual Claims in Answer Supported by Context}}{\text{Total Factual Claims Made in Answer}}$$
+    *Meaning*: Of all factual claims, formulas, ratings, and numbers in the generated response, how many are strictly supported by the retrieved context? Directly measures hallucination prevention ($\text{Hallucination Rate} = 1 - \text{Faithfulness}$).
+- **Outputs**: Pydantic structured `GenerationGuardrailOutput` (`is_grounded`, `faithfulness_score`, `unfaithful_statements`, `critique`).
 - **Decision Contract**:
-  - If Faithfulness ≥ 0.90 and Answer Relevancy ≥ 0.88 → `is_grounded = True` → Route to `END` (deliver to user).
-  - Else → `is_grounded = False` → Route to `feedback_agent`.
+  - If Faithfulness ≥ 0.90 → `is_grounded = True` → Route to `END` (deliver verified answer to user).
+  - Else → `is_grounded = False` → Passes `unfaithful_statements` and critique to `feedback_agent` for diagnostic re-planning.
 
 #### 4. Feedback Agent (Reflection & Remediation Loop)
 - **Module**: `src/agents/feedback/`
@@ -347,17 +357,17 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 - **Primary**: [Deepeval](https://github.com/confident-ai/deepeval) — LLM evaluation framework with built-in RAG metrics, runs locally
 - **Tracing**: LangSmith (optional, for development trace inspection)
 
-#### Deepeval Metrics Used
+#### Deepeval Metrics & Acceptance Criteria
 
-| Deepeval Metric | Class | Target | Description |
-| :--- | :--- | :--- | :--- |
-| Faithfulness | `FaithfulnessMetric` | ≥ 0.90 | Answer is grounded in retrieved context |
-| Answer Relevancy | `AnswerRelevancyMetric` | ≥ 0.88 | Answer directly addresses the query |
-| Contextual Precision | `ContextualPrecisionMetric` | ≥ 0.85 | Retrieved chunks are ranked correctly |
-| Contextual Recall | `ContextualRecallMetric` | ≥ 0.85 | Retrieved chunks cover the expected answer |
-| Contextual Relevancy | `ContextualRelevancyMetric` | ≥ 0.80 | Retrieved chunks are relevant to the query |
-| Query Latency (p95) | Custom timer | < 5.0s | End-to-end response time |
-| Fallback Rate | Custom counter | < 10% | % of queries hitting the fallback node |
+| Metric | DeepEval Class | Target | Mathematical Formula | Core Engineering Meaning |
+| :--- | :--- | :--- | :--- | :--- |
+| **Retrieval Precision** | `ContextualPrecisionMetric` | ≥ 0.85 | $\frac{\text{Relevant Chunks Retrieved}}{\text{Total Chunks Retrieved}}$ | **Signal-to-Noise Ratio**: Of all chunks the retriever returned, how many were actually relevant? High precision prevents polluting the generation prompt with noise. |
+| **Retrieval Recall** | `ContextualRecallMetric` | ≥ 0.85 | $\frac{\text{Relevant Chunks Retrieved}}{\text{Total Relevant Chunks Existing}}$ | **Completeness**: Of all relevant technical facts existing in the knowledge base, how many did the retriever find? (Tested against golden reference answers). |
+| **Contextual Relevancy** | `ContextualRelevancyMetric` | ≥ 0.80 | $\frac{\text{Relevant Sentences in Context}}{\text{Total Sentences in Context}}$ | **Information Density**: Assesses whether chunks are dense with useful facts rather than bloated with irrelevant filler text. |
+| **Faithfulness** | `FaithfulnessMetric` | ≥ 0.90 | $\frac{\text{Claims Supported by Context}}{\text{Total Factual Claims in Answer}}$ | **Hallucination Prevention**: Are all parameters, formulas, and ratings in the generated answer strictly backed by context? ($\text{Hallucination Rate} = 1 - \text{Faithfulness}$). |
+| **Answer Relevancy** | `AnswerRelevancyMetric` | ≥ 0.88 | $\frac{\text{Sentences Addressing Query Intent}}{\text{Total Sentences in Answer}}$ | **Query Adherence**: Does the generated response directly answer the engineering question without drift, omissions, or tangential filler? |
+| **Query Latency (p95)**| Custom Timer | < 5.0s | Measured wall-clock time | End-to-end response time on local GPU/CPU. |
+| **Fallback Rate** | Custom Counter | < 10% | $\frac{\text{Fallback Invocations}}{\text{Total Executed Queries}}$ | % of queries triggering the circuit breaker due to persistent data gaps. |
 
 #### Acceptance Gate
 A build is **not promoted** unless all 7 metrics above meet their targets on the SHP golden test set (minimum 50 hand-labeled `LLMTestCase` objects from the corpus).
@@ -652,7 +662,7 @@ flowchart TD
 
     PreGuard -->|is_sufficient = False\nand cycle < 3| Feedback["🔁 Feedback Agent\nDiagnostic Analysis &\nRemediation Formulation"]
 
-    Generator --> PostGuard{"🛡️ Post-Gen Guardrail\nDeepeval Faithfulness &\nHallucination Check"}
+    Generator --> PostGuard{"🛡️ Post-Gen Guardrail\n(Single-Pass LLM:\nGroundedness & Hallucination Check)"}
 
     PostGuard -->|is_grounded = True| Final
     PostGuard -->|is_grounded = False\nand cycle < 3| Feedback
@@ -711,6 +721,8 @@ Agentic_RAG/
 │   │   ├── retrieval_grader_user.jinja2     # Reference-Free Retrieval Grader user prompt + few-shots
 │   │   ├── generator_agent_system.jinja2    # Grounded Generator system prompt
 │   │   ├── generator_agent_user.jinja2      # Grounded Generator user prompt
+│   │   ├── generation_guardrail_system.jinja2 # Post-Gen Groundedness Guardrail system prompt
+│   │   ├── generation_guardrail_user.jinja2 # Post-Gen Groundedness Guardrail user prompt + few-shots
 │   │   ├── feedback_agent_system.jinja2     # Feedback diagnostic system prompt
 │   │   └── feedback_agent_user.jinja2       # Feedback diagnostic remediation prompt
 │   ├── states/
@@ -745,6 +757,10 @@ Agentic_RAG/
 │   │   │   ├── agentnodes.py                # Grounded answer synthesis node
 │   │   │   ├── agentgraph.py                # Generator LangGraph workflow
 │   │   │   └── generator.py                 # Public facade API
+│   │   ├── generation_guardrail/
+│   │   │   ├── agentnodes.py                # Single-Pass LLM Groundedness Guardrail (qwen3.5:9b)
+│   │   │   ├── agentgraph.py                # Post-Gen Guardrail LangGraph workflow
+│   │   │   └── generation_guardrail.py      # Public facade API
 │   │   └── feedback/
 │   │       ├── agentnodes.py                # Diagnostic reflection on guardrail failures
 │   │       ├── agentgraph.py                # Feedback Agent workflow
@@ -820,9 +836,22 @@ python -m src.ingestion.indexer --recreate
 python -m src.ingestion.indexer --query "Kaplan turbine efficiency curve" --top-k 3
 ```
 
-### 5. Run the Agent
+### 5. Run the Agent & Interactive CLI
 ```powershell
-python src/main.py chat
+# Interactive Multi-Turn Chat (with In-Memory Checkpointing)
+python src/main.py
+
+# System Health Diagnostics (Ollama, Qdrant, FastAPI MCP)
+python src/main.py --check
+
+# Single Query Execution
+python src/main.py "Compare Francis vs Pelton turbines for 120m net head and 2.0 m3/s discharge in high quartz silt conditions"
+
+# DeepEval Acceptance Benchmark Runner (Phase 7)
+python -m src.evals.run_deepeval -n 5
+
+# Fast Pipeline Metric Validation (Offline Context)
+python -m src.evals.run_deepeval --skip-agent -n 10
 ```
 
 ---
@@ -872,6 +901,6 @@ LANGSMITH_PROJECT=agentic-rag-shp
 | **Phase 2: Planner Agent** | Unified Intent Classification (`direct_answer` / `out_of_scope` / `rag_retrieval`), Sub-Query Decomposition, and Feedback Absorption (`src/agents/planner/`) | ✅ Complete & Verified |
 | **Phase 3: Orchestrator Agent & Sub-Agents** | Dynamic dispatch of specialized sub-queries against Qdrant (`narrative_retriever`, `tabular_retriever`) with concurrent threading (`src/agents/orchestrator/`) | ✅ Complete & Verified |
 | **Phase 4: Synthesizer Agent** | Multi-source chunk fusion, deduplication, fair-share sub-query balancing, and citation re-ranking (`src/agents/synthesizer/`) | ✅ Complete & Verified |
-| **Phase 5: Retrieval Grader, Generator & Guardrails** | Reference-Free Retrieval Sufficiency Grader (CRAG) + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | 🔄 In Progress |
-| **Phase 6: Graph Wiring & Memory** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and SQLite checkpointing | [ ] Planned |
-| **Phase 7: Evaluation Benchmark & CLI** | Build 50+ golden `LLMTestCase` dataset; run Deepeval benchmarks against Spec 06 criteria; rich interactive CLI | [ ] Planned |
+| **Phase 5: Retrieval Grader, Generator & Guardrails** | Reference-Free Retrieval Sufficiency Grader (CRAG) + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | ✅ Complete & Verified |
+| **Phase 6: Graph Wiring & In-Memory Checkpointing** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and In-Memory RAM checkpointing (`MemorySaver`) for single-session runs (upgradeable to SQLite for audit tracing) | ✅ Complete & Verified |
+| **Phase 7: Evaluation Benchmark & CLI** | Build 52-case golden `LLMTestCase` dataset (`src/evals/golden_dataset.json`); automated DeepEval benchmark runner (`src/evals/run_deepeval.py`) against Spec 06 criteria; rich interactive CLI (`src/main.py`) | ✅ Complete & Verified |
