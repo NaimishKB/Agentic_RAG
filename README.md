@@ -83,8 +83,8 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-08 | **Generator Node**: Grounded final answer generation using `qwen3.5:9b`, multi-source evidence synthesis, and inline citation anchoring | [x] Operational (src/agents/generator/) |
 | FR-09 | **Post-Generation Guardrail (DeepEval)**: Reference-free Faithfulness & Hallucination detection using `FaithfulnessMetric` and `qwen3.5:9b`. Validates every claim against context; passes unfaithful statements to Feedback Agent upon failure | [x] Operational (src/agents/generation_guardrail/) |
 | FR-10 | **Feedback Agent**: Diagnostic reflection on retrieval or generation defects, formulating actionable remediation hints for the Planner Agent and advancing cycle count (loops back if cycle < 3, routes to fallback if cycle >= 3) | [x] Operational (src/agents/feedback/) |
-| FR-11 | Fallback Circuit Breaker: Graceful cannot-answer response upon exceeding max retry cycles (3) | [ ] Planned |
-| FR-12 | Session conversation memory via LangGraph checkpointing (In-Memory `MemorySaver` in RAM for single active session; swappable to SQLite for persistent tracing) | [ ] Planned |
+| FR-11 | **Fallback Circuit Breaker**: Graceful cannot-answer response upon exceeding max retry cycles (3). Features 3-tier recovery: extracts best-effort LLM generation with engineering disclaimers, surfaces partial verified chunk evidence, or provides clear notice when data is unavailable in uploaded documents | [x] Operational (src/agents/fallback/) |
+| FR-12 | **Session Conversation Memory**: In-Memory `MemorySaver` checkpointing across turns (upgradeable to SQLite for persistent auditing) | [x] Operational (src/agents/main_agent.py) |
 
 #### Non-Functional Requirements
 
@@ -201,12 +201,12 @@ class AgentState(TypedDict):
 | `tabular_worker` | Sub-Agent (Tables) | `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Structured retrieval over monthly discharge, head-flow matrices, and cost tables in Qdrant (`filter: is_table=true`). |
 | `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
 | `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
-| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, and assembles structured, citation-anchored context. Features high-speed deterministic fusion (0.02s) to eliminate redundant LLM generation cycles on memory-constrained GPUs, with optional LLM synthesis toggle (`SYNTHESIZER_USE_LLM=true`). |
+| `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, and assembles structured, citation-anchored context. Features high-speed pure-Python deterministic fusion (0.000s) to eliminate redundant LLM generation cycles and preserve VRAM/bandwidth on local GPUs. |
 | `retrieval_grader` | **Retrieval Sufficiency Grader** (Production CRAG) | `query`, `sub_queries`, `synthesized_context`, `documents` | `is_retrieval_sufficient`, `missing_aspects`, `retrieval_critique`, `retrieval_confidence` | Zero-reference evaluator using `qwen3.5:9b`. Analyzes whether synthesized context contains all required technical parameters, formulas, equipment curves, and operational facts to answer the user query and sub-queries. If sufficient → `generator`. If insufficient and `cycle_count < 3` → `feedback_agent`. If insufficient and `cycle_count >= 3` → `fallback`. |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b`. |
 | `generation_guardrail` | Post-Gen Evaluator | `query`, `final_response`, `documents` | `generation_metrics`, `is_grounded` | Evaluates Faithfulness and Hallucination metrics. If ungrounded → routes to `feedback_agent`. |
 | `feedback_agent` | **Feedback Agent** | `query`, `retrieval_metrics`, `generation_metrics`, `cycle_count`, `missing_aspects`, `retrieval_critique` | `feedback_diagnosis`, `cycle_count` | Diagnoses defect root cause, formulates actionable query remediation, increments `cycle_count`. If `cycle_count >= 3` → routes to `fallback`. |
-| `fallback` | Circuit Breaker | `original_query`, `feedback_diagnosis` | `final_response` | Formulates transparent, helpful "cannot answer" message detailing what specific data was missing. |
+| `fallback` | **Fallback Circuit Breaker** (FR-11) | `original_query` / `query`, `routing_decision`, `cycle_count`, `final_response`, `documents`, `feedback_diagnosis`, `missing_aspects`, `unfaithful_statements` | `final_response`, `circuit_breaker_tripped` | Transparent fail-safe terminal node. Activated when retries reach max limit (`cycle_count >= 3`) or query is out-of-scope. Employs 3-tier response generation: (1) extracts best-effort LLM generation with high-visibility engineering warning & disclaimer, (2) formats partial verified chunk evidence if generation was bypassed, or (3) clarifies that the specific data is unavailable in uploaded documents with required ingestion guidance. |
 
 #### Routing & Conditional Edges
 
@@ -755,8 +755,6 @@ Agentic_RAG/
 │   │   ├── planner_agent_user.jinja2        # Planner Agent user prompt + few-shots
 │   │   ├── orchestrator_agent_system.jinja2 # Orchestrator Agent worker allocation prompt
 │   │   ├── orchestrator_agent_user.jinja2   # Orchestrator sub-query assignment prompt
-│   │   ├── synthesizer_agent_system.jinja2  # Synthesizer Agent fusion & citation prompt
-│   │   ├── synthesizer_agent_user.jinja2    # Synthesizer Agent user prompt + few-shots
 │   │   ├── retrieval_grader_system.jinja2   # Reference-Free Retrieval Grader system prompt
 │   │   ├── retrieval_grader_user.jinja2     # Reference-Free Retrieval Grader user prompt + few-shots
 │   │   ├── generator_agent_system.jinja2    # Grounded Generator system prompt
