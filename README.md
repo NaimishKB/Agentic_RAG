@@ -917,60 +917,60 @@ flowchart TD
         Start([User Query]) --> PlannerNode["🎯 planner Adapter Node"]
         
         subgraph PlannerSub ["Planner Agent Subgraph (PlannerAgentState)"]
-            P_Exec["Intent Classification\n& Sub-Query Planning"]
+            P_Exec["Intent Classification & Sub-Query Planning"]
         end
-        PlannerNode <--> PlannerSub
+        PlannerNode <--> P_Exec
 
-        PlannerNode -->|rag_retrieval| OrchNode["⚡ plan_orchestration Adapter Node"]
-        PlannerNode -->|direct_answer| Final([Return Direct Response])
-        PlannerNode -->|out_of_scope| FallbackNode["Fallback Node"] --> Final
+        PlannerNode -->|"rag_retrieval"| OrchNode["⚡ plan_orchestration Adapter Node"]
+        PlannerNode -->|"direct_answer"| Final([Return Direct Response])
+        PlannerNode -->|"out_of_scope"| FallbackNode["Fallback Node"] --> Final
 
         subgraph WorkerSubgraphs ["Dynamic Scatter-Gather Sub-Agents (WorkerInputState)"]
-            OrchNode -->|Send WorkerInputState| W1["narrative_worker\n(Manuals & Guidelines)"]
-            OrchNode -->|Send WorkerInputState| W2["tabular_worker\n(Discharge & Sizing Tables)"]
-            OrchNode -->|Send WorkerInputState| W3["mcp_worker\n(FastAPI MCP Power Tools)"]
-            W1 & W2 --> Qdrant[(Qdrant Vector DB\n4,064 Chunks)]
-            W3 --> MCPServer["🛠️ FastAPI MCP Server\n(Port 8602)"]
-            W1 & W2 & W3 --> AggNode["📦 aggregate_results Node\n(Fan-In via merge_sub_agent_results)"]
+            OrchNode -->|"Send WorkerInputState"| W1["narrative_worker: Manuals & Guidelines"]
+            OrchNode -->|"Send WorkerInputState"| W2["tabular_worker: Discharge & Sizing Tables"]
+            OrchNode -->|"Send WorkerInputState"| W3["mcp_worker: FastAPI MCP Power Tools"]
+            W1 & W2 --> Qdrant[("Qdrant Vector DB: 4,064 Chunks")]
+            W3 --> MCPServer["🛠️ FastAPI MCP Server: Port 8602"]
+            W1 & W2 & W3 --> AggNode["📦 aggregate_results Node"]
         end
 
         AggNode --> SynthNode["🧩 synthesizer Adapter Node"]
         subgraph SynthSub ["Synthesizer Subgraph (SynthesizerAgentState)"]
-            S_Exec["Deterministic Fair-Share Fusion\n& Citation Deduplication"]
+            S_Exec["Deterministic Fair-Share Fusion & Citation Deduplication"]
         end
-        SynthNode <--> SynthSub
+        SynthNode <--> S_Exec
 
         SynthNode --> PreGuardNode{"🛡️ retrieval_grader Adapter Node"}
         subgraph GraderSub ["Retrieval Grader Subgraph (RetrievalGraderAgentState)"]
             G_Exec["Reference-Free CRAG Sufficiency Check"]
         end
-        PreGuardNode <--> GraderSub
+        PreGuardNode <--> G_Exec
 
-        PreGuardNode -->|is_sufficient = True\nor cycle >= max_cycles (best-effort)| GenNode["✍️ generator Adapter Node"]
+        PreGuardNode -->|"is_sufficient = True or cycle >= max_cycles"| GenNode["✍️ generator Adapter Node"]
         subgraph GenSub ["Generator Subgraph (GeneratorAgentState)"]
-            Gen_Exec["Grounded Answer Synthesis\n(num_predict=8192)"]
+            Gen_Exec["Grounded Answer Synthesis (num_predict=8192)"]
         end
-        GenNode <--> GenSub
+        GenNode <--> Gen_Exec
 
-        PreGuardNode -->|is_sufficient = False\nand cycle < max_cycles| FeedNode["🔁 feedback Adapter Node"]
+        PreGuardNode -->|"is_sufficient = False and cycle < max_cycles"| FeedNode["🔁 feedback Adapter Node"]
 
         GenNode --> PostGuardNode{"🛡️ generation_guardrail Adapter Node"}
         subgraph GuardSub ["Guardrail Subgraph (GenerationGuardrailState)"]
             Guard_Exec["Single-Pass Faithfulness & Groundedness"]
         end
-        PostGuardNode <--> GuardSub
+        PostGuardNode <--> Guard_Exec
 
-        PostGuardNode -->|is_grounded = True| Final
-        PostGuardNode -->|is_grounded = False\nand cycle < max_cycles| FeedNode
+        PostGuardNode -->|"is_grounded = True"| Final
+        PostGuardNode -->|"is_grounded = False and cycle < max_cycles"| FeedNode
 
         subgraph FeedSub ["Feedback Subgraph (FeedbackAgentState)"]
             F_Exec["Defect Diagnosis & Remediation Plan"]
         end
-        FeedNode <--> FeedSub
+        FeedNode <--> F_Exec
 
-        FeedNode -->|"cycle_count += 1\nRe-plan with Diagnostic Hints"| PlannerNode
+        FeedNode -->|"cycle_count += 1: Re-plan with Diagnostic Hints"| PlannerNode
 
-        PostGuardNode -->|is_grounded = False\nand cycle >= max_cycles (circuit breaker)| FallbackNode
+        PostGuardNode -->|"is_grounded = False and cycle >= max_cycles"| FallbackNode
     end
 ```
 
