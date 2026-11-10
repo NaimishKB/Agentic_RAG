@@ -1,6 +1,6 @@
 # Agentic RAG — Small Hydropower Plant (SHP) Knowledge System
 
-> An **enterprise-grade, cost-effective Agentic RAG pipeline** for Small Hydropower Plant (SHP) operations, maintenance & knowledge management — built with **LangGraph**, **LangChain**, **Ollama**, and developed using **Spec-Driven Development (SDD)** principles. Fully on-prem capable, no external LLM API dependency.
+> An **Cost-effective and fully on-prem, Agentic RAG pipeline** for Small Hydropower Plant (SHP) operations, maintenance & knowledge management — built with **LangGraph**, **LangChain**, **Ollama**, and developed using **Spec-Driven Development (SDD)** principles. Fully on-prem capable, no external LLM API dependency.
 
 ---
 
@@ -33,7 +33,7 @@
 | **Goal** | Build an enterprise-grade, cost-effective Agentic RAG pipeline deployable fully on-prem or on any cloud infrastructure — no external LLM API required. |
 | **Target Domain** | Small Hydropower Plant (SHP) — operations, maintenance, fault diagnosis & knowledge management. |
 | **Data Scale** | ~2 GB corpus: PDF manuals, Word reports, scanned images, plain text, JPEG/PNG drawings. |
-| **LLM** | `qwen3:9b` via **Ollama** (local inference, fully air-gapped capable) |
+| **LLM** | `qwen3.5:9b` via **Ollama** (local inference, fully air-gapped capable) |
 | **Embedding Model** | `Qwen3-Embedding-0.6B` (local, via Ollama or sentence-transformers) |
 | **Vector DB** | **QDrant** (self-hosted, persistent, production-grade) |
 | **Document Parsing** | **Multi-Tier Smart Parser** — `pymupdf4llm` + `Docling` GPU Vision OCR + `RapidOCR` + Office DOM (`python-pptx`, `python-docx`, `openpyxl`, `xlrd`) |
@@ -85,12 +85,14 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 | FR-10 | **Feedback Agent**: Diagnostic reflection on retrieval or generation defects, formulating actionable remediation hints for the Planner Agent and advancing cycle count (loops back if cycle < 3, routes to fallback if cycle >= 3) | [x] Operational (src/agents/feedback/) |
 | FR-11 | **Fallback Circuit Breaker**: Graceful cannot-answer response upon exceeding max retry cycles (3). Features 3-tier recovery: extracts best-effort LLM generation with engineering disclaimers, surfaces partial verified chunk evidence, or provides clear notice when data is unavailable in uploaded documents | [x] Operational (src/agents/fallback/) |
 | FR-12 | **Session Conversation Memory**: In-Memory `MemorySaver` checkpointing across turns (upgradeable to SQLite for persistent auditing) | [x] Operational (src/agents/main_agent.py) |
+| FR-13 | **Asynchronous REST API Server (FastAPI)**: Decoupled REST API exposing pre-compiled LangGraph singleton with endpoints for health monitoring (`/api/v1/health`), execution (`/api/v1/chat`), and document uploads (`/api/v1/documents/upload`) | [x] Operational (src/api/) |
+| FR-14 | **Interactive Streamlit Web Portal**: Decoupled engineering interface featuring multi-turn chat, KaTeX LaTeX formulas, Fallback Circuit Breaker callouts, SHP sizing calculator, citations explorer, and live telemetry metrics | [x] Operational (ui/) |
 
 #### Non-Functional Requirements
 
 | # | Requirement | Target |
 |---|---|---|
-| NFR-01 | End-to-end query latency (p95) | < 5.0s on CPU/local GPU |
+| NFR-01 | End-to-end query latency (p95) | < 1.5-2.5 minutes on CPU/local GPU |
 | NFR-02 | Faithfulness score (Deepeval) | > 0.90 |
 | NFR-03 | Answer Relevance score (Deepeval) | > 0.88 |
 | NFR-04 | Context Recall (Deepeval) | > 0.85 |
@@ -386,11 +388,11 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase
 
 METRICS = [
-    FaithfulnessMetric(threshold=0.90, model="ollama/qwen3:9b"),
-    AnswerRelevancyMetric(threshold=0.88, model="ollama/qwen3:9b"),
-    ContextualPrecisionMetric(threshold=0.85, model="ollama/qwen3:9b"),
-    ContextualRecallMetric(threshold=0.85, model="ollama/qwen3:9b"),
-    ContextualRelevancyMetric(threshold=0.80, model="ollama/qwen3:9b"),
+    FaithfulnessMetric(threshold=0.90, model="ollama/qwen3.5:9b"),
+    AnswerRelevancyMetric(threshold=0.88, model="ollama/qwen3.5:9b"),
+    ContextualPrecisionMetric(threshold=0.85, model="ollama/qwen3.5:9b"),
+    ContextualRecallMetric(threshold=0.85, model="ollama/qwen3.5:9b"),
+    ContextualRelevancyMetric(threshold=0.80, model="ollama/qwen3.5:9b"),
 ]
 ```
 
@@ -566,7 +568,7 @@ python -m src.ingestion.parser --raw-dir ./data/raw --parsed-dir ./data/parsed -
 
 ### Markdown-Aware Semantic Chunking (`src/ingestion/chunker.py`)
 
-The chunking pipeline ([`src/ingestion/chunker.py`](file:///d:/GenAi_Code/Agentic_RAG/src/ingestion/chunker.py)) is specifically engineered for high-precision technical retrieval and optimized for smaller/local LLMs (`qwen3:9b`):
+The chunking pipeline ([`src/ingestion/chunker.py`](file:///d:/GenAi_Code/Agentic_RAG/src/ingestion/chunker.py)) is specifically engineered for high-precision technical retrieval and optimized for smaller/local LLMs (`qwen3.5:9b`):
 
 1. **Context Breadcrumb Injection**:
    - Every chunk automatically inherits its complete document hierarchy (e.g. `[Source: Madkini flood peak report.doc | Location: Slide/Page 3 | Section: Flood Frequency Analysis > Gumbel Distribution]`).
@@ -637,7 +639,7 @@ python -m src.ingestion.embedder --force
 
 ---
 
-### 4.3 Qdrant Vector Indexing & Hybrid Retrieval Engine
+### 4.3 Qdrant Vector Indexing & Dense Retrieval Engine
 
 The vector indexer ([`src/ingestion/indexer.py`](file:///d:/GenAi_Code/Agentic_RAG/src/ingestion/indexer.py)) ingests embedded chunks into the `shp_knowledge` Qdrant collection for high-speed similarity search and payload filtering.
 
@@ -750,6 +752,10 @@ http://localhost:8000/docs
 ```text
 Agentic_RAG/
 ├── src/
+│   ├── api/
+│   │   ├── __init__.py                      # Package entry point
+│   │   ├── app.py                           # FastAPI application server (lifespan, CORS, routes)
+│   │   └── schemas.py                       # Pydantic v2 request, response, and telemetry models
 │   ├── prompts/
 │   │   ├── planner_agent_system.jinja2      # Planner Agent system prompt
 │   │   ├── planner_agent_user.jinja2        # Planner Agent user prompt + few-shots
@@ -814,7 +820,19 @@ Agentic_RAG/
 │   ├── evals/
 │   │   ├── golden_dataset.json              # Hand-labeled SHP QA pairs (LLMTestCase format)
 │   │   └── run_deepeval.py                  # Deepeval evaluation runner
+│   ├── api/                                 # FastAPI Server & REST Schemas
+│   │   ├── app.py                           # Async REST API & LangGraph singleton lifespan
+│   │   └── schemas.py                       # Pydantic v2 request/response models
 │   └── main.py                              # CLI entry point
+├── ui/                                      # Streamlit Interactive Web Application
+│   ├── app.py                               # Streamlit main entry point (wide layout)
+│   ├── api_client.py                        # Resilient HTTP client for FastAPI
+│   ├── runner.py                            # Programmatic runner entry point
+│   └── components/                          # Modular UI widgets
+│       ├── sidebar.py                       # System diagnostics, telemetry, file upload
+│       ├── chat_view.py                     # Multi-turn chat & circuit breaker banner
+│       ├── citations_view.py                # Collapsible verified source explorer
+│       └── calculator.py                    # Hydro sizing & turbine selector calculator
 ├── data/
 │   ├── raw/                              # Raw SHP documents (PDF, DOCX, PPTX, XLS, etc.)
 │   ├── parsed/                           # Structured Markdown output + metadata.json
@@ -874,7 +892,9 @@ python -m src.ingestion.indexer --recreate
 python -m src.ingestion.indexer --query "Kaplan turbine efficiency curve" --top-k 3
 ```
 
-### 5. Run the Agent & Interactive CLI
+### 5. Run the Agent & User Interfaces
+
+#### A. Interactive CLI
 ```powershell
 # Interactive Multi-Turn Chat (with In-Memory Checkpointing)
 python src/main.py
@@ -884,7 +904,40 @@ python src/main.py --check
 
 # Single Query Execution
 python src/main.py "Compare Francis vs Pelton turbines for 120m net head and 2.0 m3/s discharge in high quartz silt conditions"
+```
 
+#### B. FastAPI Asynchronous Backend Server (Port 8000)
+```powershell
+# Start server with auto-reloading
+python src/api/app.py
+# or via uv script alias:
+uv run server
+```
+- **Interactive Swagger Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- **ReDoc Technical Specification**: [http://localhost:8000/redoc](http://localhost:8000/redoc)
+- **Health Check Probe**: `GET http://localhost:8000/api/v1/health`
+- **Execution Endpoint**: `POST http://localhost:8000/api/v1/chat`
+
+#### C. Streamlit Web Engineering Portal (Port 8501)
+```powershell
+# Start Streamlit Frontend
+streamlit run ui/app.py
+# or via uv script alias:
+uv run ui
+# or via runner:
+python ui/runner.py
+```
+- **Web UI URL**: [http://localhost:8501](http://localhost:8501)
+- **Features**:
+  - 💬 **Multi-Turn Engineering Chat**: Markdown + KaTeX LaTeX equations ($P = \rho g Q H \eta$).
+  - ⚠️ **Circuit Breaker Callout**: High-visibility warnings when 3-cycle fallback activates.
+  - ⚙️ **SHP Sizing Calculator**: Live hydraulic power, annual MWh generation, and turbine envelope selector.
+  - 📚 **Citations Inspector**: Expandable technical source verification with similarity scores.
+  - 📊 **Real-Time Telemetry**: Live latency, self-correction cycle counts, and CRAG sufficiency checks.
+  - 📤 **Document Ingestion Portal**: Drag-and-drop DPR, manual, and spec uploads.
+
+#### D. DeepEval Acceptance Benchmark Runner
+```powershell
 # DeepEval Acceptance Benchmark Runner (Phase 7)
 python -m src.evals.run_deepeval -n 5
 
@@ -922,6 +975,22 @@ RETRIEVER_SCORE_THRESHOLD=0.65
 MAX_REWRITE_ATTEMPTS=3
 MAX_GENERATION_ATTEMPTS=2
 
+# Agent Latency Timeouts (seconds) & Max Generation Tokens
+PLANNER_TIMEOUT_S=60
+PLANNER_MAX_TOKENS=1024
+ORCHESTRATOR_TIMEOUT_S=90
+ORCHESTRATOR_MAX_TOKENS=1024
+RETRIEVAL_GRADER_TIMEOUT_S=90
+RETRIEVAL_GRADER_MAX_TOKENS=512
+GENERATOR_TIMEOUT_S=200
+GENERATOR_MAX_TOKENS=1024
+GENERATION_GUARDRAIL_TIMEOUT_S=90
+GENERATION_GUARDRAIL_MAX_TOKENS=512
+FEEDBACK_TIMEOUT_S=90
+FEEDBACK_MAX_TOKENS=512
+QDRANT_TIMEOUT_S=30
+MCP_TIMEOUT_S=15
+
 # LangSmith (optional — for tracing during development)
 LANGCHAIN_TRACING_V2=false
 LANGCHAIN_API_KEY=
@@ -942,3 +1011,4 @@ LANGSMITH_PROJECT=agentic-rag-shp
 | **Phase 5: Retrieval Grader, Generator & Guardrails** | Reference-Free Retrieval Sufficiency Grader (CRAG) + Grounded Generator (`qwen3.5:9b`) + Post-Gen Faithfulness Guardrail + Diagnostic Feedback Agent | ✅ Complete & Verified |
 | **Phase 6: Graph Wiring & In-Memory Checkpointing** | Connect LangGraph StateGraph, conditional edges, cycle counter circuit breaker, and In-Memory RAM checkpointing (`MemorySaver`) for single-session runs (upgradeable to SQLite for audit tracing) | ✅ Complete & Verified |
 | **Phase 7: Evaluation Benchmark & CLI** | Build 52-case golden `LLMTestCase` dataset (`src/evals/golden_dataset.json`); automated DeepEval benchmark runner (`src/evals/run_deepeval.py`) against Spec 06 criteria; rich interactive CLI (`src/main.py`) | ✅ Complete & Verified |
+| **Phase 8: Web UI & REST API** | Decoupled FastAPI Server (port 8000) with LangGraph singleton lifecycle + Streamlit Engineering Portal (port 8501) with live telemetry, hydro sizing calculator, citations inspector, and circuit-breaker alerts | ✅ Complete & Verified |
