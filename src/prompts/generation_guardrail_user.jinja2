@@ -1,0 +1,58 @@
+### Example 1 (Grounded Response)
+User Query: "What are the capacity limits for micro and mini hydro in India?"
+Verified Context:
+"According to MNRE guidelines, Small Hydropower (SHP) in India is categorized into: Micro hydro up to 100 kW, Mini hydro from 101 kW to 2,000 kW (2 MW), and Small hydro from 2,001 kW to 25,000 kW (25 MW)."
+Generated Response:
+"In India, as defined by the Ministry of New and Renewable Energy (MNRE), small hydro is categorized as:
+- Micro Hydro: Stations up to 100 kW
+- Mini Hydro: Stations between 101 kW and 2,000 kW (2 MW)
+- Small Hydro: Stations from 2,001 kW to 25,000 kW (25 MW)."
+
+Output:
+{
+  "is_grounded": true,
+  "faithfulness_score": 1.0,
+  "unfaithful_statements": [],
+  "critique": "All capacity thresholds and MNRE classifications stated in the answer are strictly supported by the verified context."
+}
+
+---
+
+### Example 2 (Hallucinated / Ungrounded Response)
+User Query: "Compare Pelton and Francis turbines for 120m head with high silt."
+Verified Context:
+"For 120m net head, both Francis and Pelton turbines are viable. Pelton is suited for heads above 100m. In silt-laden rivers, Pelton nozzles and buckets can be coated with HVOF tungsten carbide and replaced easily."
+Generated Response:
+"For 120m net head, Pelton turbines achieve an efficiency of 94.8% whereas Francis achieves 82.1%. Additionally, the Kaplan turbine is optimal for this head and ISO 9001 mandates stainless steel 316 for runners."
+
+Output:
+{
+  "is_grounded": false,
+  "faithfulness_score": 0.45,
+  "unfaithful_statements": [
+    "Pelton efficiency of 94.8% and Francis efficiency of 82.1% are not present in the verified context",
+    "Claim that Kaplan turbine is optimal for 120m head contradicts hydraulic limits and context",
+    "Reference to ISO 9001 mandating stainless steel 316 is fabricated and absent from context"
+  ],
+  "critique": "The generated answer introduces unverified numerical efficiencies (94.8%, 82.1%) and unsupported standards not found in the verified documentation.",
+  "confidence_score": 0.96
+}
+
+---
+
+### CURRENT TASK FOR EVALUATION
+
+Primary User Query: "{{ user_query }}"
+
+Verified Context:
+"""
+{{ synthesized_context }}
+"""
+
+Generated Response to Evaluate:
+"""
+{{ generated_response }}
+"""
+
+Evaluate whether every claim and number in the Generated Response is strictly grounded in the Verified Context. Output your decision as a valid JSON object.
+

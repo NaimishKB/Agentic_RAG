@@ -1,0 +1,64 @@
+### Example 1 (Sufficient Context)
+Query: "Select suitable turbine type for 120m head and 2.5 m3/s discharge with high quartz silt content."
+Sub-Queries Planned:
+- sq_1: "Turbine selection for 120m head"
+- sq_2: "Silt erosion countermeasures for Francis vs Pelton turbines"
+Context:
+"### 1. Head Range Selection
+For net head of 120m, both Francis and Pelton turbines are viable. Francis operates efficiently between 50m to 250m. Pelton is applicable for heads above 100m.
+### 2. Silt Resistance
+In streams carrying hard quartz silt, Pelton turbines are preferred because nozzles and runner buckets can be inspected and replaced more economically than Francis casing and guide vanes. Hard tungsten carbide (WC-Co-Cr) coatings extend service life."
+
+Output:
+{
+  "is_sufficient": true,
+  "missing_aspects": [],
+  "critique": "Retrieved context provides head range operating criteria (120m applies to both Francis and Pelton) and detailed quartz silt wear comparison favoring Pelton with tungsten carbide coating.",
+  "confidence_score": 0.95
+}
+
+---
+
+### Example 2 (Insufficient Context)
+Query: "Determine penstock wall thickness for 150m head, design discharge 3.0 m3/s, and check CEA environmental flow regulations."
+Sub-Queries Planned:
+- sq_1: "Penstock wall thickness formula for 150m head and 3 m3/s"
+- sq_2: "CEA environmental flow regulations for run-of-river plants"
+Context:
+"### 1. Plant Civil Works
+The power intake is a bottom intake with trash rack. Water flows into a surface desilting basin designed for 0.2mm particle removal."
+
+Output:
+{
+  "is_sufficient": false,
+  "missing_aspects": [
+    "Penstock diameter and minimum shell wall thickness formulas (ASCE / IS 11639)",
+    "Allowable design stress and water hammer pressure allowances for 150m head",
+    "CEA mandatory environmental flow release percentages during lean and monsoon seasons"
+  ],
+  "critique": "Retrieved context only describes intake and desilting basin civil features; it completely lacks penstock thickness formulas, design pressure, and CEA environmental flow norms.",
+  "confidence_score": 0.98
+}
+
+---
+
+### CURRENT TASK FOR EVALUATION
+
+Primary User Query: "{{ user_query }}"
+
+{% if sub_queries %}
+Sub-Queries Planned by Planner:
+{% for sq in sub_queries %}
+- [{{ sq.get('sub_query_id', 'sq') }}] Filter: {{ sq.get('target_filter', 'any') }}
+  Query: "{{ sq.get('query_text', '') }}"
+  Rationale: {{ sq.get('rationale', '') }}
+{% endfor %}
+{% endif %}
+
+Synthesized Context Dossier:
+"""
+{{ synthesized_context }}
+"""
+
+Output your evaluation JSON:
+

@@ -1,0 +1,82 @@
+{
+  "timestamp": "2026-11-06T10:54:15Z",
+  "total_cases_evaluated": 1,
+  "overall_passed": false,
+  "aggregates": {
+    "retrieval_precision": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.85,
+      "passed": true,
+      "count": 1
+    },
+    "retrieval_recall": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.85,
+      "passed": true,
+      "count": 1
+    },
+    "contextual_relevancy": {
+      "mean_score": 0.85,
+      "pass_rate": 1.0,
+      "target": 0.8,
+      "passed": true,
+      "count": 1
+    },
+    "faithfulness": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.9,
+      "passed": true,
+      "count": 1
+    },
+    "answer_relevancy": {
+      "mean_score": 0.0,
+      "pass_rate": 0.0,
+      "target": 0.88,
+      "passed": false,
+      "count": 1
+    },
+    "query_latency_p95": {
+      "value_seconds": 768.78,
+      "target": 60.0,
+      "passed": false
+    },
+    "fallback_rate": {
+      "value_rate": 1.0,
+      "target": 0.1,
+      "passed": false
+    }
+  },
+  "test_results": [
+    {
+      "id": "GD-002",
+      "category": "Single-Hop Lookup",
+      "input": "Why do the cost-estimation equations for Kaplan and Francis turbines in Aggidis et al. (2010) split into multiple flow-rate bands, whereas Pelton turbines follow a single continuous formula? Specify the runner diameter thresholds associated with these boundaries.",
+      "expected_output": "The cost bands for Kaplan and Francis turbines reflect changes in the runner manufacturing process as turbine size increases, whereas the Pelton turbine manufacturing process remains generally uniform across sizes. For Kaplan turbines, the boundary between the two price bands occurs at a flow rate of 5.0 m3/s, corresponding to an outer runner diameter (De) of 0.5 m to 0.8 m. For Francis turbines, the first price band boundary (at 2.5 m3/s) corresponds to an outlet runner diameter (D3) of about 0.5 m, and the second boundary (at 10.0 m3/s) corresponds to a runner diameter of about 1.0 m. Up to these threshold diameters, Kaplan and Francis runners are manufactured as a one-piece steel casting; for larger diameters, blades are welded to the crown, and very large units are manufactured in sections.",
+      "actual_output": "## ⚠️ Partial Engineering Data Notice (3 Cycles Completed)\n\nThe system performed **3 search and self-correction cycles** for your inquiry:\n> *\"Why do the cost-estimation equations for Kaplan and Francis turbines in Aggidis et al. (2010) split into multiple flow-rate bands, whereas Pelton turbines follow a single continuous formula? Specify the runner diameter thresholds associated with these boundaries.\"*\n\nComplete engineering verification could not be completed because certain necessary parameters are missing from the uploaded documents. However, the following **partial information was located in the knowledge base**:\n\n### 📋 Verified Partial Findings:\n**Synthesized Context Summary**:\nConsolidated evidence for query 'Why do the cost-estimation equations for Kaplan and Francis turbines in Aggidis et al. (2010) split into multiple flow-rate bands, whereas Pelton turbines follow a single continuous formula? Specify the runner diameter thresholds associated with these boundaries.' covering 8 verified technical chunks and 0 programmatic outputs across 2 unique sources.\n\n**Relevant Excerpts Retrieved**:\n- **Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf** (*Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the development of existing potential > G.A. Aggidis<sup>a,*</sup> , E. Luchinskaya<sup>a</sup> , R. Rothschild<sup>b</sup> , D.C. Howard<sup>c</sup> > 5.1. Kaplan turbine costs*): \"[Source: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf | Section: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > Th...\"\n- **Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf** (*Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the development of existing potential > G.A. Aggidis<sup>a,*</sup> , E. Luchinskaya<sup>a</sup> , R. Rothschild<sup>b</sup> , D.C. Howard<sup>c</sup> > 5.1. Kaplan turbine costs*): \"[Source: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf | Section: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > Th...\"\n- **Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf** (*Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the development of existing potential > G.A. Aggidis<sup>a,*</sup> , E. Luchinskaya<sup>a</sup> , R. Rothschild<sup>b</sup> , D.C. Howard<sup>c</sup> > 5.3. Pelton turbine costs*): \"[Source: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf | Section: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > Th...\"\n- **Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf** (*Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the development of existing potential > G.A. Aggidis<sup>a,*</sup> , E. Luchinskaya<sup>a</sup> , R. Rothschild<sup>b</sup> , D.C. Howard<sup>c</sup> > 5.1. Kaplan turbine costs*): \"[Source: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf | Section: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > Th...\"\n\n---\n\n### ⚠️ Engineering Warning & Disclaimer:\n> **Disclaimer**: The findings above represent only partial context available in the current plant records. **This information may not be totally correct or complete** for physical engineering design decisions.\n\n### 🔍 Parameters Not Found in Uploaded Documents:\n- **Technical data regarding specify**\n- **Technical data regarding multiple**\n- **Technical data regarding whereas**\n- **Technical data regarding thresholds**\n- **Technical data regarding estimation**\n\n### 🛠️ Recommended Action:\nReformulate retrieval sub-queries to explicitly search for: Technical data regarding specify, Technical data regarding multiple, Technical data regarding whereas. Target engineering manuals or invoke relevant MCP engineering tools.\n\n*(Please upload the missing equipment specifications or project datasheets before proceeding with design calculations)*",
+      "routing_decision": "rag_retrieval",
+      "duration_seconds": 768.7798198,
+      "fallback_triggered": true,
+      "scores": {
+        "retrieval_precision": 1.0,
+        "retrieval_recall": 1.0,
+        "contextual_relevancy": 0.85,
+        "faithfulness": 1.0,
+        "answer_relevancy": 0.0
+      },
+      "reasons": {
+        "faithfulness": "The score is 1.00 because the actual output aligns perfectly with the retrieval context, as there are no contradictions present.",
+        "answer_relevancy": "The score is 0.00 because the response provided no technical answers, instead offering meta-commentary on data retrieval limitations and system disclaimers that completely ignored the specific request for turbine equation details and runner diameter thresholds.",
+        "retrieval_precision": "The score is 1.00 because Node 1 in retrieval contexts provides \"Relevant SHP engineering evidence,\" placing the perfect answer right at the top! With no irrelevant nodes ranked higher, this ranking achieves maximum precision, making it impossible to go any better than this perfect result.",
+        "retrieval_recall": "Contextually relevant technical evidence verified against requirements."
+      },
+      "retrieval_context": [
+        "[Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf - Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the development of existing potential > G.A. Aggidis<sup>a,*</sup> , E. Luchinskaya<sup>a</sup> , R. Rothschild<sup>b</sup> , D.C. Howard<sup>c</sup> > 5.1. Kaplan turbine costs]: [Source: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf | Section: Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010, > The costs of small-scale hydro power production: Impact on the",
+        "[Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09.pdf - Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09 > Estimating E&M powerhouse costs > Table 1 – Hydro power parameters and E&M cost statistics for data series, years 2002-2008.**]: [Source: Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09.pdf | Section: Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09 > Estimating E&M powerhouse costs > Table 1 – Hydro power parameters and E&M cost statistics for data series, years 2002-2",
+        "Section 5 & Section 6: Kaplan boundary at Q = 5.0 m3/s (De = 0.5-0.8 m); Francis boundaries at Q = 2.5 m3/s and 10.0 m3/s (D3 ≈ 0.5 m and 1.0 m). Transition from one-piece steel casting to welding blades to crown."
+      ]
+    }
+  ]
+}

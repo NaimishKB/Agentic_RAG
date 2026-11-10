@@ -1,0 +1,532 @@
+{
+  "dataset_metadata": {
+    "title": "Small Hydro Power (SHP) & Hydrology Agentic RAG Golden Dataset",
+    "version": "1.0",
+    "total_questions": 30,
+    "distribution": {
+      "policy_regulatory_and_procedural": "85% (25 questions)",
+      "numerical_and_thresholds": "15% (3 numerical/threshold + 2 adversarial trap questions)"
+    },
+    "compatible_frameworks": [
+      "DeepEval",
+      "RAGAS",
+      "LangSmith",
+      "TruLens"
+    ],
+    "corpus_documents": [
+      "allotmnet of shp.pdf",
+      "CLEARANCES.pdf",
+      "EIA and related Investigations.pdf",
+      "AK-DPR Aug 2017.pdf",
+      "AK-Overview of SHP Development.pdf",
+      "AK - Hydrology of Ungauged Catchment.pdf",
+      "Different Types of Investigationss.pdf",
+      "Estimation of design flood peak CWC 1 by 73.pdf",
+      "Aggidis, et al (2010) - The costs of small-scale existing potential.pdf",
+      "Alvarado-Ancieta (2009) - Estimating E&M Powerhouse Cost.pdf"
+    ]
+  },
+  "test_cases": [
+    {
+      "id": "GD-01",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Policy Lookup",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?",
+      "expected_output": "The three methods for SHP site allotment are the Bidding process, the MoU (Memorandum of Understanding) method, and the Swiss model of defence. Competitive bidding is used when a Pre-Feasibility Report (PFR) or Detailed Project Report (DPR) is available (or via pre-qualification merit lists when unavailable). The MoU method is preferred when there is very little or no competition. The Swiss model of defence is applied when there is total uncertainty regarding technology or tariff, giving the first bidder an opportunity to defend their bid.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 2): Site allotment/license - There are generally three methods to the site allotment: Bidding process, MoU method, Swiss model of defence.",
+        "allotmnet of shp.pdf (p. 3, 8): The project for which PFR/DPR is available shall be put on a competitive bidding... The project for which PFR/DPR are not available shall be allotted to the pre-qualified bidders.",
+        "allotmnet of shp.pdf (p. 16-17): MoU method... This method is generally preferred where there is very less or no competition. Swiss model of defense: It is applied where total uncertainty of technology, tariff etc. In this model an opportunity is given to first bidder to defend his bid."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf"
+      ],
+      "evaluation_criteria": "Must name all three methods (Bidding, MoU, Swiss model of defence) and accurately state the condition under which each is applied."
+    },
+    {
+      "id": "GD-02",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Procedural Rules",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?",
+      "expected_output": "Bids are invited for an upfront premium per MW subject to a minimum threshold premium (bids below the threshold are rejected), and the project is allotted to the highest bidder. If multiple bidders quote an identical premium per MW for a site, allotment is decided using a gradation list based on pre-qualification criteria. If no bid is received twice, the site is allotted to a government agency.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 5-7): Bids shall be invited for premium payable upfront. Upfront will be per MW for each project, subjected to a minimum threshold premium. If the bid received beneath the threshold will be rejected. Project will be allotted to the bidders making the highest bid. If more than one bidder bids the identical premium per MW for any site, a gradation list based on pre-qualification criterion shall be the basis for allotment. In case there is no bid for two times, the site is allotted to govt. agency."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf"
+      ],
+      "evaluation_criteria": "Must mention upfront premium per MW threshold, tie-breaking via pre-qualification gradation list, and allotment to a government agency after two failed bidding rounds."
+    },
+    {
+      "id": "GD-03",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Licensing & Enforcement",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What is the mandatory policy timeline for an Independent Power Producer (IPP) to achieve financial closure, and what are the penalties for non-compliance?",
+      "expected_output": "An IPP must achieve financial closure—defined as firm commitments for financing the entire project—within 12 months from the date of receiving all statutory approvals and clearances from the State and Central Governments. Failure to achieve financial closure within this window results in automatic cancellation of the site allotment and forfeiture of the upfront premium amounts, with no compensation payable to the IPP.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 24-25): Financial closure - The IPP shall achieve the financial closure within 12 months from the date of receipt of all statutory approvals and clearances given by the states and central Governments. Financial closure would imply firm commitments for the financing the entire project. The failure to get those will result in automatic cancellation of the allotment of the site, and forfeiture of upfront premium amounts. No compensation would be payable to IPP's in such instance."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf"
+      ],
+      "evaluation_criteria": "Must state the 12-month post-clearance timeline, definition of financial closure, automatic cancellation, upfront premium forfeiture, and zero compensation."
+    },
+    {
+      "id": "GD-04",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Ownership Models",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "Under which ownership modes do SHP project assets revert to the State Government free of cost, and under which mode does the developer retain ownership?",
+      "expected_output": "Under BOOT (Build, Own, Operate & Transfer), BOT (Build, Operate, Transfer), BOLT (Build, Operate, Lease, Transfer), and LROT (Lease, Rehabilitate, Operate, Transfer) modes, the entire project—including assets related to water structures and power generation—is transferred to the State Government free of cost after the specified licence period. The project can also be executed under the BOO (Build, Own, Operate) mode, which does not include a transfer clause.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 19-21): Ownership mode - The project may be on Build, Own, Operate & Transfer (BOOT) mode. May be on Build, Operate, Transfer (BOT) mode. May be on Build, Operate, Lease, Transfer (BOLT) mode. May be on Lease, Rehabilitate, Operate, Transfer (LROT) mode. In these modes, after specified period the entire project, including its assets related to water structures and power generation, shall be transferred to the state government, free of cost. It may be on Build, Own, Operate (BOO) mode."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf"
+      ],
+      "evaluation_criteria": "Must list BOOT, BOT, BOLT, and LROT as transfer modes (free of cost to State Government) and BOO as the non-transfer mode."
+    },
+    {
+      "id": "GD-05",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Contract Exit Policy",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "Under what condition can an IPP legally surrender an allotted SHP site back to the State Government?",
+      "expected_output": "An IPP may surrender the allotment back to the State Government if, upon completing the Detailed Project Report (DPR) within the stipulated timeframe, it establishes on verifiable grounds that the project is not techno-economically viable.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 26): Surrender of allotment - The IPP may surrender the allotment back to SG if on completion of the DPR, within the stipulated time frame, it has bounds to establish that the project is not techno-economically viable."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf"
+      ],
+      "evaluation_criteria": "Must cite completion of DPR within stipulated timeframe and proving lack of techno-economic viability."
+    },
+    {
+      "id": "GD-06",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Regulatory Governance",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "Under the EIA Notification 2006, how are hydroelectric projects categorized into Category A and Category B, and what happens if a state lacks a constituted SEIAA or SEAC?",
+      "expected_output": "Under the EIA Notification 2006, River Valley/Hydroelectric projects are classified into Category A if they involve >= 50 MW hydroelectric power generation or >= 10,000 ha of culturable command area, requiring prior clearance from the Central Government (MoEF) via the Expert Appraisal Committee (EAC). Category B covers projects < 50 MW and >= 25 MW (or < 10,000 ha culturable command area), requiring clearance from the State Environment Impact Assessment Authority (SEIAA) based on State EAC (SEAC) recommendations. In the absence of a duly constituted SEIAA or SEAC, a Category B project is treated as a Category A project.",
+      "retrieval_context": [
+        "EIA and related Investigations.pdf (p. 6-8): ENVIRONMENTAL IMPACT ASSESSMENT NOTIFICATION, 2006 - River Valley projects: Category A (i) >= 50 MW hydroelectric power generation; (ii) >= 10,000 ha. of culturable command area. Category B (i) < 50 MW >= 25 MW hydroelectric power generation; (ii) < 10,000 ha. of culturable command area. All Category 'A' project shall require prior environmental clearance from the Central Government (MoEF) on the recommendations of an Expert Appraisal Committee (EAC)... All Category 'B' projects will require prior environmental clearance from the State/UT Environment Impact Assessment Authority (SEIAA)... In absence of a duly constituted SEIAA or SEAC, a Category 'B' project shall be treated as a Category 'A' project."
+      ],
+      "source_documents": [
+        "EIA and related Investigations.pdf"
+      ],
+      "evaluation_criteria": "Must state MW and command area thresholds for Category A and B, respective authorities (MoEF/EAC vs SEIAA/SEAC), and the fallback rule elevating Category B to Category A."
+    },
+    {
+      "id": "GD-07",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Committee Governance",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What are the operational rules governing the Expert Appraisal Committee (EAC) and State EAC (SEAC) regarding tenure, site inspections, and decision-making?",
+      "expected_output": "The EAC and SEAC must be reconstituted every three years. Authorized committee members may inspect any project site(s) after giving at least seven days' prior notice to the applicant. Both committees function on the principle of collective responsibility; the Chairperson endeavors to reach a consensus, but if consensus cannot be achieved, the view of the majority prevails.",
+      "retrieval_context": [
+        "EIA and related Investigations.pdf (p. 9): Screening, Scoping and Appraisal Committees - EAC and SEAC shall be reconstituted every three years. Authorised members of the EAC and SEAC may inspect any site(s) connected with the project with prior notice of at least seven days to the applicant. EAC and SEACs shall function on the principle of collective responsibility. Chairperson shall endeavour to reach a consensus - if consensus cannot be reached, view of majority shall prevail."
+      ],
+      "source_documents": [
+        "EIA and related Investigations.pdf"
+      ],
+      "evaluation_criteria": "Must accurately state 3-year reconstitution, 7-day notice for site inspection, collective responsibility, and majority rule fallback."
+    },
+    {
+      "id": "GD-08",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Multi-Tier Approval",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "Walk through the four sequential stages required to obtain Forest Clearance for a small hydro project in India.",
+      "expected_output": "1. Application to District Forest Officer (DFO): Submit the application form with required maps, certificates, and documents involving multiple agencies. 2. Forest Valuation & Alternate Land Identification: Conduct a detailed evaluation of forest loss (quantified in monetary terms) and prepare a detailed compensatory afforestation scheme. 3. State Government Clearance: Following DFO approval, obtain clearances across five to six levels of State Government officials. 4. Central Government Clearance: Forward the file to the regional Ministry of Forest official, with final clearance granted by the Ministry of Forest in Delhi upon receipt of the State Government's compliance report.",
+      "retrieval_context": [
+        "CLEARANCES.pdf (p. 5-6): FOREST CLEARANCE - Losses are to be quantified and expressed in money... After receiving the compliance report from the state govt., complete clearance is issued. Stage 1: Application to District Forest Officer (documents, certificates, maps). Stage 2: Forest Valuation & alternate land Identification (detailed study on evaluation for loss of forest, detailed afforestation scheme). Stage 3: State Government Clearance (clearances from five to six level state government officials). Stage 4: Central Government Clearance (regional Ministry of Forest official, final clearance by Ministry of Forest in Delhi)."
+      ],
+      "source_documents": [
+        "CLEARANCES.pdf"
+      ],
+      "evaluation_criteria": "Must outline all four sequential stages from DFO to Ministry of Forest in Delhi, including afforestation and 5-6 state official levels."
+    },
+    {
+      "id": "GD-09",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "National Hydro Policy",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What are the key provisions of the Government of India's Policy on Hydro Power Development (1998, revised 2008) regarding local area development and state responsibilities?",
+      "expected_output": "The Government of India's Hydro Power Development Policy (announced August 1998, revised November 2008) mandates 1% free power from the project matched by a 1% contribution from the State Government for local area development to benefit the affected population. It also stipulates that concerned State Governments/developers must secure timely Environment & Forest (E&F) clearances for held-up projects, and places responsibility on the State Government to resolve land acquisition and local law-and-order agitations.",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 48-49): GOI POLICY ON HYDRO DEVELOPMENT - In Aug 1998, the Government of India announced a Policy on 'Hydro Power Development' and revised in Nov. 2008. Projects held up for environment and forest clearance, concerned State Govt./developer to get the timely E&F clearances. 1% of free power with a matching 1% support from State government for local area development to the affected local population. Problems such as local agitation (law & order), land acquisition etc. need be resolved by concerned State Government."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must mention Aug 1998 / Nov 2008 policy dates, 1% + 1% matching free power for local area development, timely E&F clearances, and state responsibility for law & order and land acquisition."
+    },
+    {
+      "id": "GD-10",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "RE Support Policy",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What fiscal incentives, tax exemptions, and regulatory mechanisms support renewable power deployment in India?",
+      "expected_output": "India's renewable energy support framework includes: (1) Fiscal & Tax Incentives: 100% Excise Duty exemption on many RE project components, a concessional 5% Customs Duty on selected components, a 10-year tax holiday, Accelerated Depreciation (AD), and Generation Based Incentives (GBI). (2) Regulatory Obligations & Tariffs: Renewable Purchase Obligations (RPOs) mandated under the Electricity Act 2003 and National Tariff Policy (adopted by 26 SERCs), Renewable Energy Certificates (RECs) to meet RPOs, State-level RE policies, and Feed-in/Preferential Tariffs to improve project bankability.",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 40): Support Mechanism for Renewable Power In India - State RE policies; Exemptions and other incentives: 100% exemption in Excise Duty for many RE project components, Concessional Customs Duty of 5% for selected RE project components, 10 year tax holiday; RPOs & RECs: RPOs are mandated by the Electricity Act 2003 and NTP, RPOs adopted by 26 SERCs, REC mechanism launched to fulfil the RPO obligations; Accelerated Depreciation (AD) and Generation based incentive; Feed in Tariffs/Preferential Tariffs."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must cover tax/duty exemptions (100% excise, 5% customs, 10-yr tax holiday), AD/GBI, RPO/REC under Electricity Act 2003 & NTP, and Feed-in Tariffs."
+    },
+    {
+      "id": "GD-11",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "International Climate Policy",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "What are the three core pledges under India's Intended Nationally Determined Contribution (INDC) for 2030?",
+      "expected_output": "India's INDC commitments for 2030 are: (1) Reduce the emissions intensity of its GDP by 33% to 35% by 2030 compared to 2005 levels; (2) Achieve approximately 40% cumulative electric power installed capacity from non-fossil fuel-based energy resources by 2030; and (3) Create an additional carbon sink of 2.5 to 3 billion tonnes of CO2 equivalent.",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 34): India's Intended Nationally Determined Contribution (INDC) - To reduce the emissions intensity of its GDP by 33 to 35% by 2030 from 2005 level; To achieve about 40% cumulative electric power installed capacity from non-fossil fuel based energy resources by 2030; To create additional Carbon Sink of 2.5-3 billion tonnes of CO2 equivalent."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must state all three INDC targets accurately."
+    },
+    {
+      "id": "GD-12",
+      "category": "Single-Hop Policy & Licensing",
+      "agentic_skill": "Appraisal Policy",
+      "hop_count": 1,
+      "query_type": "policy_regulatory",
+      "input": "Under the civil cost appraisal guidelines for hydroelectric projects, what items are classified under Direct Charges versus Indirect Charges?",
+      "expected_output": "Direct Charges comprise five heads: (I) Works (sub-divided from 'A'-Preliminary to 'Y'-Losses on Stock), (II) Establishment (engineering, supervision, and administration), (III) Tools & Plants (survey instruments, camp equipment, small tools), (IV) Suspense (kept NIL), and (V) Receipts and Recoveries (temporary buildings, special T&P, inspection vehicles). Indirect Charges comprise: (i) Capitalized value on abatement of land revenue, (ii) Audit & Account charges, (iii) Interest During Construction (IDC) on external loans, (iv) Financing Charges, and (v) Local Area Development Charges.",
+      "retrieval_context": [
+        "AK-DPR Aug 2017.pdf (p. 29-32): CIVIL COST APPRAISAL OF HYDRO ELECTRIC PROJECTS - Direct charges include I-Works, II-Establishment, III-Tools & Plants, IV-Suspense and V-Receipts and Recoveries. Indirect Charges include (i) Capitalised value of abatement of land revenue (ii) Audit & account charges (iii) IDC - interest during construction (iv) Financing Charges (v) Local area Development Charges."
+      ],
+      "source_documents": [
+        "AK-DPR Aug 2017.pdf"
+      ],
+      "evaluation_criteria": "Must clearly distinguish the 5 Direct Charge heads and 5 Indirect Charge heads."
+    },
+    {
+      "id": "GD-13",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Cross-Doc Policy Synthesis",
+      "hop_count": 2,
+      "query_type": "policy_regulatory",
+      "input": "How do the environmental clearance requirements for a 15 MW hydro project differ from a 35 MW project under the Sept 2006 MoEFCC notification, and what exception applies to the 15 MW project?",
+      "expected_output": "Under the MoEFCC September 2006 EIA Notification, a 35 MW project falls into Category B (< 50 MW and >= 25 MW), which requires prior Environmental Clearance from the State Environment Impact Assessment Authority (SEIAA) based on SEAC recommendations. Conversely, a 15 MW project is classified as a Small Hydro Power (SHP) project (< 25 MW) and does not require environmental clearance, except if the project is located within a 10 km buffer zone of protected/protracted areas.",
+      "retrieval_context": [
+        "CLEARANCES.pdf (p. 2): Envoirmental Clearance - SHP project less than 25 MW does not need any environment clearance as per MoEFCC Sept 2006 notification except those which are within 10 km of buffer zone of protracted areas.",
+        "EIA and related Investigations.pdf (p. 7-8): River Valley projects: Category A (i) >= 50 MW hydroelectric power generation; Category B (i) < 50 MW >= 25 MW hydroelectric power generation... All Category 'B' projects will require prior environmental clearance from the State/UT Environment Impact Assessment Authority (SEIAA)."
+      ],
+      "source_documents": [
+        "CLEARANCES.pdf",
+        "EIA and related Investigations.pdf"
+      ],
+      "evaluation_criteria": "Requires synthesizing EIA Notification 2006 Category B rules from EIA PDF with the <25 MW exemption and 10 km protected-area buffer exception from CLEARANCES PDF."
+    },
+    {
+      "id": "GD-14",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Cross-Doc Policy Synthesis",
+      "hop_count": 2,
+      "query_type": "policy_regulatory",
+      "input": "How does the choice of site allotment route (MoU vs. Competitive Bidding) affect the requirement for Techno-Economic Clearance (TEC) from the Central Electricity Authority (CEA)?",
+      "expected_output": "Under the SHP allotment policy, a project can be allotted via the MoU route (where developers submit PFR and DPR sequentially to the State Nodal Agency in low-competition settings) or via Competitive Bidding (based on upfront premium per MW). This allotment route directly dictates the capital cost threshold for Central Electricity Authority (CEA) Techno-Economic Clearance: projects allotted via the MoU route require CEA clearance if their cost exceeds Rs. 1000 Crores, whereas projects allotted via competitive bidding only require CEA clearance if their capital cost exceeds Rs. 2500 Crores (all inter-state projects also require CEA clearance; otherwise, TEC is granted by the State Government).",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 2-16): Site allotment/license - Bidding process, MoU method, Swiss model of defence.",
+        "CLEARANCES.pdf (p. 4): TECHNO-ECONOMIC Clearance by CEA if: Projects allotted through MoU route above Rs 1000 Crores; Projects allotted through competitive bidding if capital cost is above Rs. 2500 Crore; All inter-state projects; Otherwise by state government."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf",
+        "CLEARANCES.pdf"
+      ],
+      "evaluation_criteria": "Must connect the allotment mechanism in allotmnet of shp.pdf with the Rs. 1000 Cr (MoU) vs Rs. 2500 Cr (Bidding) CEA TEC thresholds in CLEARANCES.pdf."
+    },
+    {
+      "id": "GD-15",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Institutional Mapping",
+      "hop_count": 3,
+      "query_type": "policy_regulatory",
+      "input": "Compare the institutional roles of the Ministry of Power (MoP), MNRE, CEA, CERC, and CWC in Indian hydropower governance.",
+      "expected_output": "1. Ministry of Power (MoP): Responsible for large hydropower projects above 25 MW. 2. Ministry of New & Renewable Energy (MNRE): Nodal ministry responsible for Small Hydro Power (SHP) development up to 25 MW. 3. Central Electricity Authority (CEA): Issues technical guidelines/reports and grants Techno-Economic Concurrence (TEC) for inter-state projects, MoU projects above Rs. 1000 Cr, and competitively bid projects above Rs. 2500 Cr. 4. Central Electricity Regulatory Commission (CERC): Establishes tariff calculation guidelines and REC/RE tariff regulations for renewable technologies including SHP. 5. Central Water Commission (CWC): Grants water availability clearance for inter-state projects, provides Stage-I 'in-principle consent' via its Screening Committee for water resource projects, and publishes flood estimation methodologies (like Report 1/73 and Long Term Plan sub-zonal reports) and streamflow extension recommendations (Langbein's log-deviation method).",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 47-48): Ministry of Power is responsible for large Hydro above 25 MW. Ministry of New & Renewable Energy, Government of India is the nodal ministry for small hydropower development in India. Central Electricity Regulatory Commission announced the tariff calculation guidelines for renewable technologies including SHP. Central Electricity Authority has issued various hydro related reports and guidelines.",
+        "CLEARANCES.pdf (p. 2, 4): Water Availability: State Nodal Deptt. / CWC for Inter state project. TECHNO-ECONOMIC Clearance by CEA if Projects allotted through MoU route above Rs 1000 Crores, competitive bidding above Rs. 2500 Crore, All inter-state projects.",
+        "EIA and related Investigations.pdf (p. 11): Stage I - 'In principle consent' by Screening Committee of CWC.",
+        "AK - Hydrology of Ungauged Catchment.pdf (p. 19): Langbein's Log-deviation method... recommended by the Central Water Commission."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf",
+        "CLEARANCES.pdf",
+        "EIA and related Investigations.pdf",
+        "AK - Hydrology of Ungauged Catchment.pdf",
+        "Estimation of design flood peak CWC 1 by 73.pdf"
+      ],
+      "evaluation_criteria": "Must accurately differentiate all 5 institutions across policy, tariff, clearance, and hydrological governance."
+    },
+    {
+      "id": "GD-16",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Conflict & Nuance Resolution",
+      "hop_count": 2,
+      "query_type": "policy_regulatory",
+      "input": "How do the DPR preparation guidelines and the clearances analysis disagree or align on which pre-implementation activities take the most time and effort?",
+      "expected_output": "In the general SHP project cycle (AK-DPR Aug 2017.pdf), preparing the Resettlement & Rehabilitation (R&R) Plan is noted as the most time-consuming pre-implementation activity at 12 to 24 months, though the activity table clarifies that R&R is 'normally not involved' in small hydro projects. For actual SHP case studies where R&R is rarely triggered (CLEARANCES.pdf), empirical criticality analysis shows that Forest Clearances, Land Acquisition formalities (6-12 months for forest, 4-12 months for civil/private), and Techno-Economic Clearances consume the highest time and effort.",
+      "retrieval_context": [
+        "AK-DPR Aug 2017.pdf (p. 3-4): Activities V to X can be done in parallel. The most time consuming is Preparation of Resettlement and Rehabilitation Plan which may take 12 to 24 months. Table: Preparation of plan for Resettlement & rehabilitation - Normally not involved. Land Acquisition Forest: 6-12 months, Civil: 4-12 months, Private: 4-12 months.",
+        "CLEARANCES.pdf (p. 7): The analysis of the cases studies reveals that Forest clearances, Land acquisition formalities and Techno Economic Clearances consume the most time and effort."
+      ],
+      "source_documents": [
+        "AK-DPR Aug 2017.pdf",
+        "CLEARANCES.pdf"
+      ],
+      "evaluation_criteria": "Must reconcile the 12-24 month R&R note (and 'normally not involved' caveat) in AK-DPR with the case study criticality chart in CLEARANCES."
+    },
+    {
+      "id": "GD-17",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Methodological Comparison",
+      "hop_count": 2,
+      "query_type": "technical_policy",
+      "input": "Contrast the hydrological flood estimation methods of Dicken and Ryve across the CWC Design Flood report and the Ungauged Catchment presentation.",
+      "expected_output": "Both documents state that Dicken's formula (Q = C * A^(3/4)) applies to North (and Central) Indian watersheds, while Ryve's formula (Q = C * A^(2/3)) applies to South Indian watersheds. In AK - Hydrology of Ungauged Catchment.pdf, these formulae are adapted as catchment-area ratios (Qs = Qi * (As/Ai)^(3/4) and Qs = Qi * (As/Ai)^(2/3)) to extend short-term streamflow data using a long-term index station, assuming both stations share similar runoff characteristics. Conversely, Estimation of design flood peak CWC 1 by 73.pdf critiques these empirical formulae for standalone flood peak estimation because they lack a return-period frequency concept, rely solely on basin area A, and require subjective judgment to select the coefficient C.",
+      "retrieval_context": [
+        "AK - Hydrology of Ungauged Catchment.pdf (p. 15): Correlation with catchment area - Dicken's formula Q = C A^(3/4), Ravye's formula Q = C A^(2/3). For north Indian watersheds Qs = Qi(As/Ai)^(3/4), For south Indian watersheds Qs = Qi(As/Ai)^(2/3). The basic assumption that the base station under consideration and the index station have the similar runoff characteristics.",
+        "Estimation of design flood peak CWC 1 by 73.pdf (p. 7-8, 42): Dickens Q = C A^(3/4) used widely in North and Central India. Ryves Q = C A^(2/3) used in South India... For the estimation of design flood peak, the empirical formulae in vogue in different regions of the country have serious limitations in that the frequency concept is completely absent... Further, these formulae made use of only one parameter viz. the area (A) of the catchment. Judgement involved in selecting the constant vitiates the utility of these formulae."
+      ],
+      "source_documents": [
+        "AK - Hydrology of Ungauged Catchment.pdf",
+        "Estimation of design flood peak CWC 1 by 73.pdf"
+      ],
+      "evaluation_criteria": "Must contrast the application for streamflow record extension in Ungauged Catchment PDF with the methodological critique in CWC Report 1/73."
+    },
+    {
+      "id": "GD-18",
+      "category": "Multi-Hop Cross-Document Synthesis",
+      "agentic_skill": "Stage-Gate Synthesis",
+      "hop_count": 2,
+      "query_type": "technical_policy",
+      "input": "What are the differences between reconnaissance/pre-feasibility studies and feasibility/DPR-level studies regarding geological, topographical, and hydrological investigations?",
+      "expected_output": "Reconnaissance / Pre-Feasibility Level: Relies on secondary government department records for approximate minimum, average, and flood discharges; uses existing maps and tachometric surveys for topography; and conducts surface geological observations and preliminary reconnaissance for construction materials to establish initial technical and economic feasibility. Feasibility / DPR & Execution Level: Expands into complete hydrological extensions; prepares accurate large-scale topographical maps for all major structures; and conducts detailed subsurface geotechnical investigations via excavation, boring, rigorous material sampling/testing, water-tightness, and grouting tests, alongside formal applications for land transfer, power evacuation, and PPAs.",
+      "retrieval_context": [
+        "AK-DPR Aug 2017.pdf (p. 18-25): Reconnaissance Level (Preliminary): Hydrological Studies from records of Govt. deptts... Topographical Studies: Tachometric Surveys... Geological Studies: Overall geological characteristics and local features and some surface investigation... Feasibility/Detailed Level Study/Report: Hydrological: The most complete and detailed extension possible... Topographical: Preparation of accurate large scale maps... Geological: detailed sub-surface investigations by excavation, boring etc. rigorous sampling and testing of materials, water tightness and grouting test etc.",
+        "Different Types of Investigationss.pdf (p. 3): DURING AND FOR EXECUTION STAGE - Sub soil exploration/geo-technical investigations for knowing soil parameters for structural designs; Setting of the pillars with levels; Testing of construction material."
+      ],
+      "source_documents": [
+        "AK-DPR Aug 2017.pdf",
+        "Different Types of Investigationss.pdf"
+      ],
+      "evaluation_criteria": "Must contrast surface/secondary studies at reconnaissance stage against subsurface boring, grouting, and large-scale mapping at DPR/execution stage."
+    },
+    {
+      "id": "GD-19",
+      "category": "Conditional & Scenario-Based Policy Reasoning",
+      "agentic_skill": "Multi-Rule Scenario Evaluation",
+      "hop_count": 2,
+      "query_type": "policy_reasoning",
+      "input": "A private developer identifies a new 12 MW hydro site on their own, prepares a verifiable PFR/DPR, and applies to the State Government. However, the site requires shifting 5 local families from forest land and is 8 km from a protected national park. Which allotment rule, environmental clearance rule, and R&R compensation rule apply?",
+      "expected_output": "1. Allotment Rule: Because the site was self-identified by an IPP with a self-prepared, verifiable feasible PFR/DPR, it will be allotted on a 'first come' basis once the application fee and bid amount are paid. 2. Environmental Clearance Rule: Although SHP projects < 25 MW are generally exempt from Environmental Clearance under the Sept 2006 MoEFCC notification, this 12 MW project requires Environmental Clearance because it falls within the 10 km buffer zone of a protected area (at 8 km). 3. Forest & R&R Compensation Rule: Shifting families under Forest/R&R clearance requires paying the cost of their residence and occupation plus 1.5 times the amount they would have earned in 2 years had they not been shifted, alongside State Government R&R compliance under the RFCTLARR Act 2013 / Rules 2015.",
+      "retrieval_context": [
+        "allotmnet of shp.pdf (p. 10-11): Any feasible SHP potential site identified by the IPPs/User society and proposed to SG for allotment along with self prepared verifiable feasible PFR/DPR - The application fee and bid amount shall be paid. These projects shall be allotted as first cum basis.",
+        "CLEARANCES.pdf (p. 2, 5): SHP project less than 25 MW does not need any environment clearance as per MoEFCC Sept 2006 notification except those which are within 10 km of buffer zone of protracted areas... R&R requires payment of cost for residence and occupation in addition to which 1.5 times the amount he would have earned in 2 years had he not been shifted."
+      ],
+      "source_documents": [
+        "allotmnet of shp.pdf",
+        "CLEARANCES.pdf"
+      ],
+      "evaluation_criteria": "Must correctly trigger all three rules: first-come allotment, the 10 km protected area exception overriding the <25 MW exemption, and the 1.5x two-year earnings R&R formula."
+    },
+    {
+      "id": "GD-20",
+      "category": "Conditional & Scenario-Based Policy Reasoning",
+      "agentic_skill": "Methodological Decision Routing",
+      "hop_count": 2,
+      "query_type": "technical_policy",
+      "input": "An engineer is designing a small hydro scheme in Himachal Pradesh where the catchment is exclusively snow-fed and has very limited gauged flow records across only a few stations. Which REFRESHA homogeneous region does this fall into, and which regionalization method (Method 1, 2, or 3) is recommended for developing its flow duration curve?",
+      "expected_output": "Under the REFRESHA study for Himachal Pradesh, an exclusively snow-fed catchment falls into Region I (whereas Region II is snow- and rain-fed, and Region III is mainly rain-fed). Because adequate flow records for gauged catchments are unavailable and the number of gauged sites is limited, Method 1 will be erroneous; therefore, Method 2 (Regionalisation of parameters of a probability distribution for the region as a whole by non-dimensionalizing site flows as Q/Q' and clubbing them into a single regional sample) should be used.",
+      "retrieval_context": [
+        "AK - Hydrology of Ungauged Catchment.pdf (p. 7, 38): Method 2: Regionalisation of the parameters of a chosen probability distribution derived for the region as a whole - Sometime, either adequate flow records for gauged catchments are not available or number of gauged catchments are limited. It makes the development of regional flow duration curve using method 1 erroneous. Under these circumstances it is considered appropriate to make all the flow data values of individual sites non-dimensional by dividing it by the mean of the flow occurring at that site... HYDROLOGICALLY HOMOGENEOUS REGION - Region I: Mainly compression snow fed catchments; Region II: Mainly compression both snow and rain fed catchment; Region III: Mainly compression rain fed catchment."
+      ],
+      "source_documents": [
+        "AK - Hydrology of Ungauged Catchment.pdf"
+      ],
+      "evaluation_criteria": "Must identify Region I for snow-fed catchments and select Method 2 (non-dimensional Q/Q' regional sample) due to limited gauged records."
+    },
+    {
+      "id": "GD-21",
+      "category": "Conditional & Scenario-Based Policy Reasoning",
+      "agentic_skill": "Policy Differentiation",
+      "hop_count": 1,
+      "query_type": "policy_reasoning",
+      "input": "A state government is planning two SHP schemes: Scheme X is a 100 kW standalone village mini-grid in a remote mountain cluster, while Scheme Y is a 15 MW grid-connected plant selling power to a DISCOM. How should the policy approach differ between Scheme X and Scheme Y?",
+      "expected_output": "Scheme X is a Micro (<= 100 kW) Social Sector SHP, which operates in standalone mode, has a poor load factor, often includes local distribution, requires full government financial/subsidy support, and recovers O&M costs through user charge collection. Scheme Y is a Small (<= 25 MW) Commercial SHP, which is grid-connected, has a high load factor, is financially sound, and sells electricity to distribution/trading companies or for captive use; it relies on commercial tariff/feed-in-tariff frameworks rather than full government subsidy.",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 74, 101): HYDROPOWER CLASSIFICATION: Pico/village 5 kW & below, Micro 100 kW & below, Mini 2 MW & below, Small 25 MW & below. Social Sector SHPs - aims to supply electricity specially in stand alone mode, characterized with poor load factor and of small capacity, often involved in distribution also, Often are fully supported by government, O&M is recovered through user charges collection. Commercial SHPs - aims to sell electricity to power distributing or trading companies or for captive use, are grid connected and are relatively larger capacity, have high load factor, Financially sound."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must classify Scheme X as Micro/Social Sector SHP (government supported, user charges for O&M) and Scheme Y as Small/Commercial SHP (grid-connected, high load factor, tariff-driven)."
+    },
+    {
+      "id": "GD-22",
+      "category": "Conditional & Scenario-Based Policy Reasoning",
+      "agentic_skill": "Compliance Verification",
+      "hop_count": 1,
+      "query_type": "policy_reasoning",
+      "input": "During pre-construction site preparation, a developer wants to start excavating the powerhouse foundation and clearing land while their Form 1 application and PFR are still under review by SEIAA. Is this permissible under the EIA Notification 2006?",
+      "expected_output": "No. Under the EIA Notification 2006, prior environmental clearance from the concerned regulatory authority (MoEF for Category A or SEIAA for Category B) is mandatory before any construction work or preparation of land by the project management is started at the site, with the sole exception of securing the land.",
+      "retrieval_context": [
+        "EIA and related Investigations.pdf (p. 6, 10): Certain projects or activities shall require prior environmental clearance from concerned regulatory authority... before any construction work, or preparation of land by the project management except for securing the land, is started on the project or activity. Application seeking prior EC shall be made in prescribed Form 1... before commencing any construction activity, or preparation of land, at the site by the applicant."
+      ],
+      "source_documents": [
+        "EIA and related Investigations.pdf"
+      ],
+      "evaluation_criteria": "Must state that excavation/land preparation is prohibited prior to EC, noting that only 'securing the land' is permitted."
+    },
+    {
+      "id": "GD-23",
+      "category": "Technical Governance & Environmental Protocols",
+      "agentic_skill": "Protocol Verification",
+      "hop_count": 1,
+      "query_type": "technical_policy",
+      "input": "What are the standard field sampling protocols for soil, water quality, ambient air, and seismic studies when conducting an EIA for a small hydropower project?",
+      "expected_output": "1. Seismic Studies: Not carried out individually for small hydro projects; seismic data is taken from literature and nearby major project studies, and the seismic coefficient is derived theoretically. 2. Soil Sampling: Generally 6 soil samples are collected randomly across the impact area for physico-chemical and nutrient analysis. 3. Water Quality: 4 to 6 water samples are collected across the project area (plus polluting sources); surface samples are taken 20 cm below water level using a 2-liter horizontal sampler, with pH, turbidity, and conductivity measured on-site. 4. Ambient Air Quality: Collected at 6 locations on a 24-hour basis (testing for RSP, SP, SO2, CO, CO2, and NOx) and repeated after 3 months.",
+      "retrieval_context": [
+        "EIA and related Investigations.pdf (p. 37, 39, 47-48, 50): Six Soil Samples in General are collected from the Impact Area... For Small Hydro Electric Projects Seismic studies are not carried out individually. Seismic data is obtained from literature and recent studies of nearby major projects... Four to six water samples spread over the project area should be collected... Surface water samples should be collected at 20 cm below water level using horizontal sampler of 2 liters capacity... Ambient air samples should be collected from six locations on 24 hrs basis and should be analyzed for RSP, SP, SO2, CO, CO2, Nox. Air Sampling should be repeated after three months."
+      ],
+      "source_documents": [
+        "EIA and related Investigations.pdf"
+      ],
+      "evaluation_criteria": "Must accurately detail the protocols for all four domains (seismic exemption for SHP, 6 soil samples, 4-6 water samples at 20cm depth, 6 air locations on 24-hr basis repeated after 3 months)."
+    },
+    {
+      "id": "GD-24",
+      "category": "Technical Governance & Environmental Protocols",
+      "agentic_skill": "Engineering Policy",
+      "hop_count": 1,
+      "query_type": "technical_policy",
+      "input": "How does the three-tier sediment management strategy allocate responsibilities across a hydro project's geography, and how do sediment measurement priorities differ between Reservoir and Run-of-River schemes?",
+      "expected_output": "The three-tier strategy manages sediment across three zones: Reduce at the Catchment (via watershed management), Remove at the Headworks (via proper headworks and settling basin design), and Resist at the Powerhouse (via abrasion-resistant machinery design, monitoring, and O&M strategy). For Reservoir schemes, measurement focuses on long-term average total sediment load and Particle Size Distribution (PSD) to predict deposition patterns and reservoir lifetime. For Run-of-River schemes, the sediment concentration in abstracted water, PSD (for settling basin trapping), and mineral content (which drives turbine wear) are more critical than total river sediment load.",
+      "retrieval_context": [
+        "Different Types of Investigationss.pdf (p. 45-47): IMPORTANCE OF SEDIMENT MEASUREMENT - Reservoir: To collect the data needed to determine the long term average; PSD of incoming sediments shows likely pattern of sediment deposition in the reservoir. Run of River: Sediment content in the abstracted water is more important than the total sediment load; PSD of sediment load is important with respect to trapping of sediment in settling basin; Mineral content in the sediments is important from sediment wear point of view. SEDIMENT MANAGEMENT: Catchment -> Reduce, Headworks -> Remove, Powerhouse -> Resist."
+      ],
+      "source_documents": [
+        "Different Types of Investigationss.pdf"
+      ],
+      "evaluation_criteria": "Must map Catchment->Reduce, Headworks->Remove, Powerhouse->Resist and distinguish Reservoir (long-term total load/deposition) vs Run-of-River (abstracted water content, PSD for settling basin, mineral content for wear)."
+    },
+    {
+      "id": "GD-25",
+      "category": "Technical Governance & Environmental Protocols",
+      "agentic_skill": "Design Standards",
+      "hop_count": 1,
+      "query_type": "technical_policy",
+      "input": "What were the Khosla Committee of Engineers' (1959) design flood recommendations for railway bridges, and when should CWC Report No. 1/73 be superseded by other reports?",
+      "expected_output": "The Khosla Committee designated the 50-year return period flood (from a 50-year design storm) as the design flood for bridge waterways, and recommended a 30% higher flood above the waterway design flood for designing bridge foundations in small catchments up to 200 sq. miles. While CWC Report No. 1/73 provides a general unit-hydrograph method for drainage areas of 25 to 500 sq. km (10 to 200 sq. miles), the CWC states that whenever specific regional flood estimation reports under the Long Term Plan (covering 26 hydrometeorologically homogeneous sub-zones such as Lower Gangetic Plains 1(g), Lower Godavari 3(f), Lower Narmada & Tapi 3(b), and Mahanadi 3(d)) are published, those regional methods must be adopted instead.",
+      "retrieval_context": [
+        "Estimation of design flood peak CWC 1 by 73.pdf (p. 3, 10, 43): Twenty Six such regions have been identified, and upto now, reports for the lower Gangetic Plains (Sub-Zone 1(g)), Lower Godavari Sub-Zone (sub-zone 3(f)), Lower Narmada and Tapi Sub-Zone (Sub-Zone 3(b)) and Mahanadi Sub-Zone (Sub-Zone 3(d)) have been published. It is desirable that for drainage areas in the regions for which such regional reports have been published, the methods suggested therein are adopted. The Khosla Committee of Engineers designated the flood with a 50-year return period as the design flood to be adopted for the design of waterway of bridges... For the design of foundations... suggested the adoption of a higher flood which is 30% over the design flood for waterway for small catchments upto 200 sq. miles."
+      ],
+      "source_documents": [
+        "Estimation of design flood peak CWC 1 by 73.pdf"
+      ],
+      "evaluation_criteria": "Must state 50-year return period for waterways, +30% margin for foundations up to 200 sq. miles, and supersession by Long Term Plan sub-zonal reports."
+    },
+    {
+      "id": "GD-26",
+      "category": "Targeted Numerical & Thresholds",
+      "agentic_skill": "Policy Thresholds",
+      "hop_count": 1,
+      "query_type": "numerical_threshold",
+      "input": "How does India's megawatt threshold for defining Small Hydro Power (SHP) compare with China, the United States, Nepal, and Italy, and what are the six size classes of hydropower within India?",
+      "expected_output": "India (along with Bhutan and Mozambique) defines SHP as <= 25 MW, whereas China (and Canada, Pakistan, New Zealand) uses <= 50 MW, the United States (and Brazil, Argentina, Mexico) uses <= 30 MW, Nepal (and 26 other nations including Norway and Sri Lanka) uses <= 10 MW, and Italy uses <= 3 MW. Within India, hydropower is further classified into six size tiers: Pico/village (<= 5 kW), Micro (<= 100 kW), Mini (<= 2 MW), Small (<= 25 MW), Medium (<= 100 MW), and Large (> 100 MW).",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 73-74): SHP Definitions - Italy: <= 3 MW; Afghanistan, Nepal, Norway, Sri Lanka...: <= 10 MW; Bhutan, India, Mozambique: <= 25 MW; Argentina, Brazil, Mexico, Benin, United States: <= 30 MW; Canada, China, Pakistan, New Zealand: <= 50 MW. HYDROPOWER CLASSIFICATION: Pico/village 5 kW & below, Micro 100 kW & below, Mini 2 MW & below, Small 25 MW & below, Medium 100 MW & below, Large above 100 MW."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must accurately state all country thresholds and all 6 Indian classification tiers."
+    },
+    {
+      "id": "GD-27",
+      "category": "Targeted Numerical & Thresholds",
+      "agentic_skill": "Appraisal Percentages",
+      "hop_count": 1,
+      "query_type": "numerical_threshold",
+      "input": "In civil cost appraisal of hydroelectric projects, what exact percentage provisions are prescribed for Establishment, Tools & Plants, Audit & Account charges, and Capitalized value on abatement of land revenue?",
+      "expected_output": "1. Establishment (Direct Charge II): 8% to 10% of I-Works, excluding the cost of 'B'-Land. 2. Tools and Plants (Direct Charge III): Generally 1% of the cost of I-Works. 3. Audit & Account Charges (Indirect Charge ii): 1% of the cost of I-Works. 4. Capitalized Value on Abatement of Land Revenue (Indirect Charge i): Taken as 5% of the cost of agricultural land or 20 times the land revenue cost, whichever is higher.",
+      "retrieval_context": [
+        "AK-DPR Aug 2017.pdf (p. 31-32): II. Establishment: 8% to 10% of I-Works excluding the cost on B-Land. III. Tools and Plants: generally 1% of the cost of I-Works. INDIRECT CHARGES: (i) Capitalised value on abatement of land revenue: 5% of the cost of agricultural land or 20 times of the land revenue cost whichever is more. (ii) Audit & account Charges: 1% of cost of I-Works."
+      ],
+      "source_documents": [
+        "AK-DPR Aug 2017.pdf"
+      ],
+      "evaluation_criteria": "Must state 8-10% (excluding B-Land) for Establishment, 1% for T&P, 1% for Audit & Account, and max(5% agri land cost, 20x land revenue) for abatement."
+    },
+    {
+      "id": "GD-28",
+      "category": "Targeted Numerical & Thresholds",
+      "agentic_skill": "Empirical Cost Formulae & Physical Cause",
+      "hop_count": 1,
+      "query_type": "numerical_threshold",
+      "input": "In the Aggidis et al. (2010) UK NW study, what are the total project cost equations for heads below and above 30 m, and what physical manufacturing change causes the step-changes between price bands for Kaplan and Francis turbines?",
+      "expected_output": "Based on inflation-adjusted Salford Report data (2008 GBP), the total project cost (C_Pr) for heads of 2-30 m is C_Pr = 25,000 * (kW / H^0.35)^0.65, and for heads of 30-200 m is C_Pr = 45,500 * (kW / H^0.3)^0.6. For Kaplan and Francis turbines, the boundaries between cost bands correspond to specific runner diameters (0.5-0.8 m at Q = 5.0 m3/s for Kaplan; ~0.5 m and ~1.0 m for Francis) where the manufacturing process changes: smaller runners are produced as a one-piece steel casting, larger diameters are built by welding blades to the crown, and very large turbines are manufactured in sections (whereas Pelton manufacturing remains uniform).",
+      "retrieval_context": [
+        "Aggidis, et al (2010) (p. 3, 7): C_Pr = 25,000 * (kW/H^0.35)^0.65 (GBP, 2008) for heads 2-30 m and C_Pr = 45,500 * (kW/H^0.3)^0.6 (GBP, 2008) for heads 30-200 m... Up to certain sizes (depending on the manufacturer), Kaplan and Francis turbine runners are one-piece steel casting. For larger diameters, however, runners are constructed by welding blades to the crown. In the case of a very large size, turbines can be manufactured in sections. However, for Pelton turbines manufacturing process remains generally the same."
+      ],
+      "source_documents": [
+        "Aggidis, et al  “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf"
+      ],
+      "evaluation_criteria": "Must provide both equations (2-30m and 30-200m) and explain the manufacturing transition from one-piece casting to welding blades to the crown."
+    },
+    {
+      "id": "GD-29",
+      "category": "Adversarial & Hallucination-Trap",
+      "agentic_skill": "Premise Correction",
+      "hop_count": 1,
+      "query_type": "adversarial",
+      "input": "Since the UN and IPCC established a universal global definition of Small Hydro Power as 10 MW in 2007, why hasn't India updated its 25 MW limit to comply with IPCC's prescriptive policy?",
+      "expected_output": "This premise is incorrect on two counts based on the provided documents. First, there is no worldwide definition on hydropower size classes; in fact, declarations involving over 170 countries (including the 2002 UN World Summit, 2004 Bonn Conference, and 2007 IPCC AR4) reached a consensus on not differentiating technologies by scale, focusing instead on sustainability and economic performance. Second, the objective of the IPCC SRREN report was explicitly to be 'policy relevant but not policy prescriptive'.",
+      "retrieval_context": [
+        "AK-Overview of SHP Development.pdf (p. 61, 71, 76): Objective of report was to be policy relevant but not policy prescriptive... In recent years, declarations involving more than 170 countries have reached a consensus on not differentiating technologies by scale... No world wide definition on size classes."
+      ],
+      "source_documents": [
+        "AK-Overview of SHP Development.pdf"
+      ],
+      "evaluation_criteria": "Must reject the false premise, clarify that >170 countries agreed not to differentiate by scale (no universal definition), and note that IPCC is policy-relevant, not policy-prescriptive."
+    },
+    {
+      "id": "GD-30",
+      "category": "Adversarial & Hallucination-Trap",
+      "agentic_skill": "Premise Correction",
+      "hop_count": 1,
+      "query_type": "adversarial",
+      "input": "When using the 50-year 1-hour and 6-hour IMD isopluvial maps to calculate design flood peaks under CWC Report 1/73, should I multiply both map readings by 1.15 to convert them from observational day amounts?",
+      "expected_output": "No. The 15% increase (multiplying by 1.15) applies only to the 24-hour isopluvial map, because those values are based on observational day rainfall amounts and must be converted to maximum consecutive 1440-minute rainfall. The CWC explicitly states that no such adjustment is to be made to values read from isopluvial maps for shorter durations of 15 min, 30 min, 45 min, 1 hr, 3 hrs, 6 hrs, 9 hrs, 12 hrs, and 15 hrs.",
+      "retrieval_context": [
+        "Estimation of design flood peak CWC 1 by 73.pdf (p. 23, 68): The values given by India Meteorological Department on the isopluvial map for 24 hrs. duration are observational day rainfall amounts. For obtaining the maximum consecutive 1440 minutes rainfall amounts, the values given on this map need to be increased by 15% as per the results of detailed study made by I.M.D. No such adjustment is to be made to the values read from the isopluvial maps for durations of 15 min, 30 min, 45 min, 1 hr, 3 hrs, 6 hrs, 9 hrs, 12 hrs and 15 hrs."
+      ],
+      "source_documents": [
+        "Estimation of design flood peak CWC 1 by 73.pdf"
+      ],
+      "evaluation_criteria": "Must reject applying 1.15x to 1-hr and 6-hr maps and clarify that the 15% adjustment applies exclusively to the 24-hr observational day map."
+    }
+  ]
+}

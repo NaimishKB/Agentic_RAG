@@ -10,6 +10,7 @@ Purpose: Provides an MCP Client that connects either in-process or over HTTP
 """
 
 import json
+import os
 from typing import Any
 
 import requests
@@ -29,10 +30,13 @@ class FastAPIMCPClient:
 
     def __init__(
         self,
-        base_url: str = "http://127.0.0.1:8000",
+        base_url: str | None = None,
         prefer_http: bool = False,
-        timeout: int = 15,
+        timeout: int = int(os.getenv("MCP_TIMEOUT_S", "15")),
     ):
+        if base_url is None:
+            mcp_port = os.getenv("MCP_PORT", "8602")
+            base_url = os.getenv("MCP_SERVER_URL", f"http://127.0.0.1:{mcp_port}")
         self.base_url = base_url.rstrip("/")
         self.prefer_http = prefer_http
         self.timeout = timeout

@@ -1,0 +1,621 @@
+"""
+=============================================================================
+Small Hydropower Plant (SHP) - Golden Dataset Generator
+=============================================================================
+Module: src.evals.generate_golden_dataset
+Purpose: Generates 52 hand-labeled, domain-verified Small Hydropower Plant (SHP)
+         engineering QA test cases formatted for DeepEval LLMTestCase benchmarking.
+         Covers Hydrology, Civil Design, Turbines, Silt Erosion, Electrical/SCADA,
+         CEA Regulations, Cost Estimation, Conversational, and Out-of-Scope queries.
+=============================================================================
+"""
+
+import json
+from pathlib import Path
+
+GOLDEN_CASES = [
+    # ── 1. Hydrology & Flow Duration Curves (FDC) ──────────────────────────
+    {
+        "id": "shp_hydrology_001",
+        "category": "hydrology_fdc",
+        "input": "What is a Flow Duration Curve (FDC) in Small Hydropower development and how is design discharge Q_des typically chosen in India?",
+        "expected_output": "A Flow Duration Curve (FDC) is a cumulative frequency curve showing the percentage of time that specified stream discharges are equaled or exceeded during a given period of record. In Indian Small Hydropower (SHP) design guidelines (as per CEA and MNRE norms), the design discharge (Q_des) for run-of-river projects is typically selected at 75% dependable flow (Q75) or 90% dependable flow (Q90) for power potential studies and financial viability.",
+        "context": [
+            "Flow Duration Curve (FDC) represents the relationship between magnitude and duration of streamflow. It shows the percentage of time specified discharge is equaled or exceeded.",
+            "In run-of-river SHP projects, design discharge is commonly fixed at 75% or 90% dependability based on CEA guidelines to balance energy generation and capital cost.",
+        ],
+        "sub_queries": ["definition of Flow Duration Curve FDC", "design discharge selection 75% dependable flow CEA guidelines"],
+    },
+    {
+        "id": "shp_hydrology_002",
+        "category": "hydrology_fdc",
+        "input": "How is hydrological analysis conducted for ungauged catchments in Himalayan SHP projects?",
+        "expected_output": "For ungauged catchments, hydrological analysis utilizes regional hydrological transposition, rainfall-runoff empirical models (such as CWC regional flood frequency formulas, Rational method, and Snyder's unit hydrograph), catchment area ratio (CAR) methods with adjacent gauged rivers, and satellite precipitation data (TRMM/GPM) correlated with topography.",
+        "context": [
+            "For ungauged catchments, CWC regional flood estimation manuals and catchment area ratio (CAR) methods transfer hydrometric data from nearby donor stations.",
+            "Synthetic unit hydrograph approaches and rainfall-runoff correlation using regional precipitation records are applied for ungauged Himalayan streams.",
+        ],
+        "sub_queries": ["ungauged catchment hydrology methods SHP", "catchment area ratio and CWC regional models"],
+    },
+    {
+        "id": "shp_hydrology_003",
+        "category": "hydrology_fdc",
+        "input": "What is the standard return period used for computing the diversion design flood in run-of-river SHPs?",
+        "expected_output": "Diversion works (such as coffer dams and diversion tunnels) for Small Hydropower run-of-river projects are typically designed for a 1-in-25 year to 1-in-50 year return period flood, whereas the barrage/weir spillway design flood is commonly sized for a 1-in-100 year return period flood or Standard Project Flood (SPF).",
+        "context": [
+            "Diversion flood for temporary structures in SHP construction is usually selected for a 25 to 50 year return period.",
+            "Spillway design for permanent intake weir/barrage requires design flood of 1-in-100 year return period as per IS 4877 and CWC norms.",
+        ],
+        "sub_queries": ["diversion design flood return period SHP", "coffer dam and spillway flood frequency"],
+    },
+    {
+        "id": "shp_hydrology_004",
+        "category": "hydrology_fdc",
+        "input": "Why is the environmental flow (e-flow) requirement critical in SHP design, and what percentage of lean season flow is mandated?",
+        "expected_output": "Environmental flow (e-flow) maintains aquatic ecology, fish migration, downstream riparian rights, and water quality downstream of the diversion weir. Under Indian MoEFCC guidelines, run-of-river hydro projects must release at least 15% to 20% of the average lean season flow continuously into the river reach between diversion and tailrace.",
+        "context": [
+            "Environmental flow (e-flow) mandates continuous minimum water discharge downstream of the diversion structure to protect riverine ecosystems.",
+            "MoEFCC requires release of 20% of average lean season flow and 15% to 30% of monsoon flows as environmental flow downstream of intake.",
+        ],
+        "sub_queries": ["environmental flow mandate SHP lean season", "MoEFCC e-flow percentage intake downstream"],
+    },
+    {
+        "id": "shp_hydrology_005",
+        "category": "hydrology_fdc",
+        "input": "Explain the difference between gross head and net head in hydro power calculations.",
+        "expected_output": "Gross head (H_gross) is the total static elevation difference between the water level at the forebay/intake and the tailwater level at the discharge channel. Net head (H_net) is the actual effective head available to the turbine runner after subtracting all hydraulic friction and minor head losses in the intake, trash rack, power channel, desilting chamber, and penstock: H_net = H_gross - h_losses.",
+        "context": [
+            "Gross head is the difference between headwater level and tailwater level in meters.",
+            "Net head (effective head) equals gross head minus total hydraulic losses (trashrack, friction in penstock, bends, valves). H_net = H_gross - h_f.",
+        ],
+        "sub_queries": ["difference gross head net head hydro power", "hydraulic head losses penstock intake"],
+    },
+    {
+        "id": "shp_hydrology_006",
+        "category": "hydrology_fdc",
+        "input": "What role does the sediment rating curve play in Himalayan small hydro plant design?",
+        "expected_output": "The sediment rating curve establishes the relationship between river discharge and suspended sediment concentration (ppm or g/l). In Himalayan rivers containing hard abrasive quartz, the sediment rating curve determines the required storage volume, settling length, and flushing frequency of the desilting basin, preventing severe runner erosion.",
+        "context": [
+            "Sediment rating curve relates river discharge Q to suspended sediment concentration C (ppm) or sediment load in tonnes/day.",
+            "Himalayan rivers carry heavy quartz loads during monsoon, requiring sediment rating curves to size desilting basins and design silt exclusion gates.",
+        ],
+        "sub_queries": ["sediment rating curve Himalayan SHP", "suspended sediment concentration and desilting basin"],
+    },
+    {
+        "id": "shp_hydrology_007",
+        "category": "hydrology_fdc",
+        "input": "How does 10-daily discharge data differ from monthly average discharge in SHP energy simulation?",
+        "expected_output": "10-daily discharge data breaks each month into three 10-day intervals, capturing hydrologic peak pulses and lean flashiness much more accurately than monthly averages. Using monthly averages tends to overestimate power generation during lean months and underestimate spillway spills during flood events.",
+        "context": [
+            "10-daily discharge data divides each month into 3 periods (1-10, 11-20, 21-end) to provide higher temporal resolution than monthly mean flow.",
+            "Monthly average flow smooths out hydrological fluctuations, causing erroneous energy estimation compared to 10-daily or daily hydrological series.",
+        ],
+        "sub_queries": ["10-daily discharge vs monthly average flow", "energy estimation accuracy run-of-river SHP"],
+    },
+
+    # ── 2. Civil & Hydraulic Structures ────────────────────────────────────
+    {
+        "id": "shp_civil_008",
+        "category": "civil_structures",
+        "input": "What are the primary civil engineering components of a run-of-river Small Hydropower Plant?",
+        "expected_output": "The primary civil engineering components of a run-of-river SHP include: 1) Diversion structure (weir or trench weir / Tyrolean intake); 2) Intake channel and trash rack; 3) Desilting tank / sediment trap with flushing conduit; 4) Headrace power channel or tunnel; 5) Forebay tank / surge tank; 6) Penstock pipe with anchor and saddle blocks; 7) Powerhouse building; and 8) Tailrace channel.",
+        "context": [
+            "Run-of-river SHP components comprise diversion weir, water intake, desilting basin, power canal/tunnel, forebay/surge tank, penstock, powerhouse, and tailrace.",
+            "The diversion structure directs water into the power intake while desilting basins settle suspended sediment particles before water enters the penstock.",
+        ],
+        "sub_queries": ["civil engineering components run of river SHP", "diversion intake desilting penstock powerhouse tailrace"],
+    },
+    {
+        "id": "shp_civil_009",
+        "category": "civil_structures",
+        "input": "Explain the working principle and operational advantage of a Tyrolean (trench) intake in boulder-strewn hill streams.",
+        "expected_output": "A Tyrolean (bottom intake / trench intake) consists of a concrete trench embedded in the riverbed covered with inclined trash rack bars aligned parallel to streamflow. Water drops through the rack gaps into the collection trench while boulders and bedload roll over the bars downstream, minimizing blockage and damage in steep mountain torrents.",
+        "context": [
+            "Tyrolean intake (bottom intake) features trash rack bars inclined across a trench in the river bed. Water falls through the screen into the trench.",
+            "Tyrolean intakes are self-cleaning for heavy bedload and rolling boulders in steep gradient mountain streams, avoiding frontal barrage gates.",
+        ],
+        "sub_queries": ["Tyrolean bottom trench intake principle", "boulder stream intake design self cleaning"],
+    },
+    {
+        "id": "shp_civil_010",
+        "category": "civil_structures",
+        "input": "What criteria govern the design of a desilting basin in small hydro projects?",
+        "expected_output": "Desilting basins are designed based on: 1) Target sediment particle cutoff size (typically removing particles >= 0.20 mm or >= 0.15 mm for quartz); 2) Settling velocity determined by Stokes' or Camp's equations; 3) Flow flow-through velocity kept below 0.20–0.30 m/s to prevent resuspension; 4) Length and width sizing according to settling trajectory; and 5) Silt storage hopper with continuous or intermittent hydraulic flushing.",
+        "context": [
+            "Desilting tanks are designed to remove sediment particles larger than 0.2 mm (or 0.15 mm in high quartz content) with flow-through velocity around 0.2 to 0.3 m/s.",
+            "Settling length is calculated based on particle fall velocity using Stokes law or Camp settling velocity formulations with safety margins.",
+        ],
+        "sub_queries": ["desilting basin design criteria SHP", "particle cutoff size settling velocity 0.2mm quartz"],
+    },
+    {
+        "id": "shp_civil_011",
+        "category": "civil_structures",
+        "input": "When is a surge tank required instead of an open forebay tank in a small hydro project?",
+        "expected_output": "A surge tank is required when the conveyance system consists of a long closed conduit or pressure tunnel leading to the penstock. If the water conduit length is large and water hammer pressure rise exceeds allowable limits upon sudden turbine rejection (governor closure), an open or throttled surge tank must be installed near the penstock head to absorb pressure surges and supply transient water demand.",
+        "context": [
+            "Surge tanks are installed at the junction of long low-pressure tunnels and steep penstocks to mitigate water hammer surges during load rejection.",
+            "In open headrace channel systems, an open forebay with spillway weir handles transient surpluses, whereas closed pressure conduits mandate a surge tank.",
+        ],
+        "sub_queries": ["surge tank vs forebay tank SHP", "water hammer mitigation long pressure tunnel"],
+    },
+    {
+        "id": "shp_civil_012",
+        "category": "civil_structures",
+        "input": "What formula is used for economic sizing of penstock diameter, and what is the typical water velocity range?",
+        "expected_output": "Economic penstock diameter is commonly estimated using empirical formulas such as Sarkaria's formula D = 0.62 * Q^0.43 (for medium/high head) or Fahlbusch's formula D = 1.12 * Q^0.45 / H^0.12. The permissible flow velocity in steel penstocks typically ranges between 2.5 m/s and 5.0 m/s to strike an optimal balance between pipe capital cost and hydraulic friction loss.",
+        "context": [
+            "Sarkaria formula for economic penstock diameter: D = 0.62 * Q^0.43 where D is in meters and Q is design discharge in m3/s.",
+            "Economical flow velocity in steel penstocks ranges from 2.5 m/s to 4.5 m/s to optimize capital steel cost against head loss power deficit.",
+        ],
+        "sub_queries": ["penstock economic diameter Sarkaria formula", "penstock water velocity range 2.5 to 5.0 m/s"],
+    },
+    {
+        "id": "shp_civil_013",
+        "category": "civil_structures",
+        "input": "Describe the function of anchor blocks and saddle supports along a surface steel penstock.",
+        "expected_output": "Anchor blocks are massive reinforced concrete foundations constructed at penstock bends, junctions, and bifurcations to resist unbalanced hydrostatic forces, dynamic water hammer thrust, and thermal expansion forces. Saddle supports (pier blocks) support the penstock pipe on straight reaches between anchor blocks, allowing longitudinal expansion and contraction through low-friction slide plates or rollers.",
+        "context": [
+            "Anchor blocks provide rigid restraint at penstock bends and slope breaks to resist hydrostatic thrust, dynamic water hammer, and temperature stresses.",
+            "Saddle supports carry pipe weight on straight runs and accommodate longitudinal thermal expansion via sliding or rocker bearings.",
+        ],
+        "sub_queries": ["penstock anchor block and saddle support function", "hydrostatic thrust thermal expansion penstock"],
+    },
+    {
+        "id": "shp_civil_014",
+        "category": "civil_structures",
+        "input": "What geological investigations are necessary before finalizing the powerhouse site for an SHP?",
+        "expected_output": "Geological investigations for the powerhouse include: core drilling with standard penetration tests (SPT), geophysical seismic refraction surveys to delineate overburden depth and bedrock topography, groundwater table monitoring, slope stability analysis (rock mass rating RMR or Q-system) to prevent landslides, and bearing capacity tests for foundation design.",
+        "context": [
+            "Powerhouse geotechnical investigation requires exploratory boreholes, core recovery, RQD determination, and seismic refraction profiling.",
+            "Slope stability of surrounding hill cuts and soil/rock foundation bearing capacity must be established to ensure powerhouse safety during floods and earthquakes.",
+        ],
+        "sub_queries": ["geological investigations SHP powerhouse site", "subsurface core drilling RMR slope stability"],
+    },
+
+    # ── 3. Hydro-Mechanical Equipment & Turbine Selection ──────────────────
+    {
+        "id": "shp_turbines_015",
+        "category": "turbine_selection",
+        "input": "What are the head and discharge applicability ranges for Pelton, Francis, and Kaplan turbines in small hydropower?",
+        "expected_output": "In small hydropower: 1) Pelton turbines (impulse) are ideal for high heads (50m to >500m) and relatively low discharge; 2) Francis turbines (reaction) operate across medium heads (25m to 250m) with medium flows; and 3) Kaplan/Propeller turbines (reaction) are suited for low heads (2m to 40m) and large discharges.",
+        "context": [
+            "Pelton turbines are impulse units suited for high heads from 50m to over 500m with low to medium flow rates.",
+            "Francis turbines are reaction units used for medium heads between 25m and 250m, offering high peak efficiency.",
+            "Kaplan and bulb axial turbines are reaction turbines designed for low heads (2m to 40m) with large volumetric discharge.",
+        ],
+        "sub_queries": ["Pelton Francis Kaplan turbine head discharge application", "turbine selection ranges small hydro"],
+    },
+    {
+        "id": "shp_turbines_016",
+        "category": "turbine_selection",
+        "input": "How is the metric specific speed N_s defined, and how does it guide turbine selection?",
+        "expected_output": "Metric specific speed N_s is defined as N_s = (N * sqrt(P)) / (H^(5/4)), where N is rotational speed in rpm, P is shaft power in kW, and H is net head in meters. Low specific speed (N_s: 10 to 60) corresponds to impulse Pelton turbines; medium specific speed (N_s: 60 to 350) corresponds to radial/mixed-flow Francis turbines; and high specific speed (N_s: 350 to 900) corresponds to axial-flow Kaplan turbines.",
+        "context": [
+            "Specific speed N_s = (N * P^0.5) / (H^1.25) where N is rpm, P is kW, and H is net head in meters.",
+            "N_s ranges: Pelton (10-50 per jet), Francis (60-350), Kaplan (350-900). Higher specific speed leads to smaller, faster runners.",
+        ],
+        "sub_queries": ["metric specific speed formula Ns turbine selection", "Ns ranges Pelton Francis Kaplan"],
+    },
+    {
+        "id": "shp_turbines_017",
+        "category": "turbine_selection",
+        "input": "What are the advantages and operating characteristics of a Cross-flow (Banki-Mitchell) turbine in micro and mini hydro?",
+        "expected_output": "The Cross-flow (Banki-Mitchell) turbine is an impulse-like machine featuring water passing transversely across cylindrical runner blades twice. Its advantages include: simple and robust fabrication without high-precision casting, low capital cost, flat efficiency curve across wide discharge variations (using a divided 1/3 and 2/3 nozzle chamber), and tolerance to small debris and sediment.",
+        "context": [
+            "Cross-flow (Banki) turbines have water entering cylindrical runner radially inward and exiting radially outward across blades.",
+            "Advantages of Cross-flow turbines include low manufacturing cost, easy maintenance, and excellent part-load efficiency using split guide vanes.",
+        ],
+        "sub_queries": ["Cross-flow Banki-Mitchell turbine advantages", "part-load efficiency split chamber crossflow"],
+    },
+    {
+        "id": "shp_turbines_018",
+        "category": "turbine_selection",
+        "input": "Explain the phenomenon of cavitation in reaction turbines and the significance of Thoma's cavitation coefficient sigma.",
+        "expected_output": "Cavitation occurs when local static pressure inside the turbine (commonly near the runner blade exit or draft tube inlet) drops below the vapor pressure of water, forming vapor bubbles that collapse violently against metal surfaces, causing pitting erosion, severe vibration, and loss of efficiency. Thoma's cavitation factor sigma = (H_atm - H_vap - H_s) / H_net determines the minimum safe runner submergence depth below tailwater level.",
+        "context": [
+            "Cavitation occurs when static pressure drops below water vapor pressure, forming micro-bubbles that implode against runner blades causing pitting.",
+            "Thoma cavitation parameter sigma = (H_baro - H_vap - H_s) / H determines critical cavitation limit and required turbine setting height H_s.",
+        ],
+        "sub_queries": ["cavitation in reaction turbines Francis Kaplan", "Thoma cavitation factor sigma draft tube setting"],
+    },
+    {
+        "id": "shp_turbines_019",
+        "category": "turbine_selection",
+        "input": "What is the function of the draft tube in a reaction hydro turbine?",
+        "expected_output": "The draft tube is an expanding conduit connecting the runner exit to the tailrace channel. Its functions are: 1) It allows the turbine to be set above the tailwater level without losing static head; and 2) It decelerates the high-velocity discharge from the runner, converting kinetic energy into useful pressure head (diffuser effect), thereby recovering up to 10–15% additional turbine efficiency.",
+        "context": [
+            "The draft tube acts as a diffuser recovering kinetic energy leaving the reaction turbine runner and converting it into pressure head.",
+            "It permits installation of the turbine above tailwater level while maintaining effective suction head without loss of elevation energy.",
+        ],
+        "sub_queries": ["draft tube function reaction turbine", "kinetic energy recovery diffuser effect draft tube"],
+    },
+    {
+        "id": "shp_turbines_020",
+        "category": "turbine_selection",
+        "input": "Compare the efficiency curve of a Pelton turbine with a single-regulated Propeller turbine at 40% partial load.",
+        "expected_output": "A Pelton turbine maintains a very flat efficiency curve across partial loads, maintaining 85–88% efficiency even at 40% flow by modulating multi-jet needle nozzles. In contrast, a single-regulated Propeller turbine with fixed runner blades suffers a steep efficiency drop, plunging to 40–50% efficiency or lower at 40% load with severe cavitation and vortex instability.",
+        "context": [
+            "Pelton turbines retain high efficiency (over 85%) from 30% to 100% rated discharge by throttling needle nozzles without changing jet velocity.",
+            "Single-regulated propeller turbines have fixed blades, causing steep efficiency loss and flow separation below 70% rated discharge.",
+        ],
+        "sub_queries": ["Pelton vs Propeller partial load efficiency", "40% discharge efficiency multi-jet needle valve"],
+    },
+    {
+        "id": "shp_turbines_021",
+        "category": "turbine_selection",
+        "input": "What is the purpose of a flywheel on the turbine-generator shaft in small hydro installations?",
+        "expected_output": "A flywheel provides mechanical rotational inertia (moment of inertia GD^2 or WR^2) to stabilize generator rotational speed during sudden electrical load rejections and grid disturbances. It limits runaway acceleration, reduces transient frequency fluctuations, and gives the hydraulic governor time to modulate guide vanes/needles without excessive water hammer in the penstock.",
+        "context": [
+            "Flywheels increase rotational inertia of the turbine-generator train, dampening frequency swings during sudden grid load shedding.",
+            "Additional GD^2 from a flywheel prevents rapid overspeed runaway and allows slower, safer governor closure times to limit water hammer.",
+        ],
+        "sub_queries": ["flywheel purpose small hydro turbine shaft", "rotational inertia GD2 overspeed water hammer"],
+    },
+    {
+        "id": "shp_turbines_022",
+        "category": "turbine_selection",
+        "input": "What is runaway speed in hydro turbines and why must generators be designed for it?",
+        "expected_output": "Runaway speed is the maximum uncontrolled rotational speed that the turbine runner can reach under full design head and maximum discharge when electrical load is completely lost and the governor fails to close. Runaway speeds reach 1.8 to 2.2 times rated speed for Pelton and Francis turbines, and 2.5 to 3.0 times for Kaplan turbines. Generators must be mechanically designed to withstand centrifugal burst forces at runaway speed.",
+        "context": [
+            "Runaway speed is maximum speed reached under full head with no load and wide-open gates. Francis/Pelton reach ~1.8-2.2x, Kaplan reaches ~2.5-3x.",
+            "Generators and rotating components must be dynamically balanced and mechanically certified to withstand centrifugal stresses at runaway speed.",
+        ],
+        "sub_queries": ["turbine runaway speed definition and multiplier", "generator design centrifugal stress runaway"],
+    },
+
+    # ── 4. Silt Abrasion & Quartz Mitigation ───────────────────────────────
+    {
+        "id": "shp_silt_023",
+        "category": "silt_erosion",
+        "input": "Why is quartz silt particularly detrimental to hydro turbines in Himalayan rivers?",
+        "expected_output": "Quartz has a Mohs hardness of 7, which is significantly harder than standard turbine stainless steels (such as 13Cr-4Ni with Mohs hardness ~5.5). When high-velocity water carrying angular quartz particles impacts runner blades, guide vanes, and face plates, it causes severe micro-cutting, gouging, and erosive wear, destroying blade profiles and causing massive efficiency drop and vibrations.",
+        "context": [
+            "Quartz silt has Mohs hardness 7, harder than conventional 13Cr-4Ni martensitic stainless steel (Mohs 5.5).",
+            "Abrasive quartz particles cause erosive micro-cutting, fatigue pitting, and rapid material loss on high-velocity turbine surfaces in Himalayan rivers.",
+        ],
+        "sub_queries": ["quartz silt erosion Himalayan hydro turbines", "Mohs hardness quartz vs 13Cr 4Ni steel"],
+    },
+    {
+        "id": "shp_silt_024",
+        "category": "silt_erosion",
+        "input": "What protective coatings and metallurgical treatments are used to prevent hydro-abrasive erosion on turbine runners?",
+        "expected_output": "Modern anti-erosion treatments include: High-Velocity Oxy-Fuel (HVOF) thermal spray coatings applied with Tungsten Carbide-Cobalt-Chromium (WC-Co-Cr), Plasma-transferred arc (PTA) overlays, ceramic composites, and base metallurgy upgrades such as 16Cr-5Ni or 13Cr-4Ni martensitic stainless steel with post-weld heat treatment.",
+        "context": [
+            "HVOF thermal spraying with Tungsten Carbide (WC-Co-Cr) coatings creates hard protective layers (hardness >1200 HV) mitigating silt erosion.",
+            "Turbine runners in silt-prone waters utilize 13Cr-4Ni or 16Cr-5Ni stainless steel substrates reinforced with HVOF carbide coatings.",
+        ],
+        "sub_queries": ["HVOF tungsten carbide WC-Co-Cr coating", "hydro abrasive erosion metallurgical protection"],
+    },
+    {
+        "id": "shp_silt_025",
+        "category": "silt_erosion",
+        "input": "How does particle velocity influence the rate of hydro-abrasive silt erosion?",
+        "expected_output": "The rate of hydro-abrasive erosion is proportional to the flow velocity raised to an exponent typically between 2.5 and 3.5 (Erosion rate proportional to V^3). Because erosion scales cubically with velocity, components exposed to high jet velocities (such as Pelton nozzles and runner buckets) or high spouting velocities experience dramatically higher wear rates than low-velocity channels.",
+        "context": [
+            "Hydro-abrasive erosion rate scales exponentially with flow velocity: W is proportional to V^n where n is typically 2.5 to 3.5.",
+            "Doubling flow velocity increases silt erosion rate by roughly eightfold, making high-head impulse jets especially vulnerable.",
+        ],
+        "sub_queries": ["velocity exponent hydro abrasive erosion V3", "silt erosion velocity dependence Pelton nozzle"],
+    },
+    {
+        "id": "shp_silt_026",
+        "category": "silt_erosion",
+        "input": "Why is a Pelton turbine often preferred over a Francis turbine in high-head rivers with severe quartz silt?",
+        "expected_output": "In high quartz silt environments, Pelton turbines offer substantial operational advantages: 1) Wear is concentrated on detachable runner buckets, nozzles, and needles, which can be replaced quickly on-site without dismantling the entire powerhouse; 2) It avoids labyrinth seal clearances and guide vane facing plates that bind and leak in Francis turbines; and 3) Pelton nozzles are easily coated with HVOF tungsten carbide.",
+        "context": [
+            "Pelton turbine components subjected to silt wear (nozzle tips, needle spears, buckets) are modular and easily inspected and replaced.",
+            "Francis turbines suffer severe silt erosion on labyrinth seals, cheek plates, and guide vane clearances, requiring complete unit teardown.",
+        ],
+        "sub_queries": ["Pelton vs Francis in high quartz silt", "maintenance modularity labyrinth seal wear"],
+    },
+    {
+        "id": "shp_silt_027",
+        "category": "silt_erosion",
+        "input": "What is the recommended threshold of silt concentration and size at which turbine operation should be curtailed?",
+        "expected_output": "Under Indian Central Electricity Authority (CEA) and international operating norms, hydro plant operators are advised to curtail or shut down generation when suspended silt concentration exceeds 5,000 ppm (or 2,000–3,000 ppm if quartz content exceeds 70% and particle sizes exceed 0.2 mm) to prevent catastrophic runner destruction during monsoon floods.",
+        "context": [
+            "Turbine shutdown is generally initiated when silt concentration exceeds 5000 ppm, or 2000-3000 ppm if quartz content is very high (>70%).",
+            "CEA guidelines recommend online silt monitoring (acoustic or optical) to trigger precautionary turbine shutdown during extreme silt peaks.",
+        ],
+        "sub_queries": ["silt concentration shutdown threshold 5000 ppm", "quartz content curtailment CEA guidelines"],
+    },
+    {
+        "id": "shp_silt_028",
+        "category": "silt_erosion",
+        "input": "Explain the role of continuous flushing versus intermittent flushing in desilting basins.",
+        "expected_output": "Continuous flushing continuously bleeds 10–15% of the intake discharge through bottom hoppers and flushing conduits back into the river, preventing sediment from settling and compacting. Intermittent flushing periodically opens high-capacity bottom sluice gates when sediment sensors detect hopper filling, saving water during lean flow months but requiring higher flushing discharges.",
+        "context": [
+            "Continuous flushing consumes 10-15% of total inflow to purge sediment continuously, preventing bed consolidation.",
+            "Intermittent flushing saves valuable water during lean non-monsoon periods by flushing hoppers only when silt accumulates to designated levels.",
+        ],
+        "sub_queries": ["continuous vs intermittent flushing desilting basin", "10-15 percent water consumption silt flushing"],
+    },
+
+    # ── 5. Electrical Systems, Control & SCADA ─────────────────────────────
+    {
+        "id": "shp_electrical_029",
+        "category": "electrical_scada",
+        "input": "Compare Synchronous versus Induction (Asynchronous) generators in Small Hydropower Plants.",
+        "expected_output": "Synchronous generators: Can operate in isolated/islanded mode and grid-connected mode, provide voltage regulation via excitation systems (AVR), and supply reactive power, but are costlier and require synchronization gear. Induction (asynchronous) generators: Simpler, robust, cheaper, require no synchronization or DC exciter, but draw reactive power from the grid and cannot start or run without an external grid or capacitor bank.",
+        "context": [
+            "Synchronous generators can operate in standalone islanded mode, supply reactive power (MVAR), and maintain precise grid frequency via AVR.",
+            "Induction generators are simpler and cheaper for small grid-tied plants (<2 MW), but require external reactive excitation and cannot operate islanded.",
+        ],
+        "sub_queries": ["Synchronous vs Induction generator SHP", "islanded mode excitation AVR reactive power"],
+    },
+    {
+        "id": "shp_electrical_030",
+        "category": "electrical_scada",
+        "input": "What are the primary protection relays required for a small hydro generator as per CEA standards?",
+        "expected_output": "Standard CEA protection relays for SHP generators include: 1) Differential protection (87G) for internal stator faults; 2) Overcurrent and Earth Fault (50/51, 51N); 3) Overvoltage and Undervoltage (59/27); 4) Overfrequency and Underfrequency (81O/81U); 5) Reverse Power relay (32) to prevent motoring; 6) Stator Earth fault (64G); 7) Negative phase sequence (46); and 8) Loss of excitation (40).",
+        "context": [
+            "Generator protection relays include differential (87G), reverse power (32), overcurrent/earth fault (50/51/51N), over/under voltage (59/27), and frequency (81).",
+            "CEA guidelines mandate reverse power protection (32) to avoid water turbine motoring and loss of excitation protection (40).",
+        ],
+        "sub_queries": ["generator protection relays CEA standards SHP", "differential 87G reverse power 32 relay"],
+    },
+    {
+        "id": "shp_electrical_031",
+        "category": "electrical_scada",
+        "input": "What is an Electronic Load Controller (ELC) and where is it applied in micro-hydro projects?",
+        "expected_output": "An Electronic Load Controller (ELC) is a solid-state electrical device that maintains a constant generator electrical load by instantly diverting unused power to a secondary ballast load (such as water heating resistor banks). In micro-hydro plants using fixed-pitch runners without expensive mechanical governors, the ELC keeps generator frequency and voltage stable regardless of consumer demand fluctuations.",
+        "context": [
+            "Electronic Load Controller (ELC) diverts surplus power to dummy resistive ballast loads to keep total electrical load constant.",
+            "ELC eliminates the need for complex mechanical hydraulic flow governors in micro-hydropower schemes up to 100 kW.",
+        ],
+        "sub_queries": ["Electronic Load Controller ELC micro hydro", "ballast dump load frequency stabilization"],
+    },
+    {
+        "id": "shp_electrical_032",
+        "category": "electrical_scada",
+        "input": "What key sensor parameters are monitored in a modern SHP SCADA / automation system?",
+        "expected_output": "A modern SHP SCADA system continuously monitors: 1) Forebay and tailrace water levels; 2) Penstock pressure and differential head; 3) Turbine speed and governor servo position; 4) Bearing temperatures (turbine guide, generator thrust/guide bearings via RTDs); 5) Bearing vibration (displacement/velocity sensors); 6) Stator winding temperatures; 7) Generator voltage, current, frequency, active and reactive power; and 8) Silt concentration.",
+        "context": [
+            "SHP SCADA monitors forebay water level, penstock pressure, runner speed, bearing RTD temperatures, and vibration probes.",
+            "Electrical parameters (kV, kW, kVA, PF, Hz) and desilting silt concentration are monitored for automated start-stop sequence and alarm trips.",
+        ],
+        "sub_queries": ["SCADA sensors parameters small hydro plant", "bearing temperature RTD vibration forebay level"],
+    },
+    {
+        "id": "shp_electrical_033",
+        "category": "electrical_scada",
+        "input": "Why is reverse power protection (Relay 32) vital on hydro generator circuits?",
+        "expected_output": "Reverse power protection detects when the electrical grid starts feeding power back into the generator, turning it into an electric motor. If water flow is suddenly cut or valve closed while the breaker remains shut, the motoring generator will spin the dry runner, causing rapid aerodynamic friction overheating, runner blade distortion, and bearing failure.",
+        "context": [
+            "Reverse power relay (32) trips the breaker if energy flow reverses, preventing the generator from operating as an induction/synchronous motor.",
+            "Motoring a dry hydro turbine creates dangerous blade friction heating, windage losses, and thrust bearing starvation.",
+        ],
+        "sub_queries": ["reverse power relay 32 hydro generator", "motoring protection dry runner overheating"],
+    },
+
+    # ── 6. Mathematical & Power Calculations (MCP Tools) ─────────────────
+    {
+        "id": "shp_calc_034",
+        "category": "power_calculations",
+        "input": "Calculate the theoretical and electrical power output for a plant with 120m net head, 2.5 m3/s discharge, and 88% overall efficiency.",
+        "expected_output": "Theoretical hydraulic power is P_hyd = rho * g * Q * H = 1000 * 9.81 * 2.5 * 120 = 2,943 kW (2.94 MW). Applying overall electro-mechanical efficiency eta = 0.88, the electrical power output is P_elec = 2,943 * 0.88 = 2,589.84 kW (~2.59 MW).",
+        "context": [
+            "Hydro power equation: P = 9.81 * Q * H_net * eta (in kW), where Q is in m3/s, H_net is in meters, and eta is overall efficiency.",
+            "For Q=2.5 m3/s, H=120m, eta=0.88: P = 9.81 * 2.5 * 120 * 0.88 = 2589.84 kW (2.59 MW).",
+        ],
+        "sub_queries": ["calculate hydro power 120m head 2.5 discharge 88% efficiency", "P = rho g Q H eta formula"],
+    },
+    {
+        "id": "shp_calc_035",
+        "category": "power_calculations",
+        "input": "Calculate the metric specific speed for a turbine operating at 750 rpm under 100m net head and producing 4,000 kW output.",
+        "expected_output": "Specific speed formula: N_s = (N * sqrt(P)) / (H^(5/4)). Here N = 750 rpm, P = 4,000 kW, H = 100m. H^(1.25) = 100^1.25 = 316.228. sqrt(P) = sqrt(4000) = 63.2455. N_s = (750 * 63.2455) / 316.228 = 47,434.16 / 316.228 = 150.0. An N_s of 150 indicates a medium-head Francis turbine.",
+        "context": [
+            "Metric specific speed N_s = (N * P^0.5) / (H^1.25). For N=750 rpm, P=4000 kW, H=100m: N_s = 750 * 63.2455 / 316.228 = 150.",
+            "A specific speed of 150 falls squarely in the Francis turbine envelope (60 to 350 N_s).",
+        ],
+        "sub_queries": ["calculate specific speed 750 rpm 4000 kW 100m head", "Ns = 150 Francis turbine"],
+    },
+    {
+        "id": "shp_calc_036",
+        "category": "power_calculations",
+        "input": "Using Sarkaria's empirical formula, estimate the economic penstock diameter for a design discharge of 3.5 m3/s.",
+        "expected_output": "Sarkaria's formula for economic penstock diameter is D = 0.62 * Q^(0.43). For Q = 3.5 m3/s: 3.5^0.43 = 1.7118. D = 0.62 * 1.7118 = 1.061 meters (approx. 1.06m to 1.10m internal diameter). Flow velocity V = Q / (pi/4 * D^2) = 3.5 / (0.7854 * 1.061^2) = 3.96 m/s, which falls within the recommended 2.5–5.0 m/s velocity window.",
+        "context": [
+            "Sarkaria formula: D = 0.62 * Q^0.43. For Q=3.5 m3/s, D = 0.62 * (3.5^0.43) = 1.061 m.",
+            "Flow velocity V = Q / A = 3.96 m/s, satisfying the economical velocity range of 2.5 to 4.5 m/s.",
+        ],
+        "sub_queries": ["Sarkaria formula penstock diameter 3.5 m3s", "economic diameter 1.06m velocity calculation"],
+    },
+    {
+        "id": "shp_calc_037",
+        "category": "power_calculations",
+        "input": "Calculate the annual energy generation in GWh for a 5 MW plant operating at an annual Plant Load Factor (PLF) / capacity factor of 65%.",
+        "expected_output": "Annual energy generation is given by E = Capacity (MW) * 8,760 hours/year * Capacity Factor. For a 5 MW plant with 65% capacity factor (PLF = 0.65): E = 5 * 8,760 * 0.65 = 28,470 MWh = 28.47 GWh/year.",
+        "context": [
+            "Annual energy generation E = Installed Capacity (MW) * 8760 hours * PLF.",
+            "For a 5 MW plant at 65% PLF: 5 * 8760 * 0.65 = 28,470 MWh (28.47 GWh).",
+        ],
+        "sub_queries": ["annual energy generation 5 MW 65% PLF", "E = MW * 8760 * capacity factor GWh"],
+    },
+    {
+        "id": "shp_calc_038",
+        "category": "power_calculations",
+        "input": "Calculate water hammer pressure rise in a penstock using Joukowsky's formula for flow velocity 3.5 m/s and wave velocity 1000 m/s.",
+        "expected_output": "Joukowsky's equation for instantaneous valve closure is delta_H = (a * delta_V) / g, where a is pressure wave velocity in m/s, delta_V is change in water velocity in m/s, and g is 9.81 m/s^2. For a = 1000 m/s and delta_V = 3.5 m/s: delta_H = (1000 * 3.5) / 9.81 = 3,500 / 9.81 = 356.78 meters of water column head rise.",
+        "context": [
+            "Joukowsky formula for rapid closure water hammer: delta_H = (a * delta_V) / g.",
+            "For a=1000 m/s and delta_V=3.5 m/s: delta_H = 3500 / 9.81 = 356.8 meters head rise.",
+        ],
+        "sub_queries": ["Joukowsky formula water hammer pressure rise", "wave velocity 1000 flow velocity 3.5 head rise"],
+    },
+
+    # ── 7. Regulatory Standards, CEA, EIA & Clearances ──────────────────────
+    {
+        "id": "shp_regulatory_039",
+        "category": "regulatory_standards",
+        "input": "What is the official definition of a Small Hydropower Plant (SHP) in India according to the Ministry of New and Renewable Energy (MNRE)?",
+        "expected_output": "According to the Ministry of New and Renewable Energy (MNRE), Government of India, Small Hydropower (SHP) projects are defined as hydro stations with an aggregate station capacity of up to 25 MW. These are further categorized as: Micro Hydro (up to 100 kW), Mini Hydro (101 kW to 2,000 kW / 2 MW), and Small Hydro (2,001 kW to 25,000 kW / 25 MW).",
+        "context": [
+            "In India, hydro projects up to 25 MW capacity are categorized as Small Hydropower (SHP) under the purview of MNRE.",
+            "SHP sub-categories: Micro hydro (up to 100 kW), Mini hydro (101 kW to 2 MW), and Small hydro (2 MW to 25 MW).",
+        ],
+        "sub_queries": ["MNRE definition Small Hydropower India 25 MW", "Micro Mini Small hydro classification limits"],
+    },
+    {
+        "id": "shp_regulatory_040",
+        "category": "regulatory_standards",
+        "input": "What statutory statutory clearances and permits are required prior to construction of an SHP in India?",
+        "expected_output": "Key statutory clearances include: 1) State Government Allotment / MoA; 2) Forest Clearance (under Forest Conservation Act 1980 if forest land is diverted); 3) Environmental Clearance (EIA/EMP from State MoEFCC/SEIAA); 4) Water Abstraction Rights / Irrigation Dept consent; 5) Consent to Establish (CTE) and Consent to Operate (CTO) from State Pollution Control Board; 6) Grid Connectivity approval / Transmission Utility evacuation consent; and 7) Land acquisition / revenue rights.",
+        "context": [
+            "Statutory clearances for SHP: Forest clearance (MoEFCC), Environmental clearance (SEIAA), Water usage rights, SPCB consent, and Grid evacuation approval.",
+            "Project developer must sign an implementation agreement (MoA) with the state nodal agency and obtain clearance under the Forest Conservation Act 1980.",
+        ],
+        "sub_queries": ["statutory clearances SHP India forest environmental", "SPCB water rights grid connectivity approval"],
+    },
+    {
+        "id": "shp_regulatory_041",
+        "category": "regulatory_standards",
+        "input": "What are the provisions for open access and captive hydro power under the Indian Electricity Act 2003?",
+        "expected_output": "The Electricity Act 2003 promotes open access to transmission and distribution networks, allowing hydro power generators to sell power directly to bulk consumers or across state boundaries upon payment of wheeling charges, surcharge, and additional surcharge determined by SERC/CERC. Captive power generating plants are exempt from cross-subsidy surcharge if consumers own >= 26% equity and consume >= 51% generated energy.",
+        "context": [
+            "Electricity Act 2003 grants non-discriminatory open access on transmission systems to power generators upon payment of transmission charges.",
+            "Captive generation status requires minimum 26% equity ownership and 51% energy consumption, exempting captive hydro from cross-subsidy surcharge.",
+        ],
+        "sub_queries": ["Electricity Act 2003 open access hydro power", "captive power plant 26% equity 51% consumption"],
+    },
+    {
+        "id": "shp_regulatory_042",
+        "category": "regulatory_standards",
+        "input": "Explain the role and key provisions of a Power Purchase Agreement (PPA) for an independent small hydro developer.",
+        "expected_output": "A Power Purchase Agreement (PPA) is a legally binding long-term contract (typically 25 to 35 years) between the hydro developer (seller) and the state distribution utility (buyer). Key provisions include: 1) Tariff determination (feed-in tariff or competitively bid tariff approved by SERC); 2) Commercial Operation Date (COD) milestones and liquidated damages; 3) Metering and billing protocols; 4) Payment security mechanisms (Letter of Credit); 5) Force majeure terms; and 6) Deemed generation clauses for grid curtailment.",
+        "context": [
+            "PPA specifies 25-35 year power purchase obligations, tariff rate approved by SERC, and COD achievement milestones.",
+            "Payment security mechanisms (Letters of Credit, escrow) and deemed generation provisions protect hydro developers during evacuation line tripping.",
+        ],
+        "sub_queries": ["Power Purchase Agreement PPA provisions SHP", "feed-in tariff COD payment security letter of credit"],
+    },
+    {
+        "id": "shp_regulatory_043",
+        "category": "regulatory_standards",
+        "input": "What are the environmental and social impacts typically analyzed in an Environmental Impact Assessment (EIA) for an SHP?",
+        "expected_output": "An SHP EIA evaluates: 1) Downstream aquatic biodiversity and fish habitat loss (due to river dewatering between weir and tailrace); 2) Terrestrial flora and fauna disturbance from access road and tunnel muck disposal; 3) Soil erosion and slope instability along penstock and canal cuts; 4) Impact on local drinking/irrigation water rights; 5) Resettlement and Rehabilitation (R&R) of project-affected families; and 6) Influx of construction labor.",
+        "context": [
+            "EIA investigates ecological impacts on aquatic fauna, fish migration, muck disposal management, and forest canopy clearance.",
+            "Social impact assessment addresses riparian community water use rights, land acquisition compensation, and local employment obligations.",
+        ],
+        "sub_queries": ["EIA environmental social impact SHP", "muck disposal aquatic fauna dewatered river reach"],
+    },
+    {
+        "id": "shp_regulatory_044",
+        "category": "regulatory_standards",
+        "input": "What are CEA guidelines regarding grid connectivity and technical standards for distributed renewable plants?",
+        "expected_output": "CEA Technical Standards for Connectivity of Distributed Generation Resources mandate that renewable plants: 1) Maintain voltage within +/- 5% of nominal; 2) Operate over a frequency band of 49.5 Hz to 50.5 Hz; 3) Provide Fault Ride-Through (FRT / LVRT) capability without tripping during momentary grid faults; 4) Maintain power factor between 0.95 lag and 0.95 lead; and 5) Install telemetry devices transmitting live data to State Load Despatch Centers (SLDC).",
+        "context": [
+            "CEA connectivity regulations require distributed generators to withstand voltage excursions and support fault ride-through (LVRT/FRT).",
+            "Plant must maintain power factor between 0.95 lagging and 0.95 leading and supply real-time operational telemetry to SLDC.",
+        ],
+        "sub_queries": ["CEA grid connectivity standards distributed hydro", "LVRT FRT fault ride through SLDC telemetry"],
+    },
+
+    # ── 8. Economics, Cost Estimation, Tariffs & DPR ───────────────────────
+    {
+        "id": "shp_economics_045",
+        "category": "cost_economics",
+        "input": "What is the typical capital cost breakdown percentage between civil works and electro-mechanical equipment in an SHP?",
+        "expected_output": "In run-of-river Small Hydropower projects, the capital expenditure (CAPEX) breakdown is typically: Civil works (weir, intake, desilting tank, canal/tunnel, forebay, powerhouse) account for 50% to 65% of total cost; Electro-mechanical equipment (turbines, generators, valves, transformers, switchgear, control) accounts for 25% to 35%; and the remaining 10% to 15% covers land acquisition, infrastructure/roads, transmission lines, and engineering/contingency.",
+        "context": [
+            "Typical SHP cost breakdown: Civil works represent 55% to 65% of total CAPEX, while E&M equipment accounts for 25% to 35%.",
+            "Infrastructure roads, evacuation transmission, and environmental mitigation constitute the remaining 10% to 15% of project cost.",
+        ],
+        "sub_queries": ["capital cost breakdown SHP civil vs electromechanical", "50-65% civil works 25-35% E&M equipment"],
+    },
+    {
+        "id": "shp_economics_046",
+        "category": "cost_economics",
+        "input": "How is the levelized cost of electricity (LCOE) calculated for a hydro project and what factors influence it most?",
+        "expected_output": "The Levelized Cost of Electricity (LCOE) is calculated as the sum of discounted lifetime project costs (initial CAPEX, annual OPEX, financing debt service, and replacement costs) divided by the sum of discounted lifetime energy generation: LCOE = Sum(Cost_t / (1+r)^t) / Sum(Energy_t / (1+r)^t). The most influential factors are: initial capital expenditure per MW, discount rate / cost of capital, plant load factor (PLF / hydrology), and economic project lifespan (typically 35–40 years).",
+        "context": [
+            "LCOE represents lifetime discounted costs divided by lifetime discounted energy generation over the project economic lifespan.",
+            "Key drivers of hydro LCOE are upfront CAPEX per installed kW, weighted average cost of capital (WACC), and annual capacity factor.",
+        ],
+        "sub_queries": ["Levelized Cost of Electricity LCOE hydro formula", "CAPEX discount rate PLF project lifespan"],
+    },
+    {
+        "id": "shp_economics_047",
+        "category": "cost_economics",
+        "input": "What are the required core sections of a Detailed Project Report (DPR) for a Small Hydropower Plant?",
+        "expected_output": "A Detailed Project Report (DPR) includes: 1) Executive Summary; 2) Basin Physiography, Site Topography and Geology; 3) Hydrological Studies, FDC, and Design Flood; 4) Power Potential Studies and Installed Capacity Optimization; 5) Civil Hydraulic Design; 6) Electro-Mechanical Equipment Specifications; 7) Power Evacuation and Grid Interconnection; 8) Environmental Impact Assessment and EMP; 9) Construction Methodology and Schedule; 10) Cost Estimates and Bill of Quantities (BOQ); and 11) Financial & Economic Viability (IRR, NPV, BCR).",
+        "context": [
+            "Detailed Project Report (DPR) contains site topography, hydrology/FDC, power potential, civil layout, turbine selection, and cost estimates.",
+            "DPR financial analysis section must demonstrate economic viability including debt-service coverage ratio (DSCR), IRR, and levelized tariff.",
+        ],
+        "sub_queries": ["Detailed Project Report DPR sections SHP", "civil layout hydrology power potential financial IRR"],
+    },
+    {
+        "id": "shp_economics_048",
+        "category": "cost_economics",
+        "input": "Explain how multi-year depreciation norms are applied to small hydro power assets under CERC guidelines.",
+        "expected_output": "Under Central Electricity Regulatory Commission (CERC) tariff regulations, hydro generation assets are depreciated over a useful life of 35 to 40 years. Depreciation is calculated using the Straight-Line Method (SLM). For the first 12 years (corresponding to loan repayment period), a higher depreciation rate of around 5.28% per annum is applied to service debt; the remaining depreciable value (up to 90% salvage threshold) is spread evenly over the remaining asset life.",
+        "context": [
+            "CERC regulations allow straight-line depreciation at 5.28% per annum during the initial 12-year debt repayment period.",
+            "The remaining depreciable value (up to 90% of total capital cost) is spread uniformly over the balance useful asset life of 35-40 years.",
+        ],
+        "sub_queries": ["CERC depreciation norms hydro assets 5.28%", "12-year loan period straight line method 35-40 years"],
+    },
+
+    # ── 9. Direct Conversational Greetings & Fast Paths ───────────────────
+    {
+        "id": "shp_direct_049",
+        "category": "direct_answer",
+        "input": "Hello! Can you introduce yourself and tell me what technical domains you cover?",
+        "expected_output": "Hello! I am your Small Hydropower Plant (SHP) Engineering Assistant. I specialize in run-of-river and small hydro technical planning, including: 1) Hydrology and Flow Duration Curve (FDC) analysis; 2) Civil and hydraulic structure design (intakes, desilting tanks, penstocks, surge tanks); 3) Hydro-mechanical equipment and turbine selection (Pelton, Francis, Kaplan, Crossflow); 4) Silt erosion mitigation and quartz protection; 5) Electrical generators, protection, and SCADA; 6) CEA regulatory standards and statutory clearances; and 7) Detailed Project Reports (DPR), cost estimation, and tariffs. How can I assist you with your hydro project today?",
+        "context": [
+            "The SHP engineering assistant provides verified domain knowledge across hydrology, civil structures, turbines, electrical SCADA, CEA regulations, and cost economics.",
+        ],
+        "sub_queries": [],
+    },
+    {
+        "id": "shp_direct_050",
+        "category": "direct_answer",
+        "input": "What engineering calculations can you perform using your integrated tools?",
+        "expected_output": "I have integrated engineering calculation tools powered by our Model Context Protocol (MCP) server that can calculate: 1) Hydro Power Potential (kW/MW) and annual generation from net head, discharge, and efficiency; 2) Metric Specific Speed (N_s) and recommended turbine runner type; 3) Economic Penstock Diameter using Sarkaria's formula and flow velocity validation; and 4) Live or simulated plant SCADA sensor telemetry queries. Feel free to provide your plant parameters!",
+        "context": [
+            "Integrated MCP engineering tools calculate hydro power, specific speed turbine selection, economic penstock diameter, and query SCADA sensors.",
+        ],
+        "sub_queries": [],
+    },
+
+    # ── 10. Out-of-Scope Domain Refusals ──────────────────────────────────
+    {
+        "id": "shp_outofscope_051",
+        "category": "out_of_scope",
+        "input": "Can you provide a step-by-step recipe for making authentic Italian lasagna?",
+        "expected_output": "I apologize, but this request is out of scope. I am an engineering assistant specialized exclusively in Small Hydropower Plant (SHP) design, hydrology, civil and electrical engineering, turbine selection, and CEA regulatory guidelines. I cannot assist with culinary recipes or cooking instructions.",
+        "context": [
+            "The SHP Assistant strictly refuses non-hydropower and out-of-scope domain queries such as cooking recipes, entertainment, and general trivia.",
+        ],
+        "sub_queries": [],
+    },
+    {
+        "id": "shp_outofscope_052",
+        "category": "out_of_scope",
+        "input": "What are the common symptoms of influenza and what medication should I take?",
+        "expected_output": "I apologize, but this request is outside my domain. I am an engineering assistant specialized exclusively in Small Hydropower Plant (SHP) infrastructure, hydrology, and regulatory standards. I am not qualified to provide medical advice, symptoms diagnosis, or medication recommendations. Please consult a licensed medical professional.",
+        "context": [
+            "The system maintains strict domain boundaries, refusing medical diagnoses, drug prescriptions, and healthcare inquiries.",
+        ],
+        "sub_queries": [],
+    },
+]
+
+
+def generate_golden_dataset(output_path: str = "src/evals/golden_dataset.json"):
+    """Saves the 52 hand-labeled SHP test cases to JSON format."""
+    out_file = Path(output_path)
+    out_file.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(out_file, "w", encoding="utf-8") as f:
+        json.dump(GOLDEN_CASES, f, indent=2, ensure_ascii=False)
+
+    print(f"[OK] Successfully wrote {len(GOLDEN_CASES)} golden test cases to {out_file}")
+
+
+if __name__ == "__main__":
+    generate_golden_dataset()
+

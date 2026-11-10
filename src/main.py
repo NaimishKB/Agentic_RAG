@@ -237,6 +237,9 @@ def display_telemetry_table(state: AgentState, duration_s: float):
         table.add_row("Verified Citations Used", str(len(citations)))
         cycles = state.get("cycle_count", 0)
         table.add_row("Remediation Cycles", str(cycles))
+        cb_tripped = state.get("circuit_breaker_tripped", False)
+        cb_str = "[red]TRIPPED (Max Retries Exceeded)[/red]" if cb_tripped else "[green]NORMAL[/green]"
+        table.add_row("Circuit Breaker Status", cb_str)
 
     console.print(table)
 
@@ -280,10 +283,13 @@ def execute_query(
 
     # Render Final Answer in rich panel with markdown formatting
     console.print()
+    is_cb = result.get("circuit_breaker_tripped", False)
     if decision == "direct_answer":
         console.print(Panel(Markdown(response_text), title="[bold green]Conversational Response[/bold green]", border_style="cyan"))
     elif decision == "out_of_scope":
         console.print(Panel(Markdown(response_text), title="[bold yellow]Domain Refusal Notice[/bold yellow]", border_style="yellow"))
+    elif is_cb:
+        console.print(Panel(Markdown(response_text), title="[bold red]⚠️ Circuit Breaker Notice (Max Retries Exceeded)[/bold red]", border_style="red"))
     else:
         console.print(Panel(Markdown(response_text), title="[bold green]Verified Engineering Assessment[/bold green]", border_style="green"))
 

@@ -1,0 +1,81 @@
+{
+  "timestamp": "2026-11-06T10:16:57Z",
+  "total_cases_evaluated": 1,
+  "overall_passed": false,
+  "aggregates": {
+    "retrieval_precision": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.85,
+      "passed": true,
+      "count": 1
+    },
+    "retrieval_recall": {
+      "mean_score": 0.0,
+      "pass_rate": 0.0,
+      "target": 0.85,
+      "passed": false,
+      "count": 1
+    },
+    "contextual_relevancy": {
+      "mean_score": 0.85,
+      "pass_rate": 1.0,
+      "target": 0.8,
+      "passed": true,
+      "count": 1
+    },
+    "faithfulness": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.9,
+      "passed": true,
+      "count": 1
+    },
+    "answer_relevancy": {
+      "mean_score": 1.0,
+      "pass_rate": 1.0,
+      "target": 0.88,
+      "passed": true,
+      "count": 1
+    },
+    "query_latency_p95": {
+      "value_seconds": 200.99,
+      "target": 60.0,
+      "passed": false
+    },
+    "fallback_rate": {
+      "value_rate": 0.0,
+      "target": 0.1,
+      "passed": true
+    }
+  },
+  "test_results": [
+    {
+      "id": "GD-02",
+      "category": "Single-Hop Policy & Licensing",
+      "input": "During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?",
+      "expected_output": "Bids are invited for an upfront premium per MW subject to a minimum threshold premium (bids below the threshold are rejected), and the project is allotted to the highest bidder. If multiple bidders quote an identical premium per MW for a site, allotment is decided using a gradation list based on pre-qualification criteria. If no bid is received twice, the site is allotted to a government agency.",
+      "actual_output": "## 1. Executive Summary\nFor Small Hydropower (SHP) sites where a Preliminary Feasibility Report (PFR) and Detailed Project Report (DPR) are available, competitive bidding is mandatory. In the event of identical premium bids per MW, allotment is determined by a gradation list based on prequalification criteria [Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]. If no bid is received for two consecutive instances, the site is allotted to",
+      "routing_decision": "rag_retrieval",
+      "duration_seconds": 200.99038370000017,
+      "fallback_triggered": false,
+      "scores": {
+        "retrieval_precision": 1.0,
+        "retrieval_recall": 0.0,
+        "contextual_relevancy": 0.85,
+        "faithfulness": 1.0,
+        "answer_relevancy": 1.0
+      },
+      "reasons": {
+        "faithfulness": "The score is 1.00 because the actual output aligns perfectly with the retrieval context, as there are no contradictions present.",
+        "answer_relevancy": "The score is 1.00 because the response directly answers both parts of the query regarding tie-breaking and no bids received without any irrelevant content, providing a perfect match for the user's needs.",
+        "retrieval_precision": "The score is a perfect 1.00 because Node 1 provides Relevant SHP engineering evidence., placing key information at the very top. This achieves maximum precision since no irrelevant nodes rank higher than this relevant content.",
+        "retrieval_recall": "The score is 0.00 because sentences 1-3 of the expected output regarding premium thresholds, gradation lists, and government agency allotment lack corresponding details in node(s) in retrieval context (nodes 1 and 2)."
+      },
+      "retrieval_context": [
+        "[allotmnet of shp.pdf - allotmnet of shp > Bidding process]: [Source: allotmnet of shp.pdf | Section: allotmnet of shp > Bidding process]  # Bidding process   • The project for which PFR/DPR is available shall be put on a competitive bidding.   - The project shall be advertised widely to seek bids from private entrepreneurs desirous for se",
+        "[management of shp.pptx - management of shp > Slide 10]: [Source: management of shp.pptx | Location: Slide/Page 10 | Section: management of shp > Slide 10]  ## Slide 10  - S. No. - ACTIVITY - 1   2   3   4   5   6   7   8   9   10\t11 - MONTHS  12\t13\t14\t15\t16\t17\t18 - 19\t20\t21\t22\t23\t24\t25\t26\t27\t28\t29\t30 - 1.0 - Study of approved DPR, all"
+      ]
+    }
+  ]
+}

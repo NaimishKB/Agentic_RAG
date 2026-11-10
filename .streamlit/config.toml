@@ -1,0 +1,9 @@
+[server]
+port = 8601
+address = "0.0.0.0"
+headless = true
+
+[browser]
+serverAddress = "localhost"
+serverPort = 8601
+

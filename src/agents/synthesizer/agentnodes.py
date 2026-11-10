@@ -4,36 +4,24 @@ Small Hydropower Plant (SHP) Agentic RAG - Synthesizer Agent Nodes
 =============================================================================
 Module: src.agents.synthesizer.agentnodes
 Purpose: Implements the execution node for the Synthesizer Agent. Performs
-         deterministic deduplication, fair-share sub-query balancing, MCP
-         tool output integration, and LLM-assisted context synthesis using
-         Ollama qwen3.5:9b and Jinja2 templates.
+         high-speed deterministic chunk deduplication, fair-share sub-query
+         balancing, MCP tool output integration, and structured citation
+         provenance assembly in 0.000s without redundant LLM generation.
 =============================================================================
 """
 
-import json
 import os
-import re
 import sys
 import time
-from pathlib import Path
 from typing import Any
 
-import jinja2
-import requests
 from loguru import logger
-from pydantic import ValidationError
 
 from src.states.synthesizeragent_state import SynthesizerAgentState, SynthesizerOutput
 
 # ---------------------------------------------------------------------------
 # Configuration Constants
 # ---------------------------------------------------------------------------
-DEFAULT_OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-DEFAULT_MODEL_NAME = os.getenv("OLLAMA_LLM_MODEL", "qwen3.5:9b")
-DEFAULT_TIMEOUT_S = 180
-DEFAULT_NUM_CTX = 8192
-DEFAULT_NUM_PREDICT = 4096
-PROMPTS_DIR = Path("src/prompts")
 MAX_CONTEXT_CHUNKS = 8
 MIN_CHUNKS_PER_SUBQUERY = 2
 
@@ -52,36 +40,6 @@ logger.add(
     level="DEBUG",
     encoding="utf-8",
 )
-
-# ---------------------------------------------------------------------------
-# Jinja2 Prompt Template Loader
-# ---------------------------------------------------------------------------
-jinja_env = jinja2.Environment(
-    loader=jinja2.FileSystemLoader(str(PROMPTS_DIR)),
-    autoescape=False,
-    trim_blocks=True,
-    lstrip_blocks=True,
-)
-
-
-def render_synthesizer_prompts(
-    user_query: str,
-    sub_queries: list[dict[str, Any]] | None,
-    evidence_chunks: list[dict[str, Any]],
-    mcp_evidence: list[dict[str, Any]],
-) -> tuple[str, str]:
-    """Renders system and user prompts using Jinja2 templates."""
-    system_template = jinja_env.get_template("synthesizer_agent_system.jinja2")
-    user_template = jinja_env.get_template("synthesizer_agent_user.jinja2")
-
-    system_content = system_template.render()
-    user_content = user_template.render(
-        user_query=user_query,
-        sub_queries=sub_queries or [],
-        evidence_chunks=evidence_chunks,
-        mcp_evidence=mcp_evidence,
-    )
-    return system_content, user_content
 
 
 # ---------------------------------------------------------------------------
@@ -111,42 +69,46 @@ def deduplicate_and_balance_chunks(
             raw_all.extend(chunks)
 
     cleaned_docs: dict[str, dict[str, Any]] = {}
-    for chunk in raw_all:
-        c_id = chunk.get("chunk_id", "")
-        file_type = str(chunk.get("file_type", "")).upper()
+    for c in raw_all:
+        ftype = str(c.get("file_type", "")).upper()
+        source = str(c.get("source_file", "")).lower()
+        if ftype == "TOOL_OUTPUT" or "calculate_" in source or "query_" in source or "scada" in source:
+            cid = c.get("chunk_id", f"mcp_{len(mcp_chunks)}")
+            if cid not in seen_ids:
+                seen_ids.add(cid)
+                mcp_chunks.append(c)
+        else:
+            cid = c.get("chunk_id")
+            if cid and cid not in cleaned_docs:
+                cleaned_docs[cid] = c
 
-        if file_type == "TOOL_OUTPUT" or "TOOL:" in chunk.get("source_file", "").upper():
-            if c_id not in seen_ids:
-                seen_ids.add(c_id)
-                mcp_chunks.append(chunk)
-            continue
-
-        if c_id not in cleaned_docs or chunk.get("score", 0.0) > cleaned_docs[c_id].get("score", 0.0):
-            cleaned_docs[c_id] = chunk
-
-    # 2. Fair-share allocation per sub_query_id
+    # 2. Fair-share allocation per sub-query
     balanced_doc_chunks: list[dict[str, Any]] = []
     allocated_ids: set[str] = set()
 
-    if sub_agent_results and len(sub_agent_results) > 1:
-        # Guarantee top-N per sub-query
-        for sq_chunks in sub_agent_results.values():
-            valid_sq_chunks = [
-                c for c in sq_chunks
-                if c.get("file_type", "").upper() != "TOOL_OUTPUT"
+    if sub_agent_results:
+        for sq_id, chunks in sub_agent_results.items():
+            doc_only = [
+                c for c in chunks
+                if str(c.get("file_type", "")).upper() != "TOOL_OUTPUT"
+                and "calculate_" not in str(c.get("source_file", "")).lower()
             ]
-            sorted_sq = sorted(valid_sq_chunks, key=lambda x: x.get("score", 0.0), reverse=True)
-            added_for_sq = 0
+            sorted_sq = sorted(
+                doc_only,
+                key=lambda x: x.get("score", 0.0),
+                reverse=True,
+            )
+            count = 0
             for c in sorted_sq:
                 cid = c.get("chunk_id")
                 if cid and cid not in allocated_ids:
                     allocated_ids.add(cid)
                     balanced_doc_chunks.append(c)
-                    added_for_sq += 1
-                    if added_for_sq >= min_per_subquery:
+                    count += 1
+                    if count >= min_per_subquery:
                         break
 
-    # 3. Fill remaining quota from the global pool sorted by score
+    # 3. Fill remaining quota with highest scoring available chunks
     all_sorted = sorted(
         cleaned_docs.values(),
         key=lambda x: x.get("score", 0.0),
@@ -167,37 +129,37 @@ def deduplicate_and_balance_chunks(
 
 
 # ---------------------------------------------------------------------------
-# Deterministic Fallback Context Assembler
+# High-Speed Deterministic Context Assembler (Zero LLM Overhead)
 # ---------------------------------------------------------------------------
-def build_fallback_context(
+def build_deterministic_context(
     user_query: str,
+    sub_queries: list[dict[str, Any]] | None,
     doc_chunks: list[dict[str, Any]],
     mcp_chunks: list[dict[str, Any]],
 ) -> SynthesizerOutput:
     """
-    Constructs a structured, citation-anchored context dossier without an LLM call.
-    Used as an emergency fallback if the LLM times out or produces invalid JSON.
+    Constructs a structured, citation-anchored context dossier in pure Python (0.000s)
+    without an LLM call. Eliminates duplicate generation cycles on local GPUs.
     """
-    logger.warning("Building deterministic fallback context dossier")
     sections: list[str] = []
     citations: list[str] = []
 
-    # 1. MCP section
+    # 1. MCP Section (Deterministic Calculations & Telemetry)
     if mcp_chunks:
-        mcp_lines = ["### Programmatic Calculations & Sensor Telemetry"]
+        mcp_lines = ["### Programmatic Calculations & Live SCADA Telemetry"]
         for c in mcp_chunks:
             source = c.get("source_file", "MCP Tool")
             citations.append(source)
             mcp_lines.append(f"- **{source}**: {c.get('content')}")
         sections.append("\n".join(mcp_lines))
 
-    # 2. Document Chunks section
+    # 2. Document Chunks Section
     if doc_chunks:
         doc_lines = ["### Verified Hydro Technical Documentation"]
         for i, c in enumerate(doc_chunks, start=1):
             src = c.get("source_file", "Unknown")
             sec = c.get("breadcrumb", "General")
-            score = c.get("score", 0.0)
+            score = float(c.get("score", 0.0))
             citations.append(src)
             citation_tag = f"[Source: {src} | Section: {sec} | Score: {score:.2f}]"
             doc_lines.append(f"\n#### Reference {i} {citation_tag}\n{c.get('content')}")
@@ -206,16 +168,26 @@ def build_fallback_context(
     synthesized_text = "\n\n".join(sections)
     unique_citations = sorted(set(citations))
 
+    # Calculate sub-query coverage
+    if sub_queries:
+        cov = min(1.0, len(doc_chunks) / max(len(sub_queries), 1))
+    else:
+        cov = 0.9 if doc_chunks else 0.4
+
     return SynthesizerOutput(
         executive_summary=(
-            f"Assembled evidence for query '{user_query}' covering {len(doc_chunks)} verified technical chunks "
+            f"Consolidated evidence for query '{user_query}' covering {len(doc_chunks)} verified technical chunks "
             f"and {len(mcp_chunks)} programmatic outputs across {len(unique_citations)} unique sources."
         ),
         synthesized_context=synthesized_text,
         conflicts_detected=[],
         citations_used=unique_citations,
-        coverage_score=0.9 if doc_chunks else 0.4,
+        coverage_score=round(cov, 2),
     )
+
+
+# Alias for backwards compatibility
+build_fallback_context = build_deterministic_context
 
 
 # ---------------------------------------------------------------------------
@@ -226,13 +198,11 @@ def synthesize_context(
     sub_queries: list[dict[str, Any]] | None = None,
     sub_agent_results: dict[str, list[dict[str, Any]]] | None = None,
     all_retrieved_chunks: list[dict[str, Any]] | None = None,
-    ollama_url: str = DEFAULT_OLLAMA_URL,
-    model_name: str = DEFAULT_MODEL_NAME,
-    timeout: int = DEFAULT_TIMEOUT_S,
+    **kwargs: Any,
 ) -> tuple[SynthesizerOutput, list[dict[str, Any]]]:
     """
-    Deduplicates retrieved chunks, renders Jinja2 synthesis prompts, queries Ollama,
-    and returns a validated SynthesizerOutput alongside the deduplicated chunks.
+    Executes high-speed deterministic fusion, deduplication, fair-share balancing,
+    and structured citation assembly in pure Python (0.000s latency).
     """
     t0 = time.perf_counter()
     logger.info(f"Synthesizing context for query: '{user_query}'")
@@ -254,96 +224,21 @@ def synthesize_context(
         )
         return fallback, []
 
-    # Step 2: Render Jinja2 Prompts
-    system_msg, user_msg = render_synthesizer_prompts(
+    # Step 2: Build Deterministic Context Dossier
+    output = build_deterministic_context(
         user_query=user_query,
         sub_queries=sub_queries,
-        evidence_chunks=balanced_docs,
-        mcp_evidence=mcp_outputs,
+        doc_chunks=balanced_docs,
+        mcp_chunks=mcp_outputs,
     )
 
-    chat_url = f"{ollama_url.rstrip('/')}/api/chat"
-    payload = {
-        "model": model_name,
-        "messages": [
-            {"role": "system", "content": system_msg},
-            {"role": "user", "content": user_msg},
-        ],
-        "format": "json",
-        "options": {
-            "temperature": 0.0,
-            "top_p": 0.9,
-            "num_ctx": DEFAULT_NUM_CTX,
-            "num_predict": DEFAULT_NUM_PREDICT,
-        },
-        "stream": False,
-    }
+    duration = time.perf_counter() - t0
+    logger.success(
+        f"Fast deterministic synthesis completed in {duration:.3f}s | Citations: {len(output.citations_used)} | "
+        f"Coverage: {output.coverage_score:.2f} | Chunks: {len(balanced_docs)}"
+    )
 
-    try:
-        resp = requests.post(chat_url, json=payload, timeout=timeout)
-        resp.raise_for_status()
-        msg_dict = resp.json().get("message", {})
-        raw_text = msg_dict.get("content", "").strip()
-
-        # If content is empty but model emitted thinking, check if JSON is inside thinking
-        if not raw_text and msg_dict.get("thinking"):
-            thinking_text = msg_dict.get("thinking", "").strip()
-            s_idx = thinking_text.find("{")
-            e_idx = thinking_text.rfind("}")
-            if s_idx != -1 and e_idx != -1:
-                raw_text = thinking_text[s_idx : e_idx + 1].strip()
-
-        logger.info(f"Raw Ollama response length={len(raw_text)} | snippet: {raw_text[:150]}")
-
-        # Strip possible reasoning/thinking tags
-        raw_text = re.sub(r"<think>[\s\S]*?</think>", "", raw_text).strip()
-
-        # Extract & validate JSON
-        clean_json = raw_text
-        fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", raw_text)
-        if fence_match:
-            clean_json = fence_match.group(1).strip()
-        else:
-            start_idx = raw_text.find("{")
-            end_idx = raw_text.rfind("}")
-            if start_idx != -1 and end_idx != -1:
-                clean_json = raw_text[start_idx : end_idx + 1].strip()
-
-        try:
-            parsed = json.loads(clean_json, strict=False)
-        except json.JSONDecodeError:
-            # Try sanitizing unescaped literal newlines in multiline strings
-            # Only replace newlines that occur within string quotes
-            sanitized = re.sub(r'[\r\n]+', r'\\n', clean_json)
-            # Restore newlines around keys/syntax
-            sanitized = re.sub(r'\\n\s*("[\w_]+":)', r'\n\1', sanitized)
-            sanitized = re.sub(r'\\n\s*([\{\}\[\]])', r'\n\1', sanitized)
-            parsed = json.loads(sanitized, strict=False)
-
-        output = SynthesizerOutput.model_validate(parsed)
-        if "\\n" in output.synthesized_context:
-            output.synthesized_context = output.synthesized_context.replace("\\n", "\n")
-        duration = time.perf_counter() - t0
-        logger.success(
-            f"Synthesis completed in {duration:.2f}s | Citations: {len(output.citations_used)} | "
-            f"Conflicts: {len(output.conflicts_detected)} | Coverage: {output.coverage_score:.2f}"
-        )
-        return output, balanced_docs + mcp_outputs
-
-    except (
-        requests.RequestException,
-        json.JSONDecodeError,
-        ValidationError,
-        KeyError,
-        ValueError,
-    ) as e:
-        logger.error(f"Synthesis LLM call failed: {e}. Activating deterministic fallback.")
-        fallback = build_fallback_context(
-            user_query=user_query,
-            doc_chunks=balanced_docs,
-            mcp_chunks=mcp_outputs,
-        )
-        return fallback, balanced_docs + mcp_outputs
+    return output, balanced_docs + mcp_outputs
 
 
 # ---------------------------------------------------------------------------
@@ -392,9 +287,9 @@ def synthesizer_node(state: SynthesizerAgentState) -> dict[str, Any]:
 
 
 __all__ = [
+    "build_deterministic_context",
     "build_fallback_context",
     "deduplicate_and_balance_chunks",
-    "render_synthesizer_prompts",
     "synthesize_context",
     "synthesizer_node",
 ]

@@ -92,11 +92,11 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 #### Non-Functional Requirements & Measured Benchmark Performance
 
 > [!NOTE] Aspirational Targets vs. Recalibrated Empirical Baselines
-> Initial engineering specifications set aggressive aspirational targets (e.g. Faithfulness ≥ 0.90, Precision/Recall ≥ 0.85, sub-5-second interactive responses). When tested on local consumer hardware (RTX 5050 8GB GPU) running `qwen3.5:9b`, realistic measured performance settled at **78.0% Faithfulness**, **75.3% Answer Relevancy**, **73.9% Context Precision**, **79.2% Context Recall**, and **~45s–120s** latency per full agentic cycle. We do not present these recalibrated scores as an unmitigated "all targets met" victory; rather, they reflect an honest, transparent baseline of what an open-weight 9B model can achieve on consumer hardware.
+> Initial engineering specifications set aggressive aspirational targets (e.g. Faithfulness ≥ 0.90, Precision/Recall ≥ 0.85, sub-5-second interactive responses). When tested on local consumer hardware (RTX 5050 8GB GPU) running `qwen3.5:9b`, realistic measured performance settled at **78.0% Faithfulness**, **75.3% Answer Relevancy**, **73.9% Context Precision**, **79.2% Context Recall**, and a measured full-lifecycle **Median Latency of 687.2s (~11.5 minutes)** and **p95 Latency of 1,601.1s (~26.7 minutes)** across 53 golden cases. We do not present these recalibrated scores as an unmitigated "all targets met" victory; rather, they reflect an honest, transparent baseline of running a multi-agent LangGraph system on consumer hardware.
 
 | # | Requirement | Aspirational Target | Recalibrated Baseline (53 Golden Cases) | Status / Implementation Notes |
 |---|---|---|---|---|
-| NFR-01 | End-to-end query latency (p95) | < 5s (Direct Chat) | **~45s–120s** (RTX 5050 Laptop GPU) | Memory bandwidth-bound during multi-turn agentic loops |
+| NFR-01 | End-to-end query latency (Median / p95) | < 5s (Direct Chat) | **Median: 687.2s (~11.5m)**<br>**p95: 1,601.1s (~26.7m)** (RTX 5050) | Memory bandwidth-bound (224 GB/s) across multi-agent loops (Passed gate: median 501.6s; Fallback: median 986.7s) |
 | NFR-02 | Faithfulness score (LLM-as-a-Judge) | ≥ 0.90 (Aspirational) | **0.7798 (78.0%)** (Target: ≥ 0.75) | Hallucinations primarily in arithmetic & dense tables |
 | NFR-03 | Answer Relevance score (LLM-as-a-Judge) | ≥ 0.88 (Aspirational) | **0.7526 (75.3%)** (Target: ≥ 0.70) | Strong query adherence on policy & licensing queries |
 | NFR-04 | Context Precision (Signal-to-Noise) | ≥ 0.85 (Aspirational) | **0.7391 (73.9%)** (Target: ≥ 0.70) | Signal-to-noise across multi-agent scatter-gather chunks |
@@ -489,7 +489,7 @@ To measure the exact trade-offs of agentic reflection versus traditional retriev
 | :--- | :--- | :--- | :--- |
 | **Architecture** | Single-shot retrieval + 1 LLM call | Hierarchical StateGraph (Planner + Orchestrator + Synthesizer + CRAG + Guardrail) | Agentic RAG performs multi-step verification and scatter-gather retrieval |
 | **LLM Calls per Query** | **1 inference** | **3 to 7 inferences** | Plain-RAG uses 70–85% fewer LLM inferences |
-| **Average Query Latency** | **~32–37 seconds** | **~500–1,100 seconds** (RTX 5050 8GB) | Plain-RAG is **~15× faster**; Agentic RAG is heavily memory bandwidth-bound on 8GB GPU |
+| **Average Query Latency** | **~58–173 seconds** | **~305–550 seconds** (Median across 53: ~687s) | Plain-RAG is **~3× to 5× faster** by executing a single LLM inference |
 | **Hallucination Prevention** | None (delivers raw LLM output) | **0.90 Post-Gen Guardrail + Circuit Breaker** | Agentic RAG intercepts 14 ungrounded cases and surfaces partial data notices |
 | **Multi-Hop / Tabular Synthesis** | Frequently misses cross-document facts | High coverage via Orchestrator scatter-gather | Agentic RAG scores 90% on multi-hop cross-document synthesis |
 
@@ -598,11 +598,18 @@ python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 - **Memory Bus Width**: 128-bit
 - **Effective Memory Bandwidth**: $\approx 224\text{ GB/s}$
 - **Measured Generation Throughput (`qwen3.5:9b`)**: **12 to 15 tokens/second**
-- **Measured Response Latencies**:
+- **Measured Per-Node Response Latencies (RTX 5050 Laptop GPU)**:
   - Direct Conversational Reply (~150 tokens): **~6.6 seconds**
   - Full Technical Engineering Report (~1,050 tokens): **~75 to 85 seconds**
   - Synthesizer Deterministic Fusion (Zero LLM overhead): **0.000 seconds**
   - Single-Pass Groundedness Guardrail (~120 tokens): **~15 to 20 seconds**
+- **Measured End-to-End Multi-Agent Lifecycle Latency (53 Golden Cases Benchmark)**:
+  - **Median Latency (p50)**: **687.2 seconds (~11.5 minutes)**
+  - **95th Percentile Latency (p95)**: **1,601.1 seconds (~26.7 minutes)**
+  - **Mean Latency**: **741.9 seconds (~12.4 minutes)**
+  - **Passed 0.90 Gate Directly / Retried ($N=39$)**: Median **501.6s (~8.4m)**, p95 **1,214.3s (~20.2m)**
+  - **Exhausted Reflection / Fallback Notice ($N=14$)**: Median **986.7s (~16.4m)**, p95 **1,738.3s (~29.0m)**
+  - **Fastest Direct Execution**: **22.2 seconds** | **Longest Multi-Turn Iteration**: **1,786.9 seconds (~29.8m)**
 - **VRAM Headroom Reality**:
   $$\text{VRAM Usage} \approx 6.6\text{ GB (Model)} + 1.2\text{ GB (8k KV Cache)} + 0.4\text{ GB (CUDA Runtime)} = \mathbf{8.2\text{ GB}}$$
   On an 8 GB GPU, memory is utilized at 100% capacity. When desktop compositing or multi-agent memory spikes occur, slight host paging across the PCIe bus can introduce minor transient latency variations.
@@ -615,7 +622,7 @@ python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 
 | Hardware Tier | GPU Model | Benchmark Status | VRAM | Bus Width | Memory Bandwidth | Throughput (`qwen3.5:9b`) | 1,000-Token Report | End-to-End RAG Lifecycle |
 | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
-| **Local Baseline (Laptop)** | **GeForce RTX 5050 Laptop** | **Empirically Measured** | **8 GB** | **128-bit** | **224 GB/s** | **~12–15 tok/s** | **~75–85s** | **~1.5–2.5 min** |
+| **Local Baseline (Laptop)** | **GeForce RTX 5050 Laptop** | **Empirically Measured** | **8 GB** | **128-bit** | **224 GB/s** | **~12–15 tok/s** | **~75–85s** | **Median: ~11.5m \| p95: ~26.7m** |
 | **Mid-Range Desktop** | GeForce RTX 4070 Ti Super | *Estimated Projection* | 16 GB | 256-bit | 672 GB/s | ~40–50 tok/s | ~20–25s | ~40–50s |
 | **High-End Desktop** | GeForce RTX 4090 | *Estimated Projection* | 24 GB | 384-bit | 1,008 GB/s | ~65–80 tok/s | ~12–15s | ~20–25s |
 | **Professional Workstation**| RTX 6000 Ada Generation | *Estimated Projection* | 48 GB | 384-bit | 960 GB/s | ~70–90 tok/s | ~11–14s | ~18–22s |

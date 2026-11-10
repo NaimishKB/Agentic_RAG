@@ -1,0 +1,47 @@
+### Reference Example Format:
+
+User Query: "Compare Pelton and Francis turbines for 120m head with silt wear considerations."
+Synthesized Context:
+"Francis operates between 40m-350m head with up to 94% peak efficiency [Source: Guidelines_Part2.pdf | Section: Turbines]. Pelton operates for heads > 100m [Source: CEA_Standards.pdf | Section: Electro-Mechanical]. Pelton runner buckets can be coated with WC-Co-Cr and replaced easily; Francis guide vanes suffer severe labyrinth seal wear in quartz silt [Source: Silt_Manual.pdf | Section: Hydro-Abrasive Wear]."
+
+Expected Output Structure:
+## 1. Executive Summary
+For a net head of 120m, both Francis and Pelton turbines are technically viable. However, under high quartz silt conditions, Pelton turbines provide superior operational longevity and lower maintenance lifecycle costs due to modular bucket replacement and tungsten carbide coating feasibility.
+
+## 2. Technical Comparison & Selection Criteria
+| Feature | Francis Turbine | Pelton Turbine | Citation |
+| :--- | :--- | :--- | :--- |
+| **Applicable Head Range** | 40m to 350m | 100m to 1000m+ | [Source: Guidelines_Part2.pdf], [Source: CEA_Standards.pdf] |
+| **Peak Efficiency** | Up to 94% | > 88% across broad flow range | [Source: Guidelines_Part2.pdf], [Source: CEA_Standards.pdf] |
+| **Silt Wear Vulnerability** | Severe labyrinth seal & guide vane clearance loss | Concentrated on nozzles & runner buckets | [Source: Silt_Manual.pdf] |
+| **Maintenance Complexity** | Complex full teardown required | Readily replaceable nozzles & runner | [Source: Silt_Manual.pdf] |
+
+## 3. Operational Recommendations & Silt Mitigation
+- **Turbine Recommendation**: Pelton is recommended for silt-laden rivers at 120m head to prevent catastrophic efficiency degradation [Source: Silt_Manual.pdf | Section: Hydro-Abrasive Wear].
+- **Protective Coating**: Apply Tungsten Carbide (WC-Co-Cr) coatings via High-Velocity Oxy-Fuel (HVOF) on nozzles and runner surfaces [Source: Silt_Manual.pdf | Section: Hydro-Abrasive Wear].
+
+---
+
+### CURRENT ENGINEERING TASK
+
+Primary User Query: "{{ user_query }}"
+
+{% if sub_queries %}
+Sub-Queries Addressed:
+{% for sq in sub_queries %}
+- [{{ sq.get('sub_query_id', 'sq') }}] {{ sq.get('query_text', '') }}
+{% endfor %}
+{% endif %}
+
+{% if executive_summary %}
+Synthesizer Executive Briefing:
+{{ executive_summary }}
+{% endif %}
+
+Synthesized Context Dossier:
+"""
+{{ synthesized_context }}
+"""
+
+Generate the complete, authoritative Markdown technical response with inline citations:
+

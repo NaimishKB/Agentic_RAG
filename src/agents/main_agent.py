@@ -11,6 +11,7 @@ Purpose: Assembles, compiles, and executes the complete End-to-End LangGraph
 =============================================================================
 """
 
+import os
 import sys
 from typing import Any
 
@@ -78,30 +79,31 @@ def route_after_planner(state: AgentState) -> str:
     return "plan_orchestration"
 
 
+MAX_CYCLES = int(os.getenv("MAX_REWRITE_ATTEMPTS", "1"))
+
+
 def route_after_retrieval_grader(state: AgentState) -> str:
     """
     Evaluates Pre-Generation Retrieval Sufficiency Grader (Production CRAG).
     - is_sufficient is True -> generator
-    - is_sufficient is False AND cycle_count < 3 -> feedback
-    - is_sufficient is False AND cycle_count >= 3 -> fallback (circuit breaker)
+    - is_sufficient is False AND cycle_count < MAX_CYCLES -> feedback
+    - is_sufficient is False AND cycle_count >= MAX_CYCLES -> generator
     """
     is_sufficient = state.get("is_retrieval_sufficient", False)
     cycle = state.get("cycle_count", 0)
     logger.info(f"[ROUTER: retrieval_grader] is_sufficient={is_sufficient} | cycle_count={cycle}")
 
-    if is_sufficient:
+    if is_sufficient or cycle >= MAX_CYCLES:
         return "generator"
-    elif cycle < 3:
-        return "feedback"
-    return "fallback"
+    return "feedback"
 
 
 def route_after_generation_guardrail(state: AgentState) -> str:
     """
     Evaluates Post-Generation DeepEval Faithfulness Guardrail.
     - is_grounded is True -> END (deliver verified answer to user)
-    - is_grounded is False AND cycle_count < 3 -> feedback (loop back for remediation)
-    - is_grounded is False AND cycle_count >= 3 -> fallback (circuit breaker)
+    - is_grounded is False AND cycle_count < MAX_CYCLES -> feedback (loop back for remediation)
+    - is_grounded is False AND cycle_count >= MAX_CYCLES -> fallback (circuit breaker)
     """
     is_grounded = state.get("is_grounded", False)
     cycle = state.get("cycle_count", 0)
@@ -109,7 +111,7 @@ def route_after_generation_guardrail(state: AgentState) -> str:
 
     if is_grounded:
         return END
-    elif cycle < 3:
+    elif cycle < MAX_CYCLES:
         return "feedback"
     return "fallback"
 

@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "evaluation_mode": "auto",
+    "total_cases_evaluated": 2,
+    "hallucination_rate_percent": 0.0,
+    "provider_model_usage": {
+      "gemini:gemini-2.5-flash": 2
+    }
+  },
+  "aggregate_metrics": {
+    "average_faithfulness": 1.0,
+    "average_answer_relevancy": 1.0,
+    "average_context_precision": 0.6,
+    "average_context_recall": 0.75
+  },
+  "category_breakdown": {
+    "Single-Hop Policy & Licensing": {
+      "test_cases": 2,
+      "avg_faithfulness": 1.0,
+      "avg_answer_relevancy": 1.0,
+      "avg_context_precision": 0.6,
+      "avg_context_recall": 0.75
+    }
+  },
+  "detailed_results": [
+    {
+      "id": "GD-01",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?",
+      "actual_output": "Based on the provided engineering documentation, there are three primary methods used by State Governments for site allotment or licensing of Small Hydro Power (SHP) sites:\n\n1.  **Bidding process**\n2.  **MoU method**\n3.  **Swiss model of defence** [Source: allotmnet of shp.pdf]\n\nRegarding the conditions under which each method is preferred, the provided documentation does not contain sufficient data to specify when each method is preferred or their respective criteria for selection [Source: allotmnet of shp.pdf]. The documents describe the process for the MoU method (where an interested developer gives an offer to the State Government through a state nodal agency) but do not outline preference scenarios for the bidding process or the Swiss model [Source: allotmnet of shp.pdf].",
+      "expected_output": "The three methods for SHP site allotment are the Bidding process, the MoU (Memorandum of Understanding) method, and the Swiss model of defence. Competitive bidding is used when a Pre-Feasibility Report (PFR) or Detailed Project Report (DPR) is available (or via pre-qualification merit lists when unavailable). The MoU method is preferred when there is very little or no competition. The Swiss model of defence is applied when there is total uncertainty regarding technology or tariff, giving the first bidder an opportunity to defend their bid.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.6,
+        "context_recall_score": 0.5,
+        "hallucination_detected": false,
+        "reasoning": "The AI correctly identified the three methods for SHP site allotment directly from the context. It also accurately stated that the provided documentation lacked information on when each method is preferred, which is faithful to the retrieved chunks. However, the context contained significant irrelevant information, and critically missed the details regarding the preference criteria for each method that were present in the ground truth.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 208.37
+    },
+    {
+      "id": "GD-02",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?",
+      "actual_output": "Based on the provided engineering documentation, the procedures for competitive bidding when a PFR/DPR is available are as follows:\n\n*   **Tie-breaking:** If more than one bidder submits an identical premium per MW for a specific site, allotment is determined using a gradation list based on prequalification criteria [Source: allotmnet of shp.pdf].\n*   **No Bids Received:** In the event there are no bids received for two times (instances), the site is allotted to a government agency [Source: allotmnet of shp.pdf].",
+      "expected_output": "Bids are invited for an upfront premium per MW subject to a minimum threshold premium (bids below the threshold are rejected), and the project is allotted to the highest bidder. If multiple bidders quote an identical premium per MW for a site, allotment is decided using a gradation list based on pre-qualification criteria. If no bid is received twice, the site is allotted to a government agency.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.6,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is completely faithful to the retrieved context and directly addresses both specific questions in the user query. All information required for the ground truth was present in the context. However, the retrieved context included several irrelevant chunks, notably Chunk 5, which reduced the context precision score.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 50.23
+    }
+  ]
+}

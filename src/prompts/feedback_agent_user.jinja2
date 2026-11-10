@@ -1,0 +1,41 @@
+### DIAGNOSTIC INCIDENT REPORT
+
+Primary User Query: "{{ user_query }}"
+Execution Loop Iteration: Cycle {{ cycle_count }} / 3
+
+{% if is_retrieval_sufficient is false or missing_aspects %}
+[Failure Trigger: Retrieval Sufficiency Grader (Pre-Gen)]
+- Retrieval Sufficient: False
+- Grader Missing Aspects Identified:
+{% for item in missing_aspects %}
+  * {{ item }}
+{% endfor %}
+- Grader Critique: {{ retrieval_critique }}
+{% endif %}
+
+{% if is_grounded is false or generation_metrics %}
+[Failure Trigger: Post-Generation Groundedness Guardrail (DeepEval)]
+- Is Grounded: {{ is_grounded }}
+- Generation Metrics: {{ generation_metrics }}
+{% if unfaithful_statements %}
+- Unfaithful Claims / Hallucinations Detected:
+{% for stmt in unfaithful_statements %}
+  * {{ stmt }}
+{% endfor %}
+{% endif %}
+{% if guardrail_critique %}
+- Guardrail Critique: {{ guardrail_critique }}
+{% endif %}
+- Draft Generated Response:
+"""
+{{ final_response }}
+"""
+{% endif %}
+
+Synthesized Context Dossier Available in Previous Cycle:
+"""
+{{ synthesized_context }}
+"""
+
+Formulate your diagnostic analysis and actionable remediation instructions for the Planner Agent in valid JSON:
+

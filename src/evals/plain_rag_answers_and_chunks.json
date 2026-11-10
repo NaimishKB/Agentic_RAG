@@ -1,0 +1,191 @@
+{
+  "metadata": {
+    "timestamp": "2026-11-10T09:04:34.167028+00:00",
+    "architecture": "Plain-RAG Baseline (No Planner, No CRAG, No Feedback Loops)",
+    "total_cases_evaluated": 2,
+    "retriever_mode": "hybrid",
+    "average_latency_seconds": 129.3
+  },
+  "results": [
+    {
+      "id": "GD-01",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?",
+      "expected_output": "The three methods for SHP site allotment are the Bidding process, the MoU (Memorandum of Understanding) method, and the Swiss model of defence. Competitive bidding is used when a Pre-Feasibility Report (PFR) or Detailed Project Report (DPR) is available (or via pre-qualification merit lists when unavailable). The MoU method is preferred when there is very little or no competition. The Swiss model of defence is applied when there is total uncertainty regarding technology or tariff, giving the first bidder an opportunity to defend their bid.",
+      "actual_output": "Based on the provided engineering documentation, there are three primary methods used by State Governments for site allotment or licensing of Small Hydro Power (SHP) sites:\n\n1.  **Bidding process**\n2.  **MoU method**\n3.  **Swiss model of defence** [Source: allotmnet of shp.pdf]\n\nRegarding the conditions under which each method is preferred, the provided documentation does not contain sufficient data to specify when each method is preferred or their respective criteria for selection [Source: allotmnet of shp.pdf]. The documents describe the process for the MoU method (where an interested developer gives an offer to the State Government through a state nodal agency) but do not outline preference scenarios for the bidding process or the Swiss model [Source: allotmnet of shp.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0001",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Allotment/Licensing policy for small hydro power plant]\n\n### Allotment/Licensing policy for small hydro power plant",
+          "score": 0.834,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Allotment/Licensing policy for small hydro power plant",
+          "is_table": true,
+          "token_count": 44,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1221",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\n- } SHP sites of over 8,000 MW capacity have been allotted to private sector for their development.\n\n- } Power banking (a concept of utilizing the electricity from the grid by the IPP for its use from one season’s rainy period to other seasons i.e. dry period) is permitted by many states for a period of few months to one year.\n\n- } Buy back of SHP is generally based on the guidelines issued by the Central Electricity Regulatory Commission (CERC), with variations given by the\n\n###### **Renewable energy policy**\n\n380\n\n3.3\n\nrespective State Electricity Regulatory Commissions (SERCs).\n\n- } Some states provide other concessions such as lease of land, exemption from electricity duty and entry tax on power generation equipment.\n\n- } Some states do not levy any water charges known as water regulatory while some levy it as a percentage of electricity tariffs.\n\n- } Some states have prescribed the minimum quantum of power produced from renewable sources, renewable purchase obligation (RPO) to be purchased by State Distribution Licensee varying from 1 to 10 per cent in incremental manners.\n\n- } Some states have imposed minimum environmental flow during lean season and monitoring is done by automatic devices, including real-time data on the web.\n\n###### **Barriers to small hydropower development**\n\nThese barriers may be summarized as follows:\n\n- } Long waiting periods for project licenses, clearances, in obtaining permissions or finances;\n\n- } Lack of involvement of local people;\n\n- } Lack of awareness and legal tools with the state government to regulate minimum flows in the streams;\n\n- } Lack of power evacuation infrastructure;\n\n- } Lack of clarity in ownership of SHP projects, even each project’s provided share in the form of water royalty, local area development, assistance;",
+          "score": 0.689,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 379,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0002",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Site allotment/license]\n\n# Site allotment/license \n\n- There are generally three methods to the site allotment- \n\n- • Bidding process • MoU method \n\n- Swiss model of defence",
+          "score": 0.948,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Site allotment/license",
+          "is_table": false,
+          "token_count": 59,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "AK-Overview of SHP Development__c5191250__c0053",
+          "content": "[Source: AK-Overview of SHP Development.pdf | Section: AK-Overview of SHP Development > 一 > ~~O~~ > Vortex Turbine** > Different Devices**]\n\n#### **Different Devices**\n\nOpen Hydro Rim Drive Turbine\n\nLunar Energy RTT Turbine\n\nGorlov Helical Turbine\n\nMCT Experimental SeaFlow\n\n<!-- Start of picture text -->\nUEK<br><!-- End of picture text -->\n\nSMD Hydrovision\n\nUEK Shrouded Turbine\n\nSMAR\n\nR\n\nLow Maintenance H <mark>y</mark> drokinetic River Turbine Desi <mark>g</mark> n\n\n**<mark>100</mark>**\n\n###### **<mark>PURPOSE of SHP</mark>**\n\n###### **Social Sector SHPs-**\n\n• **aims to supply electricity specially in stand alone mode,**\n\n- **characterized with load factor and of small poor**\n\n- **capacity**\n\n- **often involved in distribution also**\n\n- • **Often are fully supported by government** • **O&M is recovered through user charges collection**\n\n- **Commercial SHPs-**\n\n• **aims to sell electricity to power distributing or trading companies or for captive use,**\n\n- **are grid connected and are relatively larger capacity**\n\n- • **have high load factor** • **Financially sound**\n\n**_Both are required and different level of approach, subsidy, tariff etc are needed_**\n\n###### **<mark>WHY SHP In Developing Countries</mark>**\n\n- The majority SHP have been used to mini grids and remote (often mountainous) areas as well as for gridbased power generation\n\n- Village-scale mini grids can serve hundreds of households in settings where there are sufficiently clustered end-users\n\nMost village-scale mini grids have been developed in Asia on the basis of small hydro, particularly in China, Nepal, India, Vietnam and Sri Lanka where they are often also powering small industries that provide substantial local income and jobs.\n\n**_SHP plays a very important role in hydro power development, especially in remote off-grid communities_**\n\n**RESEARCH AND DEVELOPMENT** <mark>日</mark>\n\n103",
+          "score": 0.686,
+          "source_file": "AK-Overview of SHP Development.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "AK-Overview of SHP Development > 一 > ~~O~~ > Vortex Turbine** > Different Devices**",
+          "is_table": true,
+          "token_count": 436,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0005",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > MoU method of allotment]\n\n# MoU method of allotment \n\n- Any interested developer may give their offer to SG through the state nodal agency. \n\n- The SG will give project-wise consent for preparation of PFR through the state nodal agency to the developer.",
+          "score": 0.619,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > MoU method of allotment",
+          "is_table": false,
+          "token_count": 76,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1220",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nTo enable the project developer in the hydropower sector to achieve a reasonable and quick return on investment, merchant sale of up to a maximum of 40 per cent of the saleable energy has been allowed. The Government of India provides subsidies for the development of SHP for government, society and private sectors in different proportions depending on the location, degree of difficulty and installed capacity.\n\n###### **Legislation on small hydropower**\n\nWater is a subject of state governments in India, and hence hydropower development is the responsibility of state governments. The Central Government advises on the hydropower matters and plays the role of an overall river basin planner and arbitrator. The MNRE has issued guidelines to the state governments for developing policies for renewable energy development, and especially for SHP. The Indian Electricity Act 2003 has special provisions to encourage the development of renewable energy and rural electrification. A new Renewable Energy Act 2015 has been drafted by MNRE and is under consideration by the Indian Parliament.<sup>5</sup>\n\nThe main features of the SHP and or renewable energy policies (different in different states) of the state government are summarized below:\n\n- } Twenty-four states namely Arunachal Pradesh, Andhra Pradesh, Assam, Bihar, Chhattisgarh, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Karnataka, Kerala, Madhya Pradesh, Maharashtra, Meghalaya, Mizoram, Orissa, Punjab, Rajasthan, Sikkim, Tamil Nadu, Tripura, Uttarakhand, Uttar Pradesh and West Bengal have announced policies for setting up commercial SHP projects through private sector participation. The facilities available in the states include wheeling of power produced, banking, buy-back of power and facility for third party sale.",
+          "score": 0.677,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 383,
+          "worker_source": "hybrid(dense_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 208.37,
+      "generation_latency_seconds": 207.03,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 549.52
+      },
+      "completed_at": "2026-11-10T09:03:43.938999+00:00"
+    },
+    {
+      "id": "GD-02",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?",
+      "expected_output": "Bids are invited for an upfront premium per MW subject to a minimum threshold premium (bids below the threshold are rejected), and the project is allotted to the highest bidder. If multiple bidders quote an identical premium per MW for a site, allotment is decided using a gradation list based on pre-qualification criteria. If no bid is received twice, the site is allotted to a government agency.",
+      "actual_output": "Based on the provided engineering documentation, the procedures for competitive bidding when a PFR/DPR is available are as follows:\n\n*   **Tie-breaking:** If more than one bidder submits an identical premium per MW for a specific site, allotment is determined using a gradation list based on prequalification criteria [Source: allotmnet of shp.pdf].\n*   **No Bids Received:** In the event there are no bids received for two times (instances), the site is allotted to a government agency [Source: allotmnet of shp.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0003",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Bidding process]\n\n# Bidding process \n\n• The project for which PFR/DPR is available shall be put on a competitive bidding. \n\n- The project shall be advertised widely to seek bids from private entrepreneurs desirous for setting up SHP.",
+          "score": 0.899,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Bidding process",
+          "is_table": true,
+          "token_count": 71,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0004",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]\n\n# Contd… \n\n• Application in response to the advertisement should be accompanied by a non refundable amount fixed by SG. \n\n• All bidders shall be subject to prequalification.\n\n# Contd… \n\n• All prequalified bidders will be provided with the PFR/DPRs. • Bids shall be invited for premium payable upfront. • Upfront will be per MW for each project, subjected to a minimum threshold premium. If the bid received beneath the threshold…\n\n# Contd… \n\n… will be rejected. \n\n• Project will be allotted to the bidders making the highest bid. • The successful bidder shall be required to deposit the premium amount within a reasonable period of receiving intimation regarding his successful bid.\n\n# Contd… \n\n• If more than one bidder bids the identical premium per MW for any site, a gradation list based on prequalification criterion shall be the basis for allotment. \n\n- In case there is no bid for two times, the site is allotted to govt. agency.\n\n# Contd… \n\n• The project for which PFR/DPR are not available shall be allotted to the prequalified bidders. \n\nThe project shall be advertised in order to seek bids. Application in response to the advertisement…\n\n# Contd… \n\n…should be accompanied by a non refundable amount fixed by SG. • All bidders shall be subject to prequalification. \n\nThe merit list of the bidders shall be prepared according to the prequalification criterion and project allotted to the bidders.\n\n# Contd… \n\n• Any feasible SHP potential site identified by the IPPs/User society and proposed to SG for allotment along with self prepared verifiable feasible PFR/DPR-\n\n# Contd… \n\nThe application fee and bid amount shall be paid. These projects shall be allotted as first cum basis.",
+          "score": 0.798,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Contd…",
+          "is_table": true,
+          "token_count": 406,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0006",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]\n\n# Contd… \n\n- The developer shall submit PFR to the state nodal agency. \n\n- Based on such PFR,SG will decide to give consent for detailed survey and investigation and DPR preparation.\n\n# Contd… \n\n• The developer shall submit the DPR to the state nodal agency and the approval for project implementation would be given by state nodal agency, after examining the DPR; if acceptable.\n\n# Contd… \n\n• A formal **Memorandum of Understanding/ Agreement** will be executed between the developer and SG for implementation of the project.\n\n# Contd… \n\n• This method is generally preferred where there is very less or no competition.",
+          "score": 0.669,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Contd…",
+          "is_table": true,
+          "token_count": 158,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0002",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Site allotment/license]\n\n# Site allotment/license \n\n- There are generally three methods to the site allotment- \n\n- • Bidding process • MoU method \n\n- Swiss model of defence",
+          "score": 0.616,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Site allotment/license",
+          "is_table": true,
+          "token_count": 59,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Pages from dpr_guidelines for cost estimates as per CWC__b64945dd__c0048",
+          "content": "[Source: Pages from dpr_guidelines for cost estimates as per CWC.pdf | Section: Pages from dpr_guidelines for cost estimates as per CWC > 18. Estimate > c) Dam: > i) Excavation > 18.6.7.1 Residential buildings should be provided for all officers and staff(regular as well as work-charged) engaged on site of work as necessary.]\n\n#### 18.6.7.1 Residential buildings should be provided for all officers and staff(regular as well as work-charged) engaged on site of work as necessary. \n\nNon-residential buildings shall include :- \n\na)Office buildings; b) Testing laboratory; c)Rest houses and field hostels; d)Workshops including site,workshops; e)Stores including site stóres; f) Sheds; and g)Other service buildings such as : \n\ni) Hospitals or dispensaries or both; ii) Welfare centres; \n\n117 \n\niii) Police stations; iv) Schools; v) Post offices, telegraph and telephone offices; vi) Community centres; vii)Diesel generating station and sub-stations viii) Canteens; \n\nix) Co-operative stores & markets; x) Bus Stops; xi) Public Utilities; xii) Banks and treasuries; xiii) Pump houses and fire stations etc. \n\n- 18.6.7.2 The buildings both residential and non-residential shall be further divided in two categories - permanent and semi-permanent or temporary. Permanent buildings may beconsidered only if these are required in the post construction period also. \n\n- 18.6.7.3 The usual practice is to make the provision under this sub-head on the basis of plinth area and prevailing market rates per unit areafordifferent types of buildings. The type of construction proposed should be clearly described. \n\nIt is observed that the total cost of buildings in a project generally amounts to 5% to 7% in plain region and 6% to 8% in hilly region of the cost of I-Works. Provision less than 5% is likely to be adequate only in cases where the project is located near urban areas or some existing project, where other buildings could be obtained for use.",
+          "score": 0.57,
+          "source_file": "Pages from dpr_guidelines for cost estimates as per CWC.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Pages from dpr_guidelines for cost estimates as per CWC > 18. Estimate > c) Dam: > i) Excavation > 18.6.7.1 Residential buildings should be provided for all officers and staff(regular as well as work-charged) engaged on site of work as necessary.",
+          "is_table": false,
+          "token_count": 467,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0013",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]\n\n# Contd… \n\n• The failure to get those will result in automatic cancellation of the allotment of the site, and forfeiture of upfront premium amounts. • No compensation would be payable to IPP’s in such instance.",
+          "score": 0.574,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Contd…",
+          "is_table": true,
+          "token_count": 68,
+          "worker_source": "hybrid(dense_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 50.23,
+      "generation_latency_seconds": 46.21,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 305.19
+      },
+      "completed_at": "2026-11-10T09:04:34.167028+00:00"
+    }
+  ]
+}

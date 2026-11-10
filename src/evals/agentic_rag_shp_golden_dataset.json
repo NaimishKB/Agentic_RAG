@@ -1,0 +1,515 @@
+[
+  {
+    "id": "GD-001",
+    "query_type": "Tool Call / Computation",
+    "difficulty": "Medium",
+    "user_input": "Using the empirical formulae developed by Aggidis et al. (2010) for NW England, estimate the minimum total project cost and the electro-mechanical equipment cost (in 2008 GBP) for a proposed small-scale hydro scheme with an installed capacity of 500 kW and a hydraulic head of 25 m.",
+    "expected_agent_behavior": "1. Retrieve Aggidis et al. (2010) total project cost equations (Eqs. 10 & 11) and E&M cost equation (Eq. 13). 2. Route to Eq. (10) because head H = 25 m falls in the 2-30 m band. 3. Invoke calculator tool to compute C_Pr = 25000 * (500 / 25^0.35)^0.65 and C_EM = 12000 * (500 / 25^0.2)^0.56.",
+    "ground_truth_answer": "For a 500 kW scheme with a 25 m head (which falls within the 2-30 m head band), Equation (10) gives the minimum total project cost: C_Pr = 25,000 * (500 / 25^0.35)^0.65 = 25,000 * (500 / 3.0852)^0.65 = 25,000 * (162.06)^0.65 ≈ £682,665 (2008 GBP). Using Equation (13), the electro-mechanical equipment cost is C_EM = 12,000 * (500 / 25^0.2)^0.56 = 12,000 * (500 / 1.9037)^0.56 = 12,000 * (262.65)^0.56 ≈ £271,949 (2008 GBP). Both estimates have an accuracy range of +/-25%.",
+    "reference_context_summary": "Eq. (10): C_Pr = 25,000 * (kW / H^0.35)^0.65 (£, 2008) for heads 2-30 m; Eq. (11): C_Pr = 45,500 * (kW / H^0.3)^0.6 (£, 2008) for heads 30-200 m; Eq. (13): C_EM = 12,000 * (kW / H^0.2)^0.56 (£, 2008).",
+    "source_documents": "Aggidis, et al “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf (Pages 3-4)",
+    "must_include_keywords": [
+      "25,000",
+      "Eq. (10)",
+      "682,665",
+      "12,000",
+      "271,949",
+      "25%"
+    ]
+  },
+  {
+    "id": "GD-002",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "Why do the cost-estimation equations for Kaplan and Francis turbines in Aggidis et al. (2010) split into multiple flow-rate bands, whereas Pelton turbines follow a single continuous formula? Specify the runner diameter thresholds associated with these boundaries.",
+    "expected_agent_behavior": "Retrieve Section 5 and Section 6 (Turbine size and manufacturing costs) from Aggidis et al. (2010) and explain the physical manufacturing transition at specific runner diameters.",
+    "ground_truth_answer": "The cost bands for Kaplan and Francis turbines reflect changes in the runner manufacturing process as turbine size increases, whereas the Pelton turbine manufacturing process remains generally uniform across sizes. For Kaplan turbines, the boundary between the two price bands occurs at a flow rate of 5.0 m3/s, corresponding to an outer runner diameter (De) of 0.5 m to 0.8 m. For Francis turbines, the first price band boundary (at 2.5 m3/s) corresponds to an outlet runner diameter (D3) of about 0.5 m, and the second boundary (at 10.0 m3/s) corresponds to a runner diameter of about 1.0 m. Up to these threshold diameters, Kaplan and Francis runners are manufactured as a one-piece steel casting; for larger diameters, blades are welded to the crown, and very large units are manufactured in sections.",
+    "reference_context_summary": "Section 5 & Section 6: Kaplan boundary at Q = 5.0 m3/s (De = 0.5-0.8 m); Francis boundaries at Q = 2.5 m3/s and 10.0 m3/s (D3 ≈ 0.5 m and 1.0 m). Transition from one-piece steel casting to welding blades to crown.",
+    "source_documents": "Aggidis, et al “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf (Pages 4-6)",
+    "must_include_keywords": [
+      "5.0 m3/s",
+      "0.5 m to 0.8 m",
+      "1.0 m",
+      "one-piece steel casting",
+      "welding blades"
+    ]
+  },
+  {
+    "id": "GD-003",
+    "query_type": "Tool Call / Computation",
+    "difficulty": "Hard",
+    "user_input": "Compare the Francis turbine cost formulas across the three flow rate bands in Aggidis et al. (2010) when expressed as a function of flow rate Q and head H, and calculate the estimated turbine cost (in 2008 GBP) for a Francis turbine with Q = 4.0 m3/s and H = 50 m.",
+    "expected_agent_behavior": "1. Retrieve Eqs. (16a), (17a), and (18a) from Aggidis et al. (2010). 2. Select Band 2 (Eq. 17a) since Q = 4.0 m3/s is between 2.5 m3/s and 10.0 m3/s. 3. Compute C_F2 = 282,000 * (4.0 / 50^0.5)^0.11.",
+    "ground_truth_answer": "Aggidis et al. (2010) define three flow-rate bands for Francis turbine cost (in 2008 GBP): Band 1 (0.5 to 2.5 m3/s): C_F1 = 142,000 * (Q * H^0.5)^0.07 (Eq. 16a); Band 2 (2.5 to 10.0 m3/s): C_F2 = 282,000 * (Q / H^0.5)^0.11 (Eq. 17a); Band 3 (Q > 10 m3/s): C_F3 = 50,000 * (Q / H^0.5)^0.52 (Eq. 18a). For Q = 4.0 m3/s and H = 50 m, Band 2 (Eq. 17a) applies: C_F2 = 282,000 * (4.0 / 7.0711)^0.11 = 282,000 * (0.5657)^0.11 ≈ £264,897 (with an uncertainty of +/-10%).",
+    "reference_context_summary": "Section 5.2 Francis turbine costs: Eqs. (16a), (17a), (18a) and +/-10% accuracy.",
+    "source_documents": "Aggidis, et al “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf (Pages 4-5)",
+    "must_include_keywords": [
+      "142,000",
+      "282,000",
+      "50,000",
+      "264,897",
+      "10%"
+    ]
+  },
+  {
+    "id": "GD-004",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "What are the three regionalisation methods for developing Flow Duration Curves (FDC) or dependable flows in ungauged catchments, and when should Method 2 be preferred over Method 1?",
+    "expected_agent_behavior": "Retrieve Methods 1, 2, and 3 from 'AK - Hydrology of Ungauged Catchment.pdf' and contrast the data availability requirements.",
+    "ground_truth_answer": "The three regionalisation methods for ungauged catchments are: (1) Method 1: Regionalisation of the parameters of a chosen probability distribution (e.g., Normal or Log-normal) fitted to individual gauged sites, relating distribution parameters (like mean flow and standard deviation) to physiographic and climatological characteristics (e.g., Area A, Basin Relief H) via linear regression; (2) Method 2: Regionalisation of the parameters of a chosen probability distribution derived for the region as a whole by non-dimensionalising individual site flows (dividing Q by site mean flow Q') and clubbing all Q/Q' series into a single regional sample; (3) Method 3: Regionalisation of specific dependable flows directly (such as Q50 and Q90) against catchment area A and relief H using linear regression (Q50 = a1 * A^a2 * H^a3). Method 2 is preferred over Method 1 when adequate flow records for gauged catchments are unavailable or the number of gauged catchments in the homogeneous region is limited, which would otherwise make Method 1 erroneous.",
+    "reference_context_summary": "Slides 4-12 of AK - Hydrology of Ungauged Catchment.pdf covering Method 1, Method 2 (non-dimensional Q/Q'), and Method 3 (Q50, Q90).",
+    "source_documents": "AK - Hydrology of Ungauged Catchment.pdf (Pages 4-12)",
+    "must_include_keywords": [
+      "Method 1",
+      "Method 2",
+      "Method 3",
+      "non-dimensional",
+      "Q/Q'",
+      "Q50",
+      "Q90"
+    ]
+  },
+  {
+    "id": "GD-005",
+    "query_type": "Multi-Hop Cross-Doc",
+    "difficulty": "Medium",
+    "user_input": "Which streamflow extension method is recommended by the Central Water Commission (CWC) when long-term runoff data is available at a neighbouring index station, and how does correlation with catchment area differ between North Indian and South Indian watersheds?",
+    "expected_agent_behavior": "Retrieve streamflow record extension methods from 'AK - Hydrology of Ungauged Catchment.pdf' and cross-check Dickens and Ryves formulas in 'Estimation of design flood peak CWC 1 by 73.pdf'.",
+    "ground_truth_answer": "The Central Water Commission (CWC) recommends Langbein's Log-deviation method as the most accepted method for extending short-term streamflow data using a nearby long-term index station. It establishes a linear regression Y = a + bX between the deviations of logarithmic discharge values (log value minus series mean) at the short-term station (Y) and index station (X), typically using 10-daily or monthly mean values to remove skewness and extreme-value distortion. When extending data via correlation with catchment area, North Indian watersheds use Dicken's formula: Qs = Qi * (As / Ai)^(3/4) (where C ranges from 400 to 1400 in CWC Report 1/73), whereas South Indian watersheds use Ryve's formula: Qs = Qi * (As / Ai)^(2/3) (where C ranges from 450 to 2700).",
+    "reference_context_summary": "Langbein's log-deviation method (Slides 19-20) and Correlation with catchment area (Slide 15) in AK - Hydrology of Ungauged Catchment.pdf; Dickens and Ryves formulas in CWC Report 1/73 (Pages 1-2).",
+    "source_documents": "AK - Hydrology of Ungauged Catchment.pdf (Pages 13-20); Estimation of design flood peak CWC 1 by 73.pdf (Pages 7-8)",
+    "must_include_keywords": [
+      "Langbein",
+      "Y = a + bX",
+      "3/4",
+      "2/3",
+      "Dicken",
+      "Ryve"
+    ]
+  },
+  {
+    "id": "GD-006",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Medium",
+    "user_input": "What is the HydrA-HP software package, which organisations developed it under the REFRESHA project, what are its four core modules, and what are the eight turbine types supported by its Turbine Selection Module?",
+    "expected_agent_behavior": "Extract details from the HydrA-HP brochure and REFRESHA presentation slides in 'AK - Hydrology of Ungauged Catchment.pdf'.",
+    "ground_truth_answer": "HydrA-HP (Himachal Pradesh atlas of small-scale hydropower resources) is a PC-based software package for rapidly estimating hydropower potential and assessing feasibility at gauged or ungauged sites in Himachal Pradesh. It was developed under the three-year UK DFID-funded project REFRESHA (Regional Flow Regimes Estimation for Small Scale Hydropower Assessment) by the Centre for Ecology & Hydrology (CEH) / Institute of Hydrology, Wallingford (UK), in collaboration with the Alternate Hydro Energy Centre (AHEC), University of Roorkee, and HIMURJA (Shimla). Its four core modules are: (1) Catchment Characteristics Module (overlays catchment boundary coordinates onto a 1 km x 1 km grid of average annual runoff and standardised low flow statistic), (2) Flow Regime Estimation Module (determines a synthetic flow duration curve), (3) Turbine Selection Module, and (4) Power Potential Module. The eight supported turbine types are: Pelton, Turgo, Cross Flow, Francis Open Flume, Francis Spiral Case, Propeller, Semi-Kaplan, and Kaplan.",
+    "reference_context_summary": "HydrA-HP brochure slides (Pages 30-35) in AK - Hydrology of Ungauged Catchment.pdf.",
+    "source_documents": "AK - Hydrology of Ungauged Catchment.pdf (Pages 30-35)",
+    "must_include_keywords": [
+      "REFRESHA",
+      "CEH",
+      "AHEC",
+      "HIMURJA",
+      "Catchment Characteristics",
+      "Flow Regime Estimation",
+      "Turbine Selection",
+      "Power Potential",
+      "Turgo",
+      "Cross Flow",
+      "Semi-Kaplan"
+    ]
+  },
+  {
+    "id": "GD-007",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Hard",
+    "user_input": "In the REFRESHA study for Himachal Pradesh, how are the three hydrologically homogeneous regions defined, how many gauging stations and GIS layers were used, and what is the district-wise breakdown of the 458 identified SHP sites and their total potential in kW?",
+    "expected_agent_behavior": "Retrieve the REFRESHA study tables and region definitions from 'AK - Hydrology of Ungauged Catchment.pdf' (Pages 36-41).",
+    "ground_truth_answer": "The REFRESHA study divides Himachal Pradesh into three hydrologically homogeneous regions: Region I (mainly snow-fed catchments), Region II (both snow- and rain-fed catchments), and Region III (mainly rain-fed catchments). The study used 60 gauging stations with 10-daily discharge data and 11 GIS digital data layers (sourced from USGS, Forest Survey of India, NSLLUB, NATMO, HP-RSA Centre, IMD & State Revenue Dept, and Survey of India). Across 8 districts, 458 sites with a total potential of 763,988 kW were identified: (1) Chamba: 128 sites (233,973 kW), (2) Lahul Spiti: 78 sites (149,173 kW), (3) Kinnaur: 55 sites (130,559 kW), (4) Kullu: 72 sites (98,536 kW), (5) Shimla: 69 sites (83,181 kW), (6) Kangra: 26 sites (38,013 kW), (7) Mandi: 22 sites (20,064 kW), and (8) Sirmour: 8 sites (10,489 kW).",
+    "reference_context_summary": "Slides 36-41 of AK - Hydrology of Ungauged Catchment.pdf: Study Area table (458 sites, 763,988 kW), Regions I-III, 60 gauging stations, 11 GIS layers.",
+    "source_documents": "AK - Hydrology of Ungauged Catchment.pdf (Pages 36-41)",
+    "must_include_keywords": [
+      "458",
+      "763,988",
+      "Chamba",
+      "233,973",
+      "Region I",
+      "Region II",
+      "Region III",
+      "60 gauging stations",
+      "11"
+    ]
+  },
+  {
+    "id": "GD-008",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "In the civil cost appraisal of hydroelectric projects (AK-DPR Aug 2017), how are Direct Charges and Indirect Charges structured, and what are the exact percentage provisions for Establishment, Tools & Plants, Audit & Account Charges, and Capitalised Value of Abatement of Land Revenue?",
+    "expected_agent_behavior": "Retrieve the 'Civil Cost Appraisal of Hydro Electric Projects' slides from 'AK-DPR Aug 2017.pdf' (Pages 29-32).",
+    "ground_truth_answer": "Direct Charges comprise five heads: I-Works (subdivided into 12 sub-heads from 'A'-Preliminary, 'B'-Land, 'C'-Works, 'J'-Power Plant Civil Works, 'K'-Buildings, 'M'-Plantation, 'O'-Miscellaneous, 'P'-Maintenance, 'Q'-Special T&P, 'R'-Communications, 'X'-Environment & Ecology, to 'Y'-Losses on Stock), II-Establishment, III-Tools & Plants, IV-Suspense, and V-Receipts and Recoveries (covering temporary buildings, special T&P, and inspection vehicles). Specific provisions under Direct Charges are: II-Establishment is kept at 8% to 10% of I-Works excluding 'B'-Land; III-Tools & Plants is kept at 1% of I-Works; IV-Suspense is kept NIL. Indirect Charges include: (i) Capitalised value on abatement of land revenue, taken as 5% of the cost of agricultural land or 20 times the land revenue cost, whichever is more; (ii) Audit & Account Charges, taken as 1% of the cost of I-Works; (iii) Interest During Construction (IDC) on external loans; (iv) Financing Charges; and (v) Local Area Development Charges.",
+    "reference_context_summary": "Slides 29-32 of AK-DPR Aug 2017.pdf detailing Direct and Indirect Charges in civil cost appraisal.",
+    "source_documents": "AK-DPR  Aug 2017.pdf (Pages 29-32)",
+    "must_include_keywords": [
+      "8% to 10%",
+      "B-Land",
+      "1% of I-Works",
+      "NIL",
+      "5%",
+      "20 times",
+      "IDC"
+    ]
+  },
+  {
+    "id": "GD-009",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Easy",
+    "user_input": "According to the SHP project cycle in 'AK-DPR Aug 2017', what are the expected durations for Pre-Feasibility Report (PFR) preparation, Detailed Project Report (DPR) preparation, DPR approval, equipment supply, and civil works construction?",
+    "expected_agent_behavior": "Lookup the 'Activities in SHP Project Cycle' table in 'AK-DPR Aug 2017.pdf' (Page 4).",
+    "ground_truth_answer": "According to the SHP project cycle table: Pre-Feasibility Report (PFR) preparation takes 1-3 months; Detailed Project Report (DPR) preparation takes 3-6 months; Approval of DPR takes 4-6 months; Equipment supply takes 8-16 months (concurrently during implementation); and Civil works construction takes 10-18 months (concurrently). Additionally, if preparation of a Resettlement & Rehabilitation (R&R) plan is required, it is the most time-consuming pre-implementation activity at 12-24 months, though it is normally not involved in SHP projects.",
+    "reference_context_summary": "Slides 3-4 of AK-DPR Aug 2017.pdf: Activities in SHP Project Cycle.",
+    "source_documents": "AK-DPR  Aug 2017.pdf (Pages 3-4)",
+    "must_include_keywords": [
+      "1-3 months",
+      "3-6 months",
+      "4-6 months",
+      "8-16",
+      "10-18 months",
+      "12 to 24 months"
+    ]
+  },
+  {
+    "id": "GD-010",
+    "query_type": "Multi-Hop Cross-Doc",
+    "difficulty": "Medium",
+    "user_input": "How is hydropower classified by capacity in India compared to international SHP thresholds in China, the United States, and Italy, and which Indian ministries are responsible for hydropower projects above and up to 25 MW?",
+    "expected_agent_behavior": "Retrieve SHP definitions, classification, and institutional responsibilities from 'AK-Overview of SHP Development.pdf'.",
+    "ground_truth_answer": "In India, hydropower is classified by capacity into: Pico/village (5 kW and below), Micro (100 kW and below), Mini (2 MW and below), Small (25 MW and below), Medium (100 MW and below), and Large (above 100 MW). Internationally, the upper threshold for Small Hydro Power (SHP) varies: Italy defines SHP as <= 3 MW, India (along with Bhutan and Mozambique) as <= 25 MW, the United States (along with Argentina, Brazil, and Mexico) as <= 30 MW, and China (along with Canada, Pakistan, and New Zealand) as <= 50 MW. In India, the Ministry of New & Renewable Energy (MNRE) is the nodal ministry for small hydropower development up to 25 MW, while the Ministry of Power (MoP) is responsible for large hydropower above 25 MW.",
+    "reference_context_summary": "Slides 47, 73, and 74 of AK-Overview of SHP Development.pdf.",
+    "source_documents": "AK-Overview of SHP Development.pdf (Pages 47, 73-74)",
+    "must_include_keywords": [
+      "5 kW",
+      "100 kW",
+      "2 MW",
+      "25 MW",
+      "100 MW",
+      "3 MW",
+      "30 MW",
+      "50 MW",
+      "MNRE",
+      "Ministry of Power"
+    ]
+  },
+  {
+    "id": "GD-011",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Medium",
+    "user_input": "What is India's total basin-wise hydropower potential (148,701 MW) broken down across the six river basins, and what is the regional distribution of India's 96,524 MW Pumped Storage Hydropower (PSH) potential?",
+    "expected_agent_behavior": "Retrieve the Basin-wise Hydropower Potential table (Page 28) and the PSH Potential Site Location map/table (Page 90) from 'AK-Overview of SHP Development.pdf'.",
+    "ground_truth_answer": "India's total basin-wise hydropower potential is 148,701 MW, distributed across six basins as follows: Brahmaputra (66,065 MW), Indus (33,832 MW), Ganga (20,711 MW), East Flowing Rivers (14,511 MW), West Flowing Rivers (9,430 MW), and Central Indian Rivers (4,152 MW). Separately, India has 63 identified Pumped Storage Hydropower (PSH) sites with a total potential of 96,524 MW (of which 11 sites / 4,804 MW are developed and 6 sites / 3,680 MW are under development). The regional PSH breakdown is: Western Region: 39,684 MW; Southern Region: 17,750 MW; North Eastern Region: 16,900 MW; Northern Region: 13,065 MW; and Eastern Region: 9,125 MW.",
+    "reference_context_summary": "Slide 28 (Basin-wise Hydropower Potential) and Slide 90 (PSH Potential Site Location) of AK-Overview of SHP Development.pdf.",
+    "source_documents": "AK-Overview of SHP Development.pdf (Pages 28, 90)",
+    "must_include_keywords": [
+      "66,065",
+      "33,832",
+      "20,711",
+      "14,511",
+      "9,430",
+      "4,152",
+      "96,524",
+      "39,684",
+      "17,750",
+      "16,900",
+      "13,065",
+      "9,125"
+    ]
+  },
+  {
+    "id": "GD-012",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "What ultra-low-head (< 3 m) hydropower case studies and turbine technologies are highlighted in Prof. Arun Kumar's overview presentation, including the Indore STP project, the Chilla Power Channel project, and the Steffturbine specifications?",
+    "expected_agent_behavior": "Retrieve slides 92-96 from 'AK-Overview of SHP Development.pdf'.",
+    "ground_truth_answer": "For ultra-low-head sites (below 3 m), available turbine technologies include Archimedes screw, vortex, cross flow, very low head (VLH), StreamDiver, Steffturbine, belt, and hydrokinetic turbines. AHEC, IIT Roorkee assessed ultra-low-head potential across 8 states (Gujarat, Karnataka, Kerala, Meghalaya, Bihar, Punjab, U.P., and Uttarakhand). Specific case studies and specs include: (1) An 18.5 kW Archimedes screw plant utilising 50 MLD treated effluent at the Kabitkhedi Sewage Treatment Plant (STP) of Indore Municipal Corporation (IMC), implemented on a BOOT basis for 25 years; (2) Steffturbine specifications: operating head of 2.5 m and above, discharge of 0.2 to 0.8 m3/s, power output of 5 to 20 kW, and efficiency of ~80%; and (3) A 2 x 25 kW hydrokinetic turbine project at Chilla Power Channel installed in 2011 and withdrawn in 2012 for design modification.",
+    "reference_context_summary": "Slides 92-96 of AK-Overview of SHP Development.pdf covering ultra-low-head potential, Kabitkhedi STP Archimedes screw, Steffturbine, and Chilla Power Channel.",
+    "source_documents": "AK-Overview of SHP Development.pdf (Pages 92-96)",
+    "must_include_keywords": [
+      "18.5 kW",
+      "50 MLD",
+      "Kabitkhedi",
+      "Indore",
+      "BOOT",
+      "25 years",
+      "Steffturbine",
+      "0.2-0.8",
+      "80%",
+      "Chilla"
+    ]
+  },
+  {
+    "id": "GD-013",
+    "query_type": "Disambiguation / Reconciliation",
+    "difficulty": "Hard",
+    "user_input": "Across the slides in 'AK-Overview of SHP Development.pdf', there are multiple figures cited for India's Small Hydro Power (SHP) potential and total hydro installed capacity. Reconcile the different SHP potential numbers (20,000 MW vs. 21,134 MW vs. 25,000 MW) and total hydro installed capacity numbers (36,013 MW vs. 36,082 MW vs. 43 GW) by identifying their specific contexts in the document.",
+    "expected_agent_behavior": "Locate all slides mentioning SHP potential and hydro installed capacity in 'AK-Overview of SHP Development.pdf' and disambiguate them by table/slide context and date.",
+    "ground_truth_answer": "The document contains figures from different reporting snapshots and tables: For Small Hydro Power (SHP, up to 25 MW) potential in India: (1) 20,000 MW is cited in the general MNRE Renewable Power Potential summary tables (Slides 36, 42, and 45, with 18% tapped); (2) 21,134 MW (across 7,134 identified sites, with 4,334 MW / 1,076 projects achieved and 749 MW / 169 projects under implementation) is given in the detailed 'State-wise Potential, Achievement & Ongoing' table (Slide 29), where Karnataka leads with 3,726 MW and Himachal Pradesh is second with 3,460 MW; (3) 25,000 MW (with 4,400 MW installed) is cited in the international comparison tables for South Asian and African countries (Slides 65 and 66). For India's total hydropower installed capacity: (1) 36,013 MW is reported as of June 2014 in the historical milestones table (Slide 27); (2) 36,082 MW (24.83% of 145,320 MW identified major/medium potential >25 MW, excluding pumped storage) is listed in the 'Present Hydro Scenario' CEA status table (Slide 43); and (3) 43 GW (out of 310–314.6 GW total electricity capacity, representing 14% of the mix) is reported up to December 2016 / January 2017 (Slides 23 and 26).",
+    "reference_context_summary": "Slides 23, 26, 27, 29, 36, 42, 43, 45, 65, 66 of AK-Overview of SHP Development.pdf.",
+    "source_documents": "AK-Overview of SHP Development.pdf (Pages 23, 26, 27, 29, 36, 42, 43, 45, 65, 66)",
+    "must_include_keywords": [
+      "20,000 MW",
+      "21,134 MW",
+      "7,134",
+      "25,000 MW",
+      "36,013 MW",
+      "36,082 MW",
+      "43 GW"
+    ]
+  },
+  {
+    "id": "GD-014",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "What are the three methods of SHP site allotment described in 'allotmnet of shp.pdf', how are ties and unbid sites handled in the competitive bidding process, and what happens if an Independent Power Producer (IPP) fails to achieve financial closure within the stipulated timeframe?",
+    "expected_agent_behavior": "Retrieve site allotment procedures, tie-breaking rules, ownership modes, and financial closure rules from 'allotmnet of shp.pdf'.",
+    "ground_truth_answer": "The three methods of SHP site allotment are: (1) Bidding process (used when PFR/DPR is available, awarded to the pre-qualified bidder offering the highest upfront premium per MW above a minimum threshold; if PFR/DPR is not available, allotted via a merit list based on pre-qualification criteria; if a site is self-identified by an IPP/User society with a verifiable PFR/DPR, allotted on a first-come basis); (2) MoU method (developer applies through the state nodal agency to prepare PFR and DPR sequentially, preferred where there is very little or no competition); and (3) Swiss model of defence (applied where there is total uncertainty of technology or tariff, giving the first bidder an opportunity to defend their bid). In competitive bidding, if multiple bidders quote an identical upfront premium per MW, allotment is decided by a gradation list based on pre-qualification criteria; if a site receives no bids twice, it is allotted to a government agency. After receiving all statutory clearances from State and Central governments, the IPP must achieve financial closure (firm commitments for financing the entire project) within 12 months. Failure to do so results in automatic cancellation of the site allotment and forfeiture of upfront premium amounts with no compensation payable to the IPP.",
+    "reference_context_summary": "Slides 2-26 of allotmnet of shp.pdf covering Bidding, MoU, Swiss model, licence duration (Kerala 20 yrs, J&K 40 yrs), BOOT/BOT/BOLT/LROT/BOO, and 12-month financial closure.",
+    "source_documents": "allotmnet of shp.pdf (Pages 2-26)",
+    "must_include_keywords": [
+      "Bidding",
+      "MoU",
+      "Swiss model",
+      "gradation list",
+      "government agency",
+      "12 months",
+      "automatic cancellation",
+      "forfeiture"
+    ]
+  },
+  {
+    "id": "GD-015",
+    "query_type": "Tool Call / Computation",
+    "difficulty": "Medium",
+    "user_input": "Using Cesar Alvarado-Ancieta's (2009) global regression formula for powerhouse electrical and mechanical (E&M) equipment costs, calculate the estimated E&M cost (in 12/2008 Million US$) for a 130 MW hydropower plant, and compare it against the actual updated E&M contract costs reported in Table 1 for the 130 MW Pucara (Peru) and 130 MW Duber Khwar (Pakistan) projects.",
+    "expected_agent_behavior": "1. Retrieve the general formula Cost = 1.1948 * P^0.7634 from Alvarado-Ancieta (2009). 2. Compute Cost for P = 130 MW. 3. Lookup Pucara (#1) and Duber Khwar (#12) in Table 1 and compare.",
+    "ground_truth_answer": "Using Alvarado-Ancieta's (2009) general formula Cost = 1.1948 * P^0.7634 (in Million US$, 12/2008) for P = 130 MW: Cost = 1.1948 * (130)^0.7634 = 1.1948 * 41.093 ≈ US$49.10 million. In Table 1, both 130 MW projects use 2 Pelton units: (1) Pucara, Peru (#1, 2008, P = 130 MW, Pu = 65 MW, H = 475 m, Q = 30 m3/s) has an updated 12/2008 E&M contract cost of US$42.86 million total (US$21.43 million per unit); and (2) Duber Khwar, Pakistan (#12, 2003, P = 130 MW, Pu = 65 MW, H = 516 m, Q = 29 m3/s) has an updated 12/2008 E&M contract cost of US$40.10 million total (US$20.05 million per unit). The general power-only regression (US$49.10M) is higher than both high-head Pelton projects (US$42.86M and US$40.10M) because high heads reduce unit equipment size and cost for a given capacity.",
+    "reference_context_summary": "Alvarado-Ancieta (2009) page 22 formula Cost = 1.1948 * P^0.7634 and Table 1 page 23 entries #1 (Pucara) and #12 (Duber Khwar).",
+    "source_documents": "Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09.pdf (Pages 3-4)",
+    "must_include_keywords": [
+      "1.1948",
+      "0.7634",
+      "49.10",
+      "Pucara",
+      "42.86",
+      "21.43",
+      "Duber Khwar",
+      "40.10",
+      "20.05"
+    ]
+  },
+  {
+    "id": "GD-016",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Medium",
+    "user_input": "In Alvarado-Ancieta (2009), what components are included in the powerhouse E&M cost data, what are the unit cost and power ranges for each of the four turbine groups across the 81 projects, and why were 8 points from the original 89-project dataset excluded?",
+    "expected_agent_behavior": "Retrieve the 'Compiled Data', 'Diagrams for Estimating E&M Equipment Costs', and 'Conclusions' sections from Alvarado-Ancieta (2009).",
+    "ground_truth_answer": "The compiled E&M powerhouse contract costs include turbines, governors, valves, cooling and drainage water systems, cranes, workshops, generators, transformers, earthing systems, control equipment, telecommunication systems (including remote central control room), and auxiliary systems (draft tube gates, heating/ventilation, domestic water, and installation). Across the 81 selected projects (from 32 countries; net heads 9 m to 800 m; unit capacities 0.5 MW to 800 MW), the per-unit cost and power ranges are: (1) Pelton units (20 points): US$0.5M (< 1 MW) to US$60M (200 MW); (2) Francis units (43 points): US$0.5M (1 MW) to US$120M (800 MW); (3) Kaplan, Kaplan-Rohr, and Bulb units (14 points): US$5M (5 MW) to US$40M (150 MW); and (4) Francis pump-turbine units (5 points): US$20M (70 MW) to US$70M (380 MW). Eight points from the original 89 plotting positions were excluded because they had abnormally low/underestimated contract costs that plotted in unsuitable locations (for example, Spain's La Muela II pumped storage project reported in July 2008 at US$55M total for four 213 MW units at 520 m head, or ~US$14M per unit).",
+    "reference_context_summary": "Alvarado-Ancieta (2009) pages 21, 22, and 25.",
+    "source_documents": "Alvarado-Ancieta-2009-Estimating E&M Powerhouse Cost - WP&DC 02_09.pdf (Pages 2, 3, 6)",
+    "must_include_keywords": [
+      "81",
+      "governors",
+      "transformers",
+      "Pelton",
+      "Francis",
+      "Kaplan",
+      "La Muela II",
+      "89",
+      "US$14M"
+    ]
+  },
+  {
+    "id": "GD-017",
+    "query_type": "Multi-Hop Cross-Doc",
+    "difficulty": "Hard",
+    "user_input": "Synthesise the environmental and techno-economic clearance rules across 'CLEARANCES.pdf' and 'EIA and related Investigations.pdf': Under the EIA Notification 2006, when does a hydroelectric project require Category A, Category B, or no Environmental Clearance at all, and what are the financial thresholds for Central Electricity Authority (CEA) Techno-Economic Clearance?",
+    "expected_agent_behavior": "Cross-reference 'CLEARANCES.pdf' (Slides 2, 4) with 'EIA and related Investigations.pdf' (Slides 6-8) to provide a unified regulatory answer.",
+    "ground_truth_answer": "Under the MoEFCC EIA Notification (September 2006): (1) Category A hydroelectric projects (>= 50 MW capacity or >= 10,000 ha culturable command area) require prior Environmental Clearance from the Central Government (MoEFCC) on the recommendation of the Expert Appraisal Committee (EAC); (2) Category B hydroelectric projects (< 50 MW and >= 25 MW capacity, or < 10,000 ha culturable command area) require prior Environmental Clearance from the State/UT Environment Impact Assessment Authority (SEIAA) based on the State EAC (SEAC) recommendation (if no SEIAA/SEAC exists, a Category B project is treated as Category A); (3) Small Hydro Power (SHP) projects < 25 MW do NOT require Environmental Clearance under the Sept 2006 notification, EXCEPT when located within a 10 km buffer zone of protected areas. Regarding Techno-Economic Clearance (TEC), it is granted by the Central Electricity Authority (CEA) if: (a) the project is allotted through the MoU route with a capital cost above Rs. 1,000 Crore, (b) the project is allotted through competitive bidding with a capital cost above Rs. 2,500 Crore, or (c) it is an inter-state project; otherwise, TEC is granted by the State Government / State Nodal Agency.",
+    "reference_context_summary": "CLEARANCES.pdf Slides 2 and 4; EIA and related Investigations.pdf Slides 6-8.",
+    "source_documents": "CLEARANCES.pdf (Pages 2, 4); EIA  and related Investigations.pdf (Pages 6-8)",
+    "must_include_keywords": [
+      "Category A",
+      "50 MW",
+      "10,000 ha",
+      "Category B",
+      "25 MW",
+      "SEIAA",
+      "10 km",
+      "1000 Crores",
+      "2500 Crore",
+      "CEA"
+    ]
+  },
+  {
+    "id": "GD-018",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Easy",
+    "user_input": "What are the four sequential stages of the Forest Clearance approval process in India, what R&R compensation is stipulated under the Forest Clearance norms in 'CLEARANCES.pdf', and which three clearances consume the most time and effort?",
+    "expected_agent_behavior": "Retrieve Slides 5, 6, and 7 from 'CLEARANCES.pdf'.",
+    "ground_truth_answer": "The four sequential stages of Forest Clearance are: (1) Application to the District Forest Officer (attaching required documents, certificates, and maps); (2) Forest Valuation & Alternate Land Identification (detailed study on loss of forest and preparation of a detailed afforestation scheme); (3) State Government Clearance (post-DFO clearance, approvals through five to six levels of state government officials); and (4) Central Government Clearance (file sent to the regional Ministry of Forest official and final clearance issued by the Ministry of Forest in Delhi after receiving the state compliance report). Under the R&R provisions described in the Forest Clearance slide, displaced persons must be paid the cost of residence and occupation plus 1.5 times the amount they would have earned in 2 years had they not been shifted. Case study analysis shows that Forest Clearance, Land Acquisition formalities, and Techno-Economic Clearance consume the most time and effort.",
+    "reference_context_summary": "CLEARANCES.pdf Slides 5, 6, and 7.",
+    "source_documents": "CLEARANCES.pdf (Pages 5-7)",
+    "must_include_keywords": [
+      "District Forest Officer",
+      "afforestation",
+      "five to six",
+      "Delhi",
+      "1.5 times",
+      "2 years",
+      "Forest",
+      "Land Acquisition",
+      "Techno Economic"
+    ]
+  },
+  {
+    "id": "GD-019",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "Compare thesix methods for determining hydraulic head in 'Different Types of Investigationss.pdf' in terms of accuracy, and state the technical specifications of a Total Station (distance ranges, measurement accuracy formula, operating temperature, and battery measurement capacity).",
+    "expected_agent_behavior": "Retrieve Head Determination (Slides 11-13) and Total Station Characteristics (Slides 19-20) from 'Different Types of Investigationss.pdf'.",
+    "ground_truth_answer": "The six methods for determining hydraulic head and their relative accuracy are: (1) Map: very rough; (2) Altimeter: very approximate (barometric pressure decreases by ~100 hectopascals per 800 m or 1 inch Hg per 1000 ft near sea level); (3) GPS: approximate; (4) Engineering level: reasonable; (5) Water-filled tube and rod: crude but reliable and reasonably accurate (suitable for low-head sites); and (6) Theodolite and Total Station: accurate. The technical specifications of a Total Station are: Range: 0.5–3.0 km (short), 3–10 km (medium), and 10–20 km (long); Accuracy: +/-(5 mm + 5 ppm); Operating temperature: -20°C to +50°C; Battery capacity: 350 to 1,400 measurements.",
+    "reference_context_summary": "Slides 11, 13, 19, 20, 30 of Different Types of Investigationss.pdf.",
+    "source_documents": "Different Types of  Investigationss.pdf (Pages 11, 13, 19, 20, 30)",
+    "must_include_keywords": [
+      "Altimeter",
+      "Water-filled tube",
+      "Total Station",
+      "0.5-3.0",
+      "3-10",
+      "10-20",
+      "5mm + 5 ppm",
+      "-20 to +50",
+      "350 and 1400"
+    ]
+  },
+  {
+    "id": "GD-020",
+    "query_type": "Table / Diagram Extraction",
+    "difficulty": "Medium",
+    "user_input": "How does 'Different Types of Investigationss.pdf' classify fluvial sediment transport, what is the complete hierarchy of sediment sampling techniques, and what is the three-tier spatial strategy for sediment management from catchment to powerhouse?",
+    "expected_agent_behavior": "Retrieve slides 35-47 on sediment transport, sampling hierarchy, and sediment management from 'Different Types of Investigationss.pdf'.",
+    "ground_truth_answer": "Fluvial sediment transport is classified into three loads: (1) Suspended-sediment load (particles carried in suspension), (2) Wash load (finer material << 0.062 mm moving through a reach with little or no bed interaction), and (3) Bedload (material moving on or near the stream bed by rolling, sliding, and skipping). The sediment sampling hierarchy divides into three main branches: (a) Suspended sediment sampling, split into Instantaneous SS sampling and Time-integrating sampling (which further splits into Depth-integrating and Point-integrating); (b) Bed load sampling (Basket type, Pan type, and Pressure-difference type); and (c) Bed material sampling (Drag bucket type, Grab bucket type, and Vertical pipe type). The three-tier spatial sediment management strategy is: 'Reduce' at the Catchment (via watershed management), 'Remove' at the Headworks (via proper headworks and settling basin arrangements), and 'Resist' at the Powerhouse (via enhanced hydro-machinery design and protective coatings/materials).",
+    "reference_context_summary": "Slides 35, 36, 44, 46, 47 of Different Types of Investigationss.pdf.",
+    "source_documents": "Different Types of  Investigationss.pdf (Pages 35, 36, 44, 46, 47)",
+    "must_include_keywords": [
+      "0.062 mm",
+      "Wash load",
+      "Depth integrating",
+      "Point integrating",
+      "Basket",
+      "Pressure difference",
+      "Drag bucket",
+      "Grab bucket",
+      "Reduce",
+      "Remove",
+      "Resist"
+    ]
+  },
+  {
+    "id": "GD-021",
+    "query_type": "Single-Hop Lookup",
+    "difficulty": "Medium",
+    "user_input": "Detail the field sampling and ecological assessment protocols prescribed in 'EIA and related Investigations.pdf' for Soil, Flora, Fauna, Water Quality, Air Quality, and Noise monitoring.",
+    "expected_agent_behavior": "Retrieve the baseline data collection protocols across slides 37-52 of 'EIA and related Investigations.pdf'.",
+    "ground_truth_answer": "The prescribed EIA baseline sampling protocols are: (1) Soil: 6 soil samples collected randomly across the impact area and analysed for physico-chemical properties and nutrient value; (2) Flora: Stratified random plotless sampling using a cross-shaped sampling frame with two arms at a 90° angle, calculating Density, Frequency, Dominance, Relative Density, Relative Dominance, Relative Frequency, and Importance Value = (Relative Density + Relative Dominance + Relative Frequency) / 3; (3) Fauna: Roadside counts conducted along transects up to 250 m on either side of the location, direct bird observation using 8 x 30 Super Zenith binoculars, and community comparison using the Similarity Index S = 2C / (A + B); (4) Water Environment: 4 to 6 water samples (plus polluting sources) collected using AQUATRAPS samplers, with surface samples taken at 20 cm depth using a 2-litre horizontal sampler, depth samples using a reversing thermometer, and on-site measurement of pH, turbidity, and conductivity; (5) Air Quality: 24-hour ambient air sampling at 6 locations, repeated after 3 months, testing for RSP, SP, SO2, CO, CO2, and NOx; and (6) Noise: 24-hour sampling near construction sites using automatic noise samplers providing hourly readings.",
+    "reference_context_summary": "Slides 37-52 of EIA and related Investigations.pdf.",
+    "source_documents": "EIA  and related Investigations.pdf (Pages 37-52)",
+    "must_include_keywords": [
+      "Six Soil Samples",
+      "plot less",
+      "90",
+      "Importance value",
+      "250 m",
+      "8x30",
+      "2C/(A+B)",
+      "AQUATRAPS",
+      "20 cm",
+      "2 liters",
+      "RSP",
+      "SO2",
+      "three months"
+    ]
+  },
+  {
+    "id": "GD-022",
+    "query_type": "Tool Call / Computation",
+    "difficulty": "Hard",
+    "user_input": "According to CWC Report No. 1/73 ('Estimation of design flood peak'), how are the unit hydrograph peak rate (Qtp), time to peak (tp), and duration of rainfall excess (tc) calculated in FPS units for a small catchment? Verify the exact values for Railway Bridge No. 604 (Jam River, Area A = 131.48 sq. miles, weighted stream slope SLC = 0.00174).",
+    "expected_agent_behavior": "1. Retrieve Eqs. (1), (2), (3), and (4) from CWC Report No. 1/73. 2. Check slope threshold: since SLC = 0.00174 < 0.0028, select Eq. (1). 3. Compute Qtp = 16000 * A^(3/4) * SLC^(2/3), qtp = Qtp / A, tp = 233 / qtp^0.9, and tc = 1.2 * tp = 280 / qtp^0.9, matching Appendix I.",
+    "ground_truth_answer": "In CWC Report No. 1/73, the peak rate Qtp (in cusecs) of the tp-hour Unit Hydrograph depends on the weighted mean slope SLC of the main stream from the centroid (CG) to the bridge site: if SLC < 0.0028 (16 ft/mile), Qtp = 16,000 * A^(3/4) * (SLC)^(2/3) (Eq. 1); if SLC > 0.0028, Qtp = 320 * A^(3/4) (Eq. 2). Time to peak is tp = 233 / (qtp)^0.9 hours (Eq. 3, where qtp = Qtp / A in cusecs/sq. mile), and rainfall excess duration is tc = 1.2 * tp = 280 / (qtp)^0.9 hours (Eq. 4), assuming qtc = qtp. For Bridge No. 604 (A = 131.48 sq. miles, SLC = 0.00174 < 0.0028): (1) Qtc = Qtp = 16,000 * (131.48)^(3/4) * (0.00174)^(2/3) = 8,986 cusecs, rounded to 9,000 cusecs; (2) qtc = 8,986 / 131.48 = 68.345 cusecs/sq. mile; (3) tc = 280 / (68.345)^0.9 = 280 / 44.79 = 6.2513 hours, taken as 6.3 hours.",
+    "reference_context_summary": "CWC Report 1/73 Section 4 (Pages 10-13) and Appendix I Illustrative Example (Pages 36-37).",
+    "source_documents": "Estimation of design flood peak CWC 1 by 73.pdf (Pages 16-19, 42-43)",
+    "must_include_keywords": [
+      "0.0028",
+      "16,000",
+      "320",
+      "233",
+      "280",
+      "8986",
+      "9000",
+      "68.345",
+      "6.3"
+    ]
+  },
+  {
+    "id": "GD-023",
+    "query_type": "Tool Call / Computation",
+    "difficulty": "Hard",
+    "user_input": "In CWC Report No. 1/73, state the equations for (a) the areal-to-point rainfall ratio (p) and (b) direct surface runoff (R) across all five soil categories (in both FPS and Metric units). Then trace the final design flood peak calculation (waterway and foundation) for Bridge No. 604 given a 24-hour 50-year areal rainfall of 180.19 mm (7.094 inches) and a 6.3-hour areal rainfall of 117.585 mm.",
+    "expected_agent_behavior": "1. Retrieve Eq. (5) for areal-to-point ratio p, Table B (and Appendix III metric conversions) for soil runoff equations, Table C for temporal adjustment factor, and Table D for base flow. 2. Walk through the step-by-step computation for Bridge No. 604 in Appendix I.",
+    "ground_truth_answer": "In CWC Report No. 1/73: (a) Areal-to-point rainfall ratio is p = exp(-A^(1/3) / (8 * T^(1/2))), where A is basin area in sq. miles and T is storm duration in hours (Eq. 5). Also, 24-hour observational day point rainfall from IMD maps is multiplied by 1.15 to obtain 1440-minute consecutive rainfall. (b) Direct surface runoff R as a function of total storm rainfall H across the 5 soil categories (Table B in inches; Appendix III in cm) is: (1) Sandy / Sandy loam: R = 0.30 * H^1.2 [Metric: 0.249 * H^1.2]; (2) Coastal alluvium / Silty loam: R = 0.40 * H^1.2 [Metric: 0.332 * H^1.2]; (3) Red soils / Clayey loam / Grey & Brown alluvium: R = 0.50 * H^1.2 [Metric: 0.415 * H^1.2]; (4) Black cotton / Clayey soils: R = 0.55 * H^1.2 [Metric: 0.456 * H^1.2]; (5) Hilly soils: R = 0.60 * H^1.2 [Metric: 0.498 * H^1.2]. For Bridge No. 604 (clayey black cotton soil, Sub-zone 3-f): (1) 24-hr runoff R = 0.55 * (7.094)^1.2 = 5.773 inches (146.65 mm), giving a uniform phi-index loss rate of (180.19 - 146.65) / 24 = 1.398 mm/hr (0.055 in/hr); (2) For tc = 6.3 hrs, rainfall excess Re = 117.585 - (6.3 * 1.398) = 108.78 mm = 4.283 inches; (3) Unadjusted flood peak = Qtc * Re = 9,000 * 4.283 = 38,547 cusecs; (4) Applying the temporal distribution adjustment factor of 1.15 (Table C for 6-9 hrs duration) gives 1.15 * 38,547 = 44,329 cusecs; (5) Adding base flow for Sub-zone 3-f (Lower Godavari) at 10 cusecs/sq. mile (Table D) = 1,310 cusecs yields the Waterway Design Flood Peak = 45,639 cusecs (say 45,600 cusecs); (6) Adding the 30% safety margin recommended by the Khosla Committee for small catchments up to 200 sq. miles gives the Foundation Design Flood Peak = 1.30 * 45,600 = 59,280 cusecs.",
+    "reference_context_summary": "CWC Report 1/73 Eq. (5) (Page 19), Table B (Page 29), Table C (Page 31), Table D (Pages 32-33), Appendix I (Pages 38-40), and Appendix III (Page 101).",
+    "source_documents": "Estimation of design flood peak CWC 1 by 73.pdf (Pages 25, 35, 37-39, 44-46, 101)",
+    "must_include_keywords": [
+      "exp(-A^(1/3)",
+      "1.15",
+      "0.30",
+      "0.40",
+      "0.50",
+      "0.55",
+      "0.60",
+      "1.398",
+      "4.283",
+      "38,547",
+      "44,329",
+      "45,600",
+      "59,280"
+    ]
+  },
+  {
+    "id": "GD-024",
+    "query_type": "Adversarial / Guardrail",
+    "difficulty": "Hard",
+    "user_input": "Can I use the Austrian investment cost formula by Matthias, Doujak and Angerer (cited in Aggidis et al., 2010) to estimate the cost of a 10 MW hydropower plant with a 45 m head, and can I use the CWC Report No. 1/73 Unit Hydrograph equations to estimate the design flood for a 2,500 sq. km river basin with wide flood plains?",
+    "expected_agent_behavior": "Identify that BOTH proposed applications violate explicit domain validity constraints stated in the source documents and refuse to apply the equations outside their bounds.",
+    "ground_truth_answer": "No, neither methodology is valid for the proposed parameters: (1) The Austrian investment cost formula by Matthias, Doujak and Angerer (K = C * (P / H^0.3)^y in Austrian Shillings) is explicitly restricted to hydropower plants with installed capacities lower than 2 MW and hydraulic heads lower than 15 m, so it cannot be applied to a 10 MW plant with a 45 m head. (2) The CWC Report No. 1/73 rational Unit Hydrograph method was developed strictly for small drainage basins with areas between 25 and 500 sq. km (10 to 200 sq. miles) where floods are contained within the stream banks and there are no major tanks or flood control structures. Furthermore, Report No. 1/73 explicitly warns that for streams with significant flood plains, its relations overestimate the design flood peak because of storage attenuation.",
+    "reference_context_summary": "Aggidis et al. (2010) page 2634 (Matthias et al. valid for < 2 MW and < 15 m); CWC Report 1/73 Foreword, Page 7, and Page 12 (valid for 25-500 sq. km / 10-200 sq. miles, contained within banks without significant flood plains).",
+    "source_documents": "Aggidis, et al “The costs of small-scale existing potential”. Renewable Energy, Vol. 35, 2010,.pdf (Page 3); Estimation of design flood peak CWC 1 by 73.pdf (Pages 3, 13, 18)",
+    "must_include_keywords": [
+      "2 MW",
+      "15 m",
+      "25 to 500 sq. km",
+      "10 to 200 sq. miles",
+      "flood plains",
+      "overestimate"
+    ]
+  },
+  {
+    "id": "GD-025",
+    "query_type": "Adversarial / Guardrail",
+    "difficulty": "Medium",
+    "user_input": "What is the mandatory field procedure for conducting individual on-site seismic surveys for a 10 MW Small Hydro Electric Project in India, and how many months doesMoEFCC Environmental Clearance take for a 15 MW run-of-river project located 25 km away from any protected area?",
+    "expected_agent_behavior": "Detect the false premises in both parts of the question using 'EIA and related Investigations.pdf' and 'CLEARANCES.pdf'.",
+    "ground_truth_answer": "Both premises in the question are incorrect based on the provided documents: (1) Individual on-site seismic field studies are NOT carried out for Small Hydro Electric Projects. Instead, seismic data is obtained from existing literature and recent studies of nearby major projects, and the seismic coefficient is derived theoretically for structural design. (2) A 15 MW Small Hydro Power (SHP) project located 25 km away from any protected area does NOT require MoEFCC Environmental Clearance at all; per the MoEFCC September 2006 notification, SHP projects under 25 MW are exempt from Environmental Clearance unless they fall within a 10 km buffer zone of protected areas.",
+    "reference_context_summary": "EIA and related Investigations.pdf Slide 39 (Seismic Studies for SHP); CLEARANCES.pdf Slide 2 (Environmental Clearance exemption for SHP < 25 MW outside 10 km buffer zone).",
+    "source_documents": "EIA  and related Investigations.pdf (Page 39); CLEARANCES.pdf (Page 2)",
+    "must_include_keywords": [
+      "not carried out individually",
+      "literature",
+      "theoretically",
+      "does not need",
+      "less than 25 MW",
+      "10 km"
+    ]
+  }
+]

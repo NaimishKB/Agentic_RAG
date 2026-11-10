@@ -29,7 +29,8 @@ from src.states.planneragent_state import PlannerAgentState, PlannerPlan, SubQue
 # ---------------------------------------------------------------------------
 DEFAULT_OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 DEFAULT_MODEL_NAME = os.getenv("OLLAMA_LLM_MODEL", "qwen3.5:9b")
-DEFAULT_TIMEOUT_S = 60
+DEFAULT_TIMEOUT_S = int(os.getenv("PLANNER_TIMEOUT_S", "120"))
+DEFAULT_MAX_TOKENS = int(os.getenv("PLANNER_MAX_TOKENS", "2048"))
 PROMPTS_DIR = Path("src/prompts")
 
 # Configure logger
@@ -105,6 +106,7 @@ def generate_plan(
         "options": {
             "temperature": 0.0,
             "top_p": 0.9,
+            "num_predict": DEFAULT_MAX_TOKENS,
         },
         "stream": False,
     }

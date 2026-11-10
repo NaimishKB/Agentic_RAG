@@ -105,7 +105,7 @@ class QdrantIndexManager:
             try:
                 resp = requests.get(f"{url.rstrip('/')}/healthz", timeout=1.5)
                 if resp.status_code == 200:
-                    client = QdrantClient(url=url, timeout=30.0)
+                    client = QdrantClient(url=url, timeout=float(os.getenv("QDRANT_TIMEOUT_S", "30.0")))
                     return client, f"Server ({url})"
             except Exception:
                 logger.debug(f"Live Qdrant server not detected at {url}. Falling back to embedded local storage.")

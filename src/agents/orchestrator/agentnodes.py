@@ -23,6 +23,7 @@ from langgraph.types import Send
 from loguru import logger
 from pydantic import ValidationError
 
+from src.ingestion.bm25_retriever import get_bm25_retriever, reciprocal_rank_fusion
 from src.ingestion.embedder import OllamaEmbeddingClient
 from src.ingestion.indexer import QdrantIndexManager
 from src.mcp_server.client import FastAPIMCPClient
@@ -41,7 +42,12 @@ DEFAULT_OLLAMA_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
 DEFAULT_LLM_MODEL = os.getenv("OLLAMA_LLM_MODEL", "qwen3.5:9b")
 DEFAULT_EMBED_MODEL = os.getenv("OLLAMA_EMBED_MODEL", "qwen3-embedding:0.6b")
 DEFAULT_QDRANT_URL = os.getenv("QDRANT_URL", "http://127.0.0.1:6333")
-DEFAULT_TIMEOUT_S = 90
+DEFAULT_TIMEOUT_S = int(os.getenv("ORCHESTRATOR_TIMEOUT_S", "120"))
+DEFAULT_MAX_TOKENS = int(os.getenv("ORCHESTRATOR_MAX_TOKENS", "2048"))
+ENABLE_BM25_RETRIEVAL = os.getenv("ENABLE_BM25_RETRIEVAL", "true").lower() in ("true", "1", "yes")
+RETRIEVER_MODE = os.getenv("RETRIEVER_MODE", "hybrid").lower()  # "hybrid", "dense", "bm25"
+BM25_WEIGHT = float(os.getenv("BM25_WEIGHT", "0.5"))
+DENSE_WEIGHT = float(os.getenv("DENSE_WEIGHT", "0.5"))
 PROMPTS_DIR = Path("src/prompts")
 
 # Configure logger
@@ -195,6 +201,7 @@ def generate_orchestration_plan(
             "options": {
                 "temperature": 0.0,
                 "top_p": 0.9,
+                "num_predict": DEFAULT_MAX_TOKENS,
             },
             "stream": False,
         }
@@ -304,6 +311,64 @@ def execute_vector_retrieval(
 
 
 # ---------------------------------------------------------------------------
+# Hybrid Retrieval (Dense Vector + BM25 Sparse Keyword via RRF)
+# ---------------------------------------------------------------------------
+def execute_hybrid_retrieval(
+    task: WorkerTask,
+    embedder: OllamaEmbeddingClient,
+    qdrant: QdrantIndexManager,
+) -> list[RetrievedChunk]:
+    """
+    Executes hybrid retrieval combining dense vector search (Qdrant) and
+    sparse keyword search (BM25) with Reciprocal Rank Fusion (RRF).
+
+    Guarantees that exact entity names, project identifiers, and statutory
+    references present in chunks are retrieved even when semantic vector similarity drifts.
+    """
+    # 1. Pure BM25 mode
+    if RETRIEVER_MODE == "bm25":
+        bm25 = get_bm25_retriever()
+        return bm25.search(task.query_text, top_k=task.top_k, filter_dict=task.target_filter)
+
+    # 2. Pure Dense mode
+    if RETRIEVER_MODE == "dense" or not ENABLE_BM25_RETRIEVAL:
+        return execute_vector_retrieval(task, embedder, qdrant)
+
+    # 3. Hybrid Mode (Dense + BM25 via Reciprocal Rank Fusion)
+    dense_chunks = execute_vector_retrieval(task, embedder, qdrant)
+
+    try:
+        bm25 = get_bm25_retriever()
+        bm25_chunks = bm25.search(
+            query=task.query_text,
+            top_k=task.top_k,
+            filter_dict=task.target_filter,
+        )
+    except Exception as e:
+        logger.warning(f"[{task.worker_type}] BM25 retrieval failed: {e}. Utilizing dense chunks only.")
+        return dense_chunks
+
+    if not dense_chunks and bm25_chunks:
+        logger.info(f"[{task.worker_type}] Dense returned 0 chunks; utilizing {len(bm25_chunks)} BM25 keyword matches.")
+        return bm25_chunks
+
+    if not bm25_chunks:
+        return dense_chunks
+
+    fused_chunks = reciprocal_rank_fusion(
+        dense_chunks=dense_chunks,
+        bm25_chunks=bm25_chunks,
+        top_k=task.top_k,
+        dense_weight=DENSE_WEIGHT,
+        bm25_weight=BM25_WEIGHT,
+    )
+    logger.debug(
+        f"[{task.worker_type}] Hybrid fusion fused {len(dense_chunks)} dense + {len(bm25_chunks)} BM25 -> {len(fused_chunks)} final chunks"
+    )
+    return fused_chunks
+
+
+# ---------------------------------------------------------------------------
 # LangGraph Node 1: Orchestrator Planning Node
 # ---------------------------------------------------------------------------
 def plan_orchestration_node(state: OrchestratorAgentState) -> dict[str, Any]:
@@ -379,7 +444,7 @@ def narrative_worker_node(state: WorkerInputState) -> dict[str, Any]:
         prefer_local=False,
     )
 
-    chunks = execute_vector_retrieval(task, embedder, qdrant)
+    chunks = execute_hybrid_retrieval(task, embedder, qdrant)
     chunk_dicts = [c.model_dump() for c in chunks]
 
     return {
@@ -409,7 +474,7 @@ def tabular_worker_node(state: WorkerInputState) -> dict[str, Any]:
         prefer_local=False,
     )
 
-    chunks = execute_vector_retrieval(task, embedder, qdrant)
+    chunks = execute_hybrid_retrieval(task, embedder, qdrant)
     chunk_dicts = [c.model_dump() for c in chunks]
 
     return {

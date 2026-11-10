@@ -18,23 +18,7 @@ from pydantic import BaseModel, Field
 # ---------------------------------------------------------------------------
 # Reducer Functions for Parallel Fan-In (LangGraph Send API)
 # ---------------------------------------------------------------------------
-def merge_sub_agent_results(
-    left: dict[str, list[dict[str, Any]]] | None,
-    right: dict[str, list[dict[str, Any]]] | None,
-) -> dict[str, list[dict[str, Any]]]:
-    """Merges sub_agent_results dictionaries emitted by parallel worker nodes."""
-    merged = dict(left or {})
-    if right:
-        for k, v in right.items():
-            if k in merged:
-                # Merge lists without duplicating chunk_ids
-                existing_ids = {c["chunk_id"] for c in merged[k] if "chunk_id" in c}
-                for item in v:
-                    if item.get("chunk_id") not in existing_ids:
-                        merged[k].append(item)
-            else:
-                merged[k] = list(v)
-    return merged
+from src.states.agent_state import merge_sub_agent_results
 
 
 # ---------------------------------------------------------------------------

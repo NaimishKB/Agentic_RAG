@@ -524,7 +524,7 @@ def api_query_plant_scada(req: ScadaQueryRequest) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 # Server Launcher
 # ---------------------------------------------------------------------------
-def start_server(host: str = "0.0.0.0", port: int = 8000):
+def start_server(host: str = "0.0.0.0", port: int = 8602):
     """Launches the FastAPI server with Uvicorn."""
     logger.info(f"Starting FastAPI SHP MCP Server on http://{host}:{port} (Docs: http://{host}:{port}/docs)")
     uvicorn.run(app, host=host, port=port, log_level="info")
@@ -532,5 +532,5 @@ def start_server(host: str = "0.0.0.0", port: int = 8000):
 
 if __name__ == "__main__":
     host_env = os.getenv("MCP_HOST", "0.0.0.0")
-    port_env = int(os.getenv("MCP_PORT", "8000"))
+    port_env = int(os.getenv("MCP_PORT", "8602"))
     start_server(host=host_env, port=port_env)
