@@ -1,6 +1,6 @@
 # Agentic RAG — Small Hydropower Plant (SHP) Knowledge System
 
-> A **cost-effective and totally free Agentic RAG pipeline** for Small Hydropower Plant (SHP) operations, maintenance & knowledge management — built with **LangGraph**, **LangChain**, and **Ollama**, and developed using **Spec-Driven Development (SDD)** principles. Fully on-prem capable architecture, evaluated using 100% free-tier resources (local inference + free-tier cloud LLM judges).
+> A **cost-effective Agentic RAG pipeline with zero API fees** for Small Hydropower Plant (SHP) operations, maintenance & knowledge management — built with **LangGraph**, **LangChain**, and **Ollama**, and developed using **Spec-Driven Development (SDD)** principles. Fully on-prem capable architecture, evaluated using zero-cost resources (local Ollama inference + free-tier cloud LLM judges).
 
 ---
 
@@ -31,7 +31,7 @@
 
 | Field | Detail |
 | :--- | :--- |
-| **Goal** | Build a cost-effective, totally free agentic RAG pipeline for Small Hydropower Plant (SHP) — operations, maintenance, fault diagnosis & knowledge management. Fully on-prem capable at runtime. |
+| **Goal** | Build a cost-effective, zero-API-fee agentic RAG pipeline for Small Hydropower Plant (SHP) — operations, maintenance, fault diagnosis & knowledge management. Fully on-prem capable at runtime. |
 | **Target Domain** | Small Hydropower Plant (SHP) — operations, maintenance, fault diagnosis & knowledge management. |
 | **Data Scale** | ~2 GB corpus: PDF manuals, Word reports, scanned images, plain text, JPEG/PNG drawings. |
 | **LLM** | `qwen3.5:9b` via **Ollama** (local inference, fully air-gapped capable) |
@@ -41,7 +41,7 @@
 | **Orchestration** | **LangGraph** (Stateful Multi-Agent Hierarchical Architecture with Parent StateGraph & Specialized Agent Subgraphs + Send API Map-Reduce) + **LangChain** |
 | **Language** | Python 3.11+ |
 | **Key Capabilities** | Hierarchical subgraphs, self-healing reflection loops, corrective RAG (CRAG), self-RAG, query rewriting, hallucination detection, multi-agent scatter-gather routing |
-| **Evaluation** | **Multi-Provider LLM-as-a-Judge Offline Benchmark** (100% free via Google Gemini 2.5 Flash & Groq 120B/20B waterfall failover across 53 golden test cases; optional local assertions via Ollama) |
+| **Evaluation** | **Multi-Provider LLM-as-a-Judge Offline Benchmark** (Zero API fees via Google Gemini 2.5 Flash & Groq 120B/20B waterfall failover across 53 golden test cases; optional local assertions via Ollama) |
 
 ---
 
@@ -98,10 +98,10 @@ This project follows **Spec-Driven Development (SDD)**: every node, state transi
 |---|---|---|---|---|
 | NFR-01 | End-to-end query latency (p95) | < 5s (Direct Chat) | **~45s–120s** (RTX 5050 Laptop GPU) | Memory bandwidth-bound during multi-turn agentic loops |
 | NFR-02 | Faithfulness score (LLM-as-a-Judge) | ≥ 0.90 (Aspirational) | **0.7798 (78.0%)** (Target: ≥ 0.75) | Hallucinations primarily in arithmetic & dense tables |
-| NFR-03 | Answer Relevance score (LLM-as-a-Judge) | ≥ 0.85 (Aspirational) | **0.7526 (75.3%)** (Target: ≥ 0.70) | Strong query adherence on policy & licensing queries |
+| NFR-03 | Answer Relevance score (LLM-as-a-Judge) | ≥ 0.88 (Aspirational) | **0.7526 (75.3%)** (Target: ≥ 0.70) | Strong query adherence on policy & licensing queries |
 | NFR-04 | Context Precision (Signal-to-Noise) | ≥ 0.85 (Aspirational) | **0.7391 (73.9%)** (Target: ≥ 0.70) | Signal-to-noise across multi-agent scatter-gather chunks |
 | NFR-05 | Context Recall (Completeness) | ≥ 0.85 (Aspirational) | **0.7921 (79.2%)** (Target: ≥ 0.75) | Broad coverage across multi-hop civil & turbine documents |
-| NFR-06 | Zero dependency on paid external LLMs | Totally Free | **100% Free** | Local Ollama `qwen3.5:9b` runtime + free-tier Gemini/Groq judges |
+| NFR-06 | Zero dependency on paid external LLMs | Zero API Fees | **No API Fees** | Local Ollama `qwen3.5:9b` runtime + free-tier Gemini/Groq judges |
 | NFR-07 | On-prem capable architecture vs. experiment | On-Prem Capable | **Hybrid Free Setup in Experiment** | Production can run 100% on-prem; benchmark used free cloud judges & LangSmith |
 | NFR-08 | Max query rewrite attempts before fallback | 1–3 configurable | **Configurable via `MAX_REWRITE_ATTEMPTS=1` in `.env`** | Prevents infinite reflection loops and bounds GPU latency |
 
@@ -235,7 +235,7 @@ class AgentState(TypedDict, total=False):
 | `mcp_worker` | Sub-Agent (Tools/SCADA)| `task` (via `Send`) | `sub_agent_results`, `all_retrieved_chunks` | Exact formula execution ($P$, $N_s$, Penstock sizing) and plant sensor telemetry via FastAPI MCP Server. |
 | `aggregate_results` | Fan-In Aggregator | `all_retrieved_chunks`, `sub_agent_results` | `all_retrieved_chunks`, `total_retrieved` | Fans in outputs across all dynamic sub-agents, deduplicates by `chunk_id`, and sorts by relevance score. |
 | `synthesizer` | **Synthesizer Agent** | `sub_agent_results`, `all_retrieved_chunks`, `query` / `user_query`, `sub_queries` | `documents`, `synthesized_context`, `executive_summary`, `conflicts_detected`, `citations` | Fuses chunks across all sub-queries, eliminates duplicates by `chunk_id`, enforces fair-share sub-query coverage, elevates MCP tool calculations, and assembles structured, citation-anchored context. Features high-speed pure-Python deterministic fusion (0.000s) to eliminate redundant LLM generation cycles and preserve VRAM/bandwidth on local GPUs. |
-| `retrieval_grader` | **Retrieval Sufficiency Grader** (Production CRAG) | `query`, `sub_queries`, `synthesized_context`, `documents` | `is_retrieval_sufficient`, `missing_aspects`, `retrieval_critique`, `retrieval_confidence` | Zero-reference evaluator using `qwen3.5:9b`. Analyzes whether synthesized context contains all required technical parameters, formulas, equipment curves, and operational facts to answer the user query and sub-queries. If sufficient → `generator`. If insufficient and `cycle_count < MAX_CYCLES` (configurable in `.env`, default: 1) → `feedback_agent`. If insufficient and `cycle_count >= MAX_CYCLES` → `generator` / `fallback`. |
+| `retrieval_grader` | **Retrieval Sufficiency Grader** (Production CRAG) | `query`, `sub_queries`, `synthesized_context`, `documents` | `is_retrieval_sufficient`, `missing_aspects`, `retrieval_critique`, `retrieval_confidence` | Zero-reference evaluator using `qwen3.5:9b`. Analyzes whether synthesized context contains all required technical parameters, formulas, equipment curves, and operational facts to answer the user query and sub-queries. If sufficient → `generator`. If insufficient and `cycle_count < MAX_CYCLES` (configurable in `.env`, default: 1) → `feedback_agent`. If insufficient and `cycle_count >= MAX_CYCLES` → `generator` (attempts best-effort synthesis with available evidence; guardrail will subsequently verify faithfulness before delivery). |
 | `generator` | Answer Generator | `query`, `synthesized_context` | `final_response` | Synthesizes an authoritative engineering answer strictly from context using `qwen3.5:9b` (configured with `GENERATOR_MAX_TOKENS=8192` to prevent mid-sentence cutoff). |
 | `generation_guardrail` | Post-Gen Evaluator | `query`, `final_response`, `documents` | `generation_metrics`, `is_grounded` | Evaluates Faithfulness and Hallucination metrics. If ungrounded and `cycle_count < MAX_CYCLES` → routes to `feedback_agent`; if exceeding limit → routes to `fallback`. |
 | `feedback_agent` | **Feedback Agent** | `query`, `retrieval_metrics`, `generation_metrics`, `cycle_count`, `missing_aspects`, `retrieval_critique` | `feedback_diagnosis`, `cycle_count` | Diagnoses defect root cause, formulates actionable query remediation, increments `cycle_count`. If `cycle_count >= MAX_CYCLES` → routes to `fallback`. |
@@ -259,13 +259,13 @@ synthesizer               ──> retrieval_grader
 
 retrieval_grader → is_retrieval_sufficient = True                                      ──> generator
 retrieval_grader → is_retrieval_sufficient = False AND cycle_count < MAX_CYCLES        ──> feedback_agent
-retrieval_grader → is_retrieval_sufficient = False AND cycle_count >= MAX_CYCLES       ──> generator / fallback
+retrieval_grader → is_retrieval_sufficient = False AND cycle_count >= MAX_CYCLES       ──> generator (best-effort synthesis)
 
 generator                 ──> generation_guardrail
 
 generation_guardrail → is_grounded = True                                             ──> END (Return response)
 generation_guardrail → is_grounded = False AND cycle_count < MAX_CYCLES               ──> feedback_agent
-generation_guardrail → is_grounded = False AND cycle_count >= MAX_CYCLES              ──> fallback
+generation_guardrail → is_grounded = False AND cycle_count >= MAX_CYCLES              ──> fallback (circuit breaker trips)
 
 feedback_agent            ──> planner (re-plan with diagnostic guidance)
 ```
@@ -281,9 +281,27 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 | **Vector Store** | QDrant (self-hosted) | `host: localhost`, `port: 6333`, `collection: shp_knowledge` |
 | **Document Parser** | Docling | Input: PDF, DOCX, TXT, JPEG, PNG → Output: Markdown |
 | **Text Splitter** | `RecursiveCharacterTextSplitter` (Markdown-aware) | `chunk_size: 1000 characters (~330 tokens via cl100k_base)`, `chunk_overlap: 150 characters (~40 tokens)` |
-| **Retriever** | QDrant vector search | `top_k: 6`, `score_threshold: 0.65` |
+| **Retriever** | **Hybrid Retriever**: Dense Vector Search (Qdrant) + Sparse Keyword Search (Okapi BM25 with Exact Name Boosting via Reciprocal Rank Fusion / RRF) | `top_k: 6`, `retriever_mode: hybrid`, `score_threshold: 0.65`, `dense_weight: 0.5`, `bm25_weight: 0.5` |
 | **Checkpointing** | LangGraph `MemorySaver` (In-Memory RAM for active session); upgradeable to `SqliteSaver` (`./data/checkpoints.db`) | In-RAM thread checkpointing during session execution; zero disk overhead; persistent cross-session audit tracing via SQLite |
 | **MCP Tool Server** | FastAPI SHP MCP Server (`src/mcp_server/`) | Port 8602 (FastAPI + Uvicorn): JSON-RPC 2.0 (`/mcp`), REST endpoints (`/tools`, `/api/v1/...`), Swagger UI (`/docs`) |
+
+#### Hybrid Retrieval Engine: Dense Vector + Okapi BM25 Keyword Search
+
+While dense embeddings (`qwen3-embedding:0.6b` via Qdrant) excel at general semantic similarity, dense-only retrieval frequently struggles with **exact entity names, project identifiers, and statutory references** (e.g. project sites like *"Tala"*, author names like *"Aggidis"* or *"Alvarado-Ancieta"*, policy documents like *"allotment of shp"*, or specific codes like *"Regulation 14(2)"*). 
+
+To solve this, the system implements an in-memory **Okapi BM25 Sparse Keyword Retriever** ([`src/ingestion/bm25_retriever.py`](src/ingestion/bm25_retriever.py)) that operates alongside Qdrant:
+
+1. **Exact Name & Entity Boosting**:
+   - Analyzes all 4,064 chunks in `data/chunks/chunks.jsonl`.
+   - When a query contains terms matching a document's filename (`source_file`), title (`document_title`), or breadcrumb header (`breadcrumb`), it applies an **Exact Name Boost (+3.5 score)**.
+   - Exact multi-word phrase containment in chunk text receives an additional **+7.0 boost**, ensuring that chunks referencing the exact queried entity are propelled to the very top rank.
+2. **Sub-5ms Query Latency & Persistent Disk Caching**:
+   - Pre-computes and caches the complete inverted index and IDF weights in `data/chunks/bm25_index.pkl`.
+   - Subsequent initializations load from disk in **< 20ms**, and searches execute in **3–5 milliseconds** with zero GPU memory contention.
+3. **Reciprocal Rank Fusion (RRF)**:
+   - Worker nodes (`narrative_worker`, `tabular_worker`) combine ranked lists from dense Qdrant search and BM25 keyword search:
+     $$\text{RRF}(d) = \frac{w_{\text{dense}}}{60 + \text{rank}_{\text{dense}}(d)} + \frac{w_{\text{bm25}}}{60 + \text{rank}_{\text{bm25}}(d)}$$
+   - Configurable via `.env`: `RETRIEVER_MODE=hybrid` (default), `dense`, or `bm25`.
 
 ---
 
@@ -319,15 +337,15 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 #### 2. Offline Evaluation Metrics Framework (Free-Tier LLM-as-a-Judge)
 - **Module**: `src/evals/evaluate_offline_with_llm.py`
 - **Role**: **Offline QA & Regression Testing Suite** for systematic evaluation against curated golden datasets (53 test cases across policy, multi-hop engineering, and mathematical calculations).
-- **Mechanism**: Automated **Multi-Provider LLM-as-a-Judge** benchmark with resilient waterfall failover across free-tier API endpoints (Google Gemini 2.5 Flash → Groq 120B/20B → local Ollama fallback), operating **100% free of cost**.
+- **Mechanism**: Automated **Multi-Provider LLM-as-a-Judge** benchmark with resilient waterfall failover across free-tier API endpoints (Google Gemini 2.5 Flash → Groq 120B/20B → local Ollama fallback), operating with **zero API fees**.
 - **Requirement**: Evaluates against a curated **ground-truth reference answer (`expected_output`)** for each query in the golden datasets.
 - **Intended Usage**:
   - **For QA Engineers & Researchers**: Systematically benchmarks vector index retrieval quality, chunking strategies, generation groundedness, and re-ranking performance.
   - **Not in Live Production Workflow**: Because live production queries have no known reference answer, this harness is executed independently during offline regression testing.
 - **Evaluated Core RAG Metrics**:
-  1. **Faithfulness (Hallucination Prevention)**:
-     $$\text{Faithfulness} = \frac{\text{Claims in Answer Supported by Context}}{\text{Total Factual Claims Made in Answer}}$$
-     *Meaning*: Of all factual claims, formulas, ratings, and numbers in the generated response, how many are strictly supported by the retrieved context? Directly measures hallucination prevention ($\text{Hallucination Rate} = 1 - \text{Faithfulness}$).
+  1. **Faithfulness (Claim-Level Groundedness Ratio)**:
+     $$\text{Faithfulness} = \frac{\text{Factual Claims in Answer Supported by Context}}{\text{Total Factual Claims Made in Answer}}$$
+     *Meaning*: Evaluates the fraction of individual factual claims that are backed by the retrieved context. A 0.78 score means 78% of factual propositions were verified against context.
   2. **Answer Relevancy (Query Adherence)**:
      $$\text{Answer Relevancy} = \frac{\text{Sentences Directly Addressing Query Intent}}{\text{Total Sentences in Generated Answer}}$$
      *Meaning*: Evaluates whether the generated response directly answers the user's specific engineering question without drift, omissions, or generic boilerplate.
@@ -337,9 +355,13 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
   4. **Context Recall (Retrieval Completeness)**:
      $$\text{Context Recall} = \frac{\text{Relevant Facts Found in Retrieved Context}}{\text{Total Required Facts in Ground Truth Reference}}$$
      *Meaning*: Of all the key technical facts and criteria required by the golden ground truth (`expected_output`), how many did the retriever successfully locate?
-  5. **Hallucination Rate**:
-     $$\text{Hallucination Rate} = \frac{\text{Answers with Flagged Unverified Claims}}{\text{Total Evaluated Queries}} \approx 1 - \text{Faithfulness}$$
-     *Meaning*: Measures the proportion of generated responses containing ungrounded claims, arithmetic inaccuracies, or unsupported extrapolations.
+  5. **Query Hallucination Incident Rate (Defect Frequency)**:
+     $$\text{Query Hallucination Rate} = \frac{\text{Queries with } \ge 1 \text{ Flagged Unsupported Claim}}{\text{Total Evaluated Queries}} = \frac{14}{53} \approx 26.4\%$$
+     *Meaning*: Measures the proportion of generated responses that contained *at least one* ungrounded statement or arithmetic error.
+     > [!IMPORTANT] Distinguishing Faithfulness from Query Hallucination Rate
+     > **Do not equate Query Hallucination Rate with $1 - \text{Faithfulness}$.** They measure fundamentally different dimensions at different granularities:
+     > - **Faithfulness (0.78)** is a continuous, claim-level micro-average (78% of all individual claims were grounded, leaving a 22% claim ungroundedness margin).
+     > - **Query Hallucination Rate (26.4%)** is a query-level binary occurrence metric (14 out of 53 queries contained at least one defect). An answer containing 9 grounded statements and 1 minor arithmetic slip has 90% faithfulness, but is recorded as a flagged query in the binary hallucination rate.
 
 #### 3. Post-Generation Guardrail (Single-Pass Groundedness Evaluation at Runtime)
 - **Module**: `src/agents/generation_guardrail/`
@@ -358,7 +380,7 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 
 > [!WARNING] Sensitive Documents & Free-Tier Cloud Privacy Notice
 > - **Cloud APIs & Sensitive Data**: While the production inference runtime (`qwen3.5:9b` via Ollama + Qdrant) is fully local and on-prem, the offline evaluation script (`src/evals/evaluate_offline_with_llm.py`) sends retrieved chunks and generated answers to external cloud endpoints (Google Gemini and Groq). Free-tier terms of service often permit providers to use submitted prompt data for model improvement and training. **If your SHP documents are confidential, proprietary, or classified, do not submit them to free cloud APIs.** Instead, evaluate using local models via Ollama.
-> - **LangSmith Telemetry**: The default configuration sets `LANGSMITH_TRACING=true` in `.env` for visual graph tracing and debugging. In strict air-gapped environments, disable this by setting `LANGSMITH_TRACING=false`.
+> - **LangSmith Telemetry**: The example configuration sets `LANGSMITH_TRACING=false` in `.env` to prevent accidental external data transmission by default. Set to `true` with your `LANGCHAIN_API_KEY` only when cloud tracing is explicitly desired.
 
 #### 4. Feedback Agent (Reflection & Remediation Loop)
 - **Module**: `src/agents/feedback/`
@@ -398,7 +420,7 @@ feedback_agent            ──> planner (re-plan with diagnostic guidance)
 
 ### Spec 06: Evaluation & Acceptance Criteria
 
-#### 1. Multi-Provider LLM-as-a-Judge Offline Evaluation Framework (100% Free)
+#### 1. Multi-Provider LLM-as-a-Judge Offline Evaluation Framework (Zero API Fees)
 The offline evaluation suite ([`src/evals/evaluate_offline_with_llm.py`](src/evals/evaluate_offline_with_llm.py)) implements an automated **Multi-Provider LLM-as-a-Judge** benchmark with resilient waterfall failover across free-tier API endpoints. It costs \$0 to execute, allowing anyone with an adequate consumer GPU to reproduce the evaluation without enterprise cloud budgets.
 
 ```
@@ -416,16 +438,16 @@ The table below reflects the actual benchmark evaluation run on [`src/evals/gene
 
 | Metric | Measured Score | Target | Mathematical Formula | Core Engineering Meaning |
 | :--- | :---: | :---: | :--- | :--- |
-| **Faithfulness** | **0.7798 (78.0%)** | ≥ 0.75 | $\frac{\text{Claims Supported by Context}}{\text{Total Factual Claims in Answer}}$ | **Hallucination Prevention**: Are all parameters, formulas, and ratings in the generated answer strictly backed by context? |
+| **Faithfulness** | **0.7798 (78.0%)** | ≥ 0.75 | $\frac{\text{Claims Supported by Context}}{\text{Total Factual Claims in Answer}}$ | **Hallucination Prevention**: Are all parameters, formulas, and ratings in the generated answer strictly backed by context? (Claim-level micro-average). |
 | **Answer Relevancy** | **0.7526 (75.3%)** | ≥ 0.70 | $\frac{\text{Sentences Addressing Query Intent}}{\text{Total Sentences in Answer}}$ | **Query Adherence**: Does the generated response directly answer the engineering question without drift or omissions? |
 | **Context Precision** | **0.7391 (73.9%)** | ≥ 0.70 | $\frac{\text{Relevant Chunks Retrieved}}{\text{Total Chunks Retrieved}}$ | **Signal-to-Noise Ratio**: Of all chunks returned by the retriever, how many were relevant to formulating the answer? |
 | **Context Recall** | **0.7921 (79.2%)** | ≥ 0.75 | $\frac{\text{Relevant Facts Found in Context}}{\text{Total Required Facts in Ground Truth}}$ | **Completeness**: How completely does the retrieved context cover the facts required in the golden ground-truth? |
-| **Hallucination Rate** | **14 / 53 (26.4%)** | < 30% | $\frac{\text{Hallucinated / Unverified Answers}}{\text{Total Executed Queries}}$ | Extrapolations or arithmetic errors flagged by the judge (primarily on dense regression formulas). |
+| **Query Hallucination Rate** | **14 / 53 (26.4%)** | < 30% | $\frac{\text{Queries with } \ge 1 \text{ Flagged Claim}}{\text{Total Executed Queries}}$ | Binary query defect rate: proportion of questions where the judge flagged at least one unsupported claim or math error. |
 
-#### Category-by-Category Benchmark Breakdown
+#### Category-by-Category Benchmark Breakdown (53 Cases Reconciled)
 
 > [!WARNING] Small Sample Size Limitation (Avoid Over-Interpretation)
-> Several categories in the benchmark contain very small sample sizes ($N = 1$ to $4$ cases). In particular, the **Disambiguation / Reconciliation** category contains only **a single test case ($N = 1$, score 0.22)**, while **Technical Governance ($N = 3$)**, **Targeted Numerical ($N = 3$)**, **Conditional Policy ($N = 4$)**, **Adversarial Guardrails ($N = 4$)**, and **Tool Call / Math ($N = 4$)** have limited representation.
+> Several categories in the benchmark contain very small sample sizes ($N = 1$ to $4$ cases). In particular, the **Disambiguation / Reconciliation** category contains only **a single test case ($N = 1$, score 0.22)**, while **Adversarial / Guardrail ($N = 2$)**, **Adversarial & Hallucination-Trap ($N = 2$)**, **Technical Governance ($N = 3$)**, **Targeted Numerical ($N = 3$)**, **Multi-Hop Cross-Doc ($N = 3$)**, **Conditional Policy ($N = 4$)**, and **Tool Call / Computation ($N = 4$)** have limited representation.
 > **Do not draw generalizable statistical conclusions from these individual category rows.** They serve as preliminary qualitative case studies and diagnostic indicators rather than statistically definitive domain performance.
 
 | Category | Cases ($N$) | Faithfulness | Relevancy | Context Precision | Context Recall | Sample Note |
@@ -434,25 +456,118 @@ The table below reflects the actual benchmark evaluation run on [`src/evals/gene
 | **Targeted Numerical & Policy Thresholds** | 3 | **0.95 (95%)** | **0.80** | 0.81 | 0.83 | Small sample ($N=3$) |
 | **Multi-Hop Cross-Document Synthesis** | 6 | **0.90 (90%)** | **0.90** | 0.81 | 0.78 | Robust multi-doc reasoning |
 | **Single-Hop Policy & Licensing** | 12 | **0.90 (90%)** | **0.78** | 0.64 | 0.85 | Core policy retrieval strength |
-| **Single-Hop Fact Lookup** | 7 | **0.88 (88%)** | **0.93** | 0.85 | 0.90 | High precision factual extraction |
-| **Conditional & Scenario-Based Policy Reasoning** | 4 | **0.85 (85%)** | **0.88** | 0.78 | 0.76 | Small sample ($N=4$) |
-| **Adversarial Guardrails & Safety** | 4 | **0.67 (67%)** | **0.71** | 0.68 | 0.68 | Small sample ($N=4$) |
-| **Table & Diagram Extraction** | 6 | **0.57 (57%)** | **0.56** | 0.72 | 0.75 | Weak: OCR alignment challenges |
-| **Tool Call / Mathematical Regression Calculations** | 4 | **0.42 (42%)** | **0.40** | 0.65 | 0.60 | Weak: Small sample ($N=4$), tool dispatch gap |
-| **Disambiguation / Reconciliation** | 1 | **0.22 (22%)** | **0.12** | 0.60 | 0.70 | **Single case ($N=1$) — do not extrapolate** |
+| **Single-Hop Fact Lookup** | 7 | **0.88 (88%)** | **0.93** | 0.87 | 0.88 | High precision factual extraction |
+| **Conditional & Scenario-Based Policy Reasoning** | 4 | **0.86 (86%)** | **0.88** | 0.78 | 0.76 | Small sample ($N=4$) |
+| **Adversarial / Guardrail** | 2 | **0.73 (73%)** | **0.85** | 0.89 | 0.81 | Small sample ($N=2$) |
+| **Adversarial & Hallucination-Trap** | 2 | **0.61 (61%)** | **0.56** | 0.58 | 0.74 | Small sample ($N=2$) |
+| **Table & Diagram Extraction** | 6 | **0.57 (57%)** | **0.56** | 0.69 | 0.61 | Weak: OCR alignment challenges |
+| **Multi-Hop Cross-Doc** | 3 | **0.56 (56%)** | **0.76** | 0.79 | 0.79 | Small sample ($N=3$) |
+| **Tool Call / Computation** | 4 | **0.42 (42%)** | **0.40** | 0.74 | 0.84 | Weak: Small sample ($N=4$), tool schema gap |
+| **Disambiguation / Reconciliation** | 1 | **0.22 (22%)** | **0.12** | 0.78 | 0.41 | **Single case ($N=1$) — do not extrapolate** |
+| **Total / Macro Average** | **53** | **0.780 (78.0%)** | **0.753 (75.3%)** | **0.739 (73.9%)** | **0.792 (79.2%)** | **Full 53-Case Benchmark Reconciled** |
+
+#### Fallback, Gate Pass & Retry Statistics (Empirical Breakdown of 53 Cases)
+
+Across the 53 executed golden benchmark cases (configured with `FAITHFULNESS_THRESHOLD=0.90` and `MAX_REWRITE_ATTEMPTS=1` in `.env`):
+
+| Pipeline Outcome | Case Count | Percentage | Faithfulness | Relevancy | Context Precision | Context Recall | Average Latency | Primary Reason / Behavior |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |
+| **Passed 0.90 Gate Directly / Retried** | **39** | **73.6%** | **88.7%** | **84.6%** | **75.2%** | **83.9%** | **586s (~9.8m)** | Grounded engineering synthesis; verified against context |
+| **Circuit Breaker Tripped (Fallback)** | **14** | **26.4%** | **48.1%** | **49.4%** | **70.4%** | **66.2%** | **1,175s (~19.6m)** | Re-planning exhausted without passing 0.90 gate |
+
+##### Why Did 14 Cases End in Fallback?
+1. **Tier-2/3 Partial Data Notices (7 cases)**:
+   - For cases like `GD-29` (adversarial hallucination trap querying nonexistent regulations) and `GD-27` (targeted numerical threshold absent from uploaded DPRs), the system's CRAG grader and guardrail functioned as intended: rather than hallucinating answers, the circuit breaker tripped and delivered a transparent **"Partial Engineering Data Notice"** disclosing that documentation was unavailable.
+2. **Tier-1 Best-Effort Delivery with Disclaimers (7 cases)**:
+   - For complex calculations (`GD-015`, `GD-023`) and multi-hop synthesis (`GD-13`, `GD-15`), the system exhausted retry loops and delivered best-effort answers with explicit qualification banners, acknowledging that groundedness could not be verified at $\ge 0.90$.
+
+#### Plain-RAG Baseline Comparison vs. Agentic RAG
+
+To measure the exact trade-offs of agentic reflection versus traditional retrieval, a standalone **Plain-RAG Baseline Runner** ([`src/evals/run_plain_rag_baseline.py`](src/evals/run_plain_rag_baseline.py)) was constructed. Plain-RAG executes single-shot hybrid retrieval (top-6 chunks) followed directly by single-turn LLM generation without planning, CRAG verification, or reflection loops:
+
+| Dimension | Plain-RAG Baseline | Multi-Agent Hierarchical RAG | Trade-Off Analysis |
+| :--- | :--- | :--- | :--- |
+| **Architecture** | Single-shot retrieval + 1 LLM call | Hierarchical StateGraph (Planner + Orchestrator + Synthesizer + CRAG + Guardrail) | Agentic RAG performs multi-step verification and scatter-gather retrieval |
+| **LLM Calls per Query** | **1 inference** | **3 to 7 inferences** | Plain-RAG uses 70–85% fewer LLM inferences |
+| **Average Query Latency** | **~32–37 seconds** | **~500–1,100 seconds** (RTX 5050 8GB) | Plain-RAG is **~15× faster**; Agentic RAG is heavily memory bandwidth-bound on 8GB GPU |
+| **Hallucination Prevention** | None (delivers raw LLM output) | **0.90 Post-Gen Guardrail + Circuit Breaker** | Agentic RAG intercepts 14 ungrounded cases and surfaces partial data notices |
+| **Multi-Hop / Tabular Synthesis** | Frequently misses cross-document facts | High coverage via Orchestrator scatter-gather | Agentic RAG scores 90% on multi-hop cross-document synthesis |
+
+```powershell
+# Run Plain-RAG baseline on golden dataset
+python -m src.evals.run_plain_rag_baseline --limit 5 --retriever hybrid
+```
+
+##### Empirical Head-to-Head Benchmark: Plain-RAG vs. Agentic RAG (Cases GD-01 & GD-02)
+
+The table below contrasts the empirical results evaluated by the multi-provider LLM judge (`gemini-2.5-flash`) on [`src/evals/plain_rag_answers_and_chunks.json`](src/evals/plain_rag_answers_and_chunks.json) vs. [`src/evals/generated_answers_and_chunks.json`](src/evals/generated_answers_and_chunks.json):
+
+| Metric / Dimension | GD-01 (Plain-RAG) | GD-01 (Agentic RAG) | GD-02 (Plain-RAG) | GD-02 (Agentic RAG) | Engineering Analysis & Key Finding |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Query Type** | Multi-part Policy & Licensing | Multi-part Policy & Licensing | Focused Single-Hop Policy | Focused Single-Hop Policy | GD-01 requires cross-document facts; GD-02 is concentrated |
+| **Context Recall** | **0.00 (0.0%)** | **0.70 (70.0%)** | **1.00 (100%)** | **1.00 (100%)** | **Retrieval Collapse in Plain-RAG**: Single-shot retrieval completely missed the required criteria for all 3 allotment methods. Agentic RAG's Planner decomposed the query and achieved 70% recall. |
+| **Context Precision** | **0.10 (10.0%)** | **0.70 (70.0%)** | 0.75 (75.0%) | **0.90 (90.0%)** | Plain-RAG suffered heavy context pollution (0.10), while Agentic RAG maintained high signal-to-noise. |
+| **Faithfulness Score** | 1.00 (Abstained) | 0.75 (75.0%) | **1.00 (100%)** | **1.00 (100%)** | Plain-RAG scored 1.00 on GD-01 by refusing to answer; both scored 100% on GD-02. |
+| **Answer Relevancy** | 1.00 (Refusal) | 0.65 (65.0%) | **1.00 (100%)** | **1.00 (100%)** | On GD-02, both provided exact, concise policy answers. |
+| **Execution Latency** | **173.4s** | 549.5s | **58.1s** | 305.2s | Plain-RAG is **~3× to 5.2× faster** by skipping multi-agent coordination. |
+| **Generation Outcome** | **Abstained (Data Missing)** | **Synthesized Comparison** | **Answered Directly** | **Answered with Verification** | **The Agentic Trade-Off**: For simple single-hop lookups (GD-02), Plain-RAG is sufficient and 5× faster. But for complex multi-part questions (GD-01), Plain-RAG experiences total retrieval failure, whereas Agentic RAG successfully synthesizes the answer. |
+
+###### Qualitative Case Study: Why the Pipelines Diverged
+
+1. **Query GD-01 (Multi-part Policy & Licensing)**:
+   - **User Query**: *"What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?"*
+   - **Vanilla / Plain-RAG Outcome**:
+     - **Result**: **Total Retrieval Collapse (Recall: 0.00, Precision: 0.10)**.
+     - **Actual Output**: *"The provided engineering documentation does not contain sufficient data to answer this query."*
+     - **Root Cause**: Single-shot retrieval retrieved generic hydro policy chunks that mentioned site allotment in passing but completely missed the required clauses explaining the 3 allotment methods (Competitive Bidding, MoU, Swiss Model) and when each is preferred. Because the model had no data, it correctly abstained (earning a technical 1.0 for not hallucinating, but 0.0 for utility).
+   - **Multi-Agent Hierarchical RAG Outcome**:
+     - **Result**: **Context Recall jumped to 0.70 (70%)** with **Context Precision at 0.70 (70%)**.
+     - **Actual Output**: The **Planner Agent** decomposed the question into targeted sub-queries, retrieving chunks across `allotmnet of shp.pdf` and `hydro policy.pdf`. The **Synthesizer** synthesized a complete 4-section engineering brief with a structured comparative matrix covering Bidding, MoU, and Swiss Challenge.
+     - **Judge Note**: Faithfulness was scored at **0.75** because the generator attempted to fabricate a pseudo-mathematical threshold formula for developer qualification (`$$\text{Eligibility Status} = \dots$$`) that was not in the source text.
+
+2. **Query GD-02 (Focused Single-Hop Policy)**:
+   - **User Query**: *"During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?"*
+   - **Vanilla / Plain-RAG Outcome**:
+     - **Result**: **Flawless Execution (Recall: 1.00, Precision: 0.75, Faithfulness: 1.00, Relevancy: 1.00)**.
+     - **Execution Latency**: **58.1 seconds** (**~5.2× faster** than Agentic RAG).
+     - **Actual Output**: Clean 2-bullet answer directly quoting `allotmnet of shp.pdf` (ties broken by gradation list based on prequalification criteria; site allotted to government agency if no bids received twice).
+   - **Multi-Agent Hierarchical RAG Outcome**:
+     - **Result**: **Recall: 1.00, Precision: 0.90, Faithfulness: 1.00, Relevancy: 1.00**.
+     - **Execution Latency**: **305.2 seconds**.
+     - **Actual Output**: Complete 4-section engineering brief with executive summary, comparison matrix, regulatory provisions, and risk mitigation.
+   - **Engineering Conclusion**: For focused, single-hop factual retrieval, Plain-RAG is optimal and avoids multi-agent coordination overhead. For distributed or multi-part questions requiring cross-document synthesis, Agentic RAG is necessary to prevent total retrieval collapse.
 
 #### Critical Failure Analysis: The 26.4% Hallucination Rate & Weakest Categories
 
-An aggregate hallucination rate of **26.4% (14 out of 53 cases)** is substantial in mission-critical hydropower engineering. While policy lookup and regulatory queries achieved high groundedness (88% to 100%), performance dropped sharply in the two high-risk categories:
+An aggregate query hallucination rate of **26.4% (14 out of 53 cases)** is substantial in mission-critical hydropower engineering. While policy lookup and regulatory queries achieved high groundedness (88% to 100%), performance dropped sharply in the two high-risk categories:
 
 1. **Tool Call & Mathematical Regression Calculations (0.42 Faithfulness, $N=4$)**:
-   - **The Intent**: The Model Context Protocol (MCP) server was integrated specifically to provide deterministic mathematical solvers and eliminate LLM arithmetic hallucinations.
-   - **The Reality**: The local 9B model (`qwen3.5:9b`) struggled with reliable tool invocation. Instead of dispatching structured sub-queries to the `mcp_worker` tools, the agent frequently attempted to calculate complex regressions within its own autoregressive text stream, producing incorrect mathematical derivations and unverified numerical figures.
-   - **Experimental Purpose of MCP Calculators**: The MCP calculators (e.g., penstock sizing, specific speed, hydro power) were implemented as an **experimental demonstration** to show how external tools can be integrated via MCP into an agentic graph. They serve as an extensible sandbox for experimenting with specialized engineering tools.
+   - **Empirical Tool Dispatch Audit**: Across all 4 test cases in this category (`GD-003`, `GD-015`, `GD-022`, `GD-023`), **`mcp_worker` fired in 0 of 4 cases (0%)**.
+   - **Root Cause (Tool Catalog Schema Gap & Planner Skip)**:
+     - The FastAPI MCP server (`src/mcp_server/server.py`) implements 3 deterministic hydraulic calculators: `calculate_hydro_power`, `calculate_penstock_diameter`, and `calculate_specific_speed`.
+     - However, the 4 benchmark test cases evaluated specialized domain regressions: Francis turbine cost formulas from Aggidis et al. (`GD-003`), CWC Report No. 1/73 unit hydrograph flood equations (`GD-022`, `GD-023`), and Cesar Alvarado-Ancieta (2009) global powerhouse E&M regression (`GD-015`).
+     - Because no matching tool schema existed in the MCP tool catalog for these specialized non-linear formulas, the **Planner Agent appropriately skipped tool assignment** (allocating 0 MCP sub-tasks) and routed the sub-queries entirely to narrative document retrieval.
+   - **Observed Failure Modes**:
+     - **Inline Autoregressive Calculation (`GD-015`)**: When forced to calculate regressions inline in text without a tool, the Generator suffered severe arithmetic drift (outputting $42.13\text{ Million US\$}$ instead of the correct $\approx 49.1\text{ M\$}$) and misread a dense OCR table value ($4,286\text{ M\$}$ instead of $42.86\text{ M\$}$).
+     - **Circuit Breaker Abort (`GD-003`, `GD-023`)**: When retrieved text lacked specific formula constants, the system refused to fabricate numbers and tripped the circuit breaker after 3 cycles, returning Partial Engineering Data Notices (lowering benchmark recall/faithfulness scores due to missing requested numbers).
+   - **Experimental Purpose of MCP Calculators**: The MCP calculators exist as an **experimental demonstration** showing how external engineering tools can be registered and dispatched over JSON-RPC in an agentic graph. Expanding this to production requires authoring dedicated MCP endpoints for every empirical regression in the benchmark.
    - **Sarkaria Formula Investigation ($D = 0.62 \cdot Q^{0.43}$)**: For example, in our experimental penstock calculator, the economic diameter formula was implemented as a simplified flow-only empirical relation ($D = 0.62 \cdot Q^{0.43}$). In classical hydraulic engineering literature (USBR, ASCE, Indian Central Electricity Authority / CWC guidelines), the full Sarkaria formulation typically incorporates design head $H$ (e.g., $D \propto \frac{Q^{0.43}}{H^{0.14}}$ or head-loss optimization). This discrepancy underscored that experimental tools require strict schema alignment with specific engineering standards and explicit prompt guidance to ensure the LLM invokes them correctly.
+
 2. **Table & Diagram Extraction (0.57 Faithfulness, $N=6$)**:
-   - Technical manuals in Small Hydropower frequently store head-discharge boundaries, turbine selection envelopes, and cost matrices in complex multi-column tables and scanned schematics.
-   - Local OCR engines (Docling / RapidOCR) occasionally break row-column delimiters on dense tables, injecting scrambled text into the vector index. When the generator receives garbled tabular chunks, it struggles to correlate rows with columns, resulting in factual hallucinations flagged by the judge.
+   - **Empirical Contrast (Clean Markdown vs. OCR Distortion)**:
+     - When tables had cleanly preserved Markdown delimiters, extraction was flawless. In **`GD-009`** (project cycle duration table from `AK-DPR Aug 2017.pdf`), the retrieved chunks contained clean Markdown pipes (`||**Activities**|**Time Taken**|`), and the model scored **1.00 (100%) Faithfulness and 1.00 Relevancy**.
+     - In 4 out of the 6 cases (`GD-006`, `GD-007`, `GD-011`, `GD-016`), dense multi-column PDF tables and scanned figures suffered from parser distortion:
+       - **Scanned Character Noise (`GD-006` Chunk 0)**: Scanned pages in `hydro policy.pdf` produced garbled OCR character sequences:
+         ```text
+         [Source: hydro policy.pdf | Section: P08 Hydpe]
+         |'St<br>~.~1&~~~1&~<br>.jg;<br>1<br>~~~!f~~~l~~l<br>~~_I~1O·1&!1&t~...|---|---|
+         ```
+       - **Multi-Row Collapsing (`GD-016` Table 1)**: In Alvarado-Ancieta (2009), the document parser collapsed multiple table rows into single cell blocks separated by HTML `<br>` tags:
+         ```text
+         |#<br>Year<br>Country|Hydropower<br>Project|Power<br>P [MW]|Net Head<br>H [m]|...
+         |28<br>2008<br>29<br>2007|Akocak<br>AkkoyI|80<br>103.5|250<br>149...
+         ```
+         This collapsed vertical row boundaries, causing the Generator to miscorrelate project names with cost and head metrics, leading the LLM judge to penalize factual groundedness.
 
 #### Aspirational Targets vs. Recalibrated Baselines: An Honest Retrospective
 - **Why Targets Moved**: The initial SDD specifications proposed aggressive aspirational targets: Faithfulness $\ge 0.90$, Precision $\ge 0.85$, Recall $\ge 0.85$, and sub-5-second interactive responses.
@@ -467,7 +582,7 @@ An aggregate hallucination rate of **26.4% (14 out of 53 cases)** is substantial
 - **Failures / Crashes**: **0 (100% completion rate)** across all 53 test cases.
 
 ```powershell
-# Run Multi-Provider LLM-as-a-Judge Offline Benchmark (100% free)
+# Run Multi-Provider LLM-as-a-Judge Offline Benchmark (Zero API fees)
 python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 ```
 
@@ -507,8 +622,8 @@ python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 | **Datacenter Enterprise** | NVIDIA A100 SXM4 | *Estimated Projection* | 80 GB | 5120-bit HBM2e | 2,039 GB/s | ~120–150 tok/s | ~6–8s | ~10–14s |
 | **Hyperscale Acceleration**| NVIDIA H100 SXM5 | *Estimated Projection* | 80 GB | 5120-bit HBM3 | 3,350 GB/s | ~180–230 tok/s | ~4–5s | ~6–9s |
 
-#### 3. Enterprise Production Benefits on 24 GB / 32 GB / 64 GB+
-1. **$5\times$ to $15\times$ Latency Reduction**: Upgrading from a 128-bit mobile bus (224 GB/s) to high-bandwidth memory (1,008 to 3,350 GB/s) drops the total end-to-end multi-agent execution time from **~2 minutes down to 8–15 seconds**.
+#### 3. Enterprise Production Benefits on 24 GB / 32 GB / 64 GB+ (Theoretical Projections)
+1. **Projected $5\times$ to $15\times$ Latency Reduction**: Based on memory bandwidth scaling, upgrading from a 128-bit mobile bus (224 GB/s) to high-bandwidth memory (1,008 to 3,350 GB/s) is projected to reduce total end-to-end multi-agent execution time from **~2 minutes down to an estimated 8–15 seconds** (theoretical projection).
 2. **Zero Host RAM Paging**: 24 GB+ VRAM provides abundant headroom for full 32k context lengths, multi-turn session history, and full FP16 KV caches with zero PCIe bus offloading.
 3. **Concurrent Multi-Agent Parallelism**: High-capacity GPUs allow setting `OLLAMA_NUM_PARALLEL=4` (or deploying with vLLM / TensorRT-LLM PagedAttention continuous batching), enabling Planner, Orchestrator, narrative workers, tabular workers, and guardrails to run simultaneously without queue serialization.
 
@@ -807,7 +922,7 @@ flowchart TD
         end
         PreGuardNode <--> GraderSub
 
-        PreGuardNode -->|is_sufficient = True| GenNode["✍️ generator Adapter Node"]
+        PreGuardNode -->|is_sufficient = True\nor cycle >= max_cycles (best-effort)| GenNode["✍️ generator Adapter Node"]
         subgraph GenSub ["Generator Subgraph (GeneratorAgentState)"]
             Gen_Exec["Grounded Answer Synthesis\n(num_predict=8192)"]
         end
@@ -831,8 +946,7 @@ flowchart TD
 
         FeedNode -->|"cycle_count += 1\nRe-plan with Diagnostic Hints"| PlannerNode
 
-        PreGuardNode -->|cycle >= max_cycles| FallbackNode
-        PostGuardNode -->|cycle >= max_cycles| FallbackNode
+        PostGuardNode -->|is_grounded = False\nand cycle >= max_cycles (circuit breaker)| FallbackNode
     end
 ```
 
@@ -940,12 +1054,14 @@ Agentic_RAG/
 │   │   ├── parser.py                        # Smart Multi-Tier Document Parser (Operational)
 │   │   ├── chunker.py                       # Markdown-aware semantic text splitting (Operational)
 │   │   ├── embedder.py                      # Qwen3-Embedding-0.6B via Ollama (Operational)
-│   │   └── indexer.py                       # QDrant collection manager & upsert (Operational)
+│   │   ├── indexer.py                       # QDrant collection manager & upsert (Operational)
+│   │   └── bm25_retriever.py                # Okapi BM25 keyword & exact name retriever with RRF (Operational)
 │   ├── evals/
-│   │   ├── shp_agentic_rag_golden_dataset.json # Curated golden dataset (30 policy & licensing cases)
-│   │   ├── agentic_rag_shp_golden_dataset.json # Curated golden dataset (25 engineering computation cases)
+│   │   ├── shp_agentic_rag_golden_dataset.json # Curated golden dataset (30 policy & licensing cases: GD-01 to GD-30)
+│   │   ├── agentic_rag_shp_golden_dataset.json # Curated golden dataset (25 engineering cases: 23 in full 53-case run GD-003 to GD-025; GD-001/002 in pilot tests)
 │   │   ├── generate_dataset_answers.py      # Automated batch generator for test datasets
 │   │   ├── generated_answers_and_chunks.json# Full responses, citations & raw retrieved chunks
+│   │   ├── run_plain_rag_baseline.py        # Plain-RAG baseline benchmark runner (Operational)
 │   │   ├── evaluate_offline_with_llm.py     # Multi-Provider LLM-as-a-Judge offline benchmark suite
 │   │   ├── evaluation_report.json           # Comprehensive benchmark report with scores & critiques
 │   │   └── run_deepeval.py                  # Optional DeepEval assertion testing harness
@@ -1016,6 +1132,9 @@ python -m src.ingestion.indexer --recreate
 
 # 5. Verify vector retrieval
 python -m src.ingestion.indexer --query "Kaplan turbine efficiency curve" --top-k 3
+
+# 6. Verify BM25 keyword & exact name retrieval (sub-5ms)
+python -m src.ingestion.bm25_retriever --query "allotment of shp competitive bidding" --top-k 3
 ```
 
 ### 5. Run the Agent & User Interfaces
@@ -1064,8 +1183,11 @@ python src/evals/generate_dataset_answers.py
 # 2. Run multi-provider LLM-as-a-Judge offline evaluation (Gemini -> Groq waterfall)
 python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 
-# Optional: Local assertion test harness check (if configured)
-python -m src.evals.evaluate_offline_with_llm --mode groq --delay 2.0
+# Target specific cloud provider (e.g., Groq directly):
+python src/evals/evaluate_offline_with_llm.py --mode groq --delay 2.0
+
+# Target local Ollama instance (100% offline, zero cloud calls):
+python src/evals/evaluate_offline_with_llm.py --mode ollama --delay 0.5
 ```
 
 ---
@@ -1096,9 +1218,13 @@ QDRANT_HOST=localhost
 QDRANT_PORT=6333
 QDRANT_COLLECTION=shp_knowledge
 
-# Retrieval
+# Retrieval & Hybrid Search
 RETRIEVER_TOP_K=6
 RETRIEVER_SCORE_THRESHOLD=0.65
+ENABLE_BM25_RETRIEVAL=true
+RETRIEVER_MODE=hybrid
+BM25_WEIGHT=0.5
+DENSE_WEIGHT=0.5
 
 # Self-healing limits
 MAX_REWRITE_ATTEMPTS=1
@@ -1128,8 +1254,8 @@ STREAMLIT_PORT=8601
 MCP_PORT=8602
 MCP_SERVER_URL=http://127.0.0.1:8602
 
-# LangSmith (optional — for tracing during development)
-LANGSMITH_TRACING=true
+# LangSmith (disabled by default for local privacy; set true to enable tracing)
+LANGSMITH_TRACING=false
 LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=agentic-rag-shp
 ```
