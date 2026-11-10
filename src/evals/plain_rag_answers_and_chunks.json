@@ -1,10 +1,10 @@
 {
   "metadata": {
-    "timestamp": "2026-11-10T09:04:34.167028+00:00",
+    "timestamp": "2026-11-10T09:26:15.864592+00:00",
     "architecture": "Plain-RAG Baseline (No Planner, No CRAG, No Feedback Loops)",
-    "total_cases_evaluated": 2,
+    "total_cases_evaluated": 10,
     "retriever_mode": "hybrid",
-    "average_latency_seconds": 129.3
+    "average_latency_seconds": 134.02
   },
   "results": [
     {
@@ -186,6 +186,726 @@
         "agentic_latency_seconds": 305.19
       },
       "completed_at": "2026-11-10T09:04:34.167028+00:00"
+    },
+    {
+      "id": "GD-03",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What is the mandatory policy timeline for an Independent Power Producer (IPP) to achieve financial closure, and what are the penalties for non-compliance?",
+      "expected_output": "An IPP must achieve financial closure—defined as firm commitments for financing the entire project—within 12 months from the date of receiving all statutory approvals and clearances from the State and Central Governments. Failure to achieve financial closure within this window results in automatic cancellation of the site allotment and forfeiture of the upfront premium amounts, with no compensation payable to the IPP.",
+      "actual_output": "Based strictly on the provided engineering documentation:\n\n**Mandatory Policy Timeline for Financial Closure**\n*   An Independent Power Producer (IPP) shall achieve financial closure within **12 months** from the date of receipt of all statutory approvals and clearances given by the states and central Governments [Source: allotmnet of shp.pdf].\n*   In specific policy contexts, concurrence of CEA, financial closure, award of work, and long-term PPA were required to be completed by **31.12.2010** [Source: hydro policy.pdf].\n\n**Penalties for Non-Compliance**\n*   The documentation does not explicitly specify a distinct penalty solely for missing the financial closure deadline. However, regarding compliance with project timelines generally:\n    *   Delays in the commissioning date result in a **reduction of merchant sales incentive by 5%** for every six months of delay [Source: hydro policy.pdf].\n    *   Projects that do not conform to prescribed timelines lose this merchant sales incentive in a graded manner [Source: hydro policy.pdf].\n*   The documentation notes that achieving financial closure without a Power Purchase Agreement is very difficult, implying the PPA is a critical prerequisite for financing [Source: hydro policy.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0012",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Financial closure]\n\n# Financial closure \n\n• The IPP shall achieve the financial closure within 12 months from the date of receipt of all statutory approvals and clearances given by the states and central Governments. \n\n• Financial closure would imply firm commitments for the financing the entire project.",
+          "score": 0.799,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Financial closure",
+          "is_table": true,
+          "token_count": 74,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0135",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia]\n\n- c) Concurrence of CEA (if required under section 8 of the Act), financial closure, award of work and long term PPA (of more than 35 years) of the capacity specified in (d) below with distribution licensees are completed by 31.12.2010.\n\n###### **Annexure 5 contd.**\n\n- d) Long term PPA would be at least for 60% of the total saleable design energy. However, this figure of 60% would get enhanced by 5% for delay of every six months in commissioning of the last unit of the project against the scheduled date approved by the Appropriate Commission before commencement of the construction. The time period for commissioning of all the units of the project shall be four years from the date of approval of the commissioning schedule by the Appropriate Commission. However, the Appropriate Commission may, after recording reasons in writing, fix longer time period for large storage projects and run-of -the river projects of more than 500 MW capacity. Adherence to the agreed timelines to achieve the fixed commissioning schedule shall be verified through independent third partyverification.\n\n- e) Award of contracts for supply of equipment and construction of the project, either through a turnkey or through well defined packages, are done on the basis of international competitive bidding.\n\nIn cases, where the conditions mentioned above at (a) to (e) are fulfilled, the Appropriate Commission shall determine tariff ensuring the following:\n\n- (i) Any expenditure incurred or committed to be incurred by the project developer for getting project site allotted (except free power upto 13% ) would neither be included in the project cost, nor any such expenditure shall be passed through tariff.\n\n- (ii) The project cost shall include the",
+          "score": 0.61,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia",
+          "is_table": true,
+          "token_count": 395,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1261",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nSource: IAE<sup>19</sup>\n\nNote: An asterisk (*) indicates Upfront Tariff by NEPRA. Double asterisks (**) indicate data is not country-specific.\n\nMaturity Phase for competitive growth (January 2015 onwards).<sup>16</sup>\n\nThe Mid-Term Policy provides the following general incentives:\n\n- } Mandatory purchase of electricity; and\n\n- } Guaranteed grid connection.\n\nSpecific incentives for independent power producers (IPP) of alternative and renewable energy (ARE) include:\n\n- } Simplified generation licensing procedure;\n\n- } Simplified land and site access; and\n\n- } Security package: guaranteed purchase of all power and payment, facilitated acquisition of carbon credits.\n\nDue to the significance of the renewable energy policy and its consequences on the future of the renewable energy sector, AEDB held stakeholders’ consultation workshops at provincial and national levels. Stakeholders’ comments and concerns are being addressed and incorporated to finalize the Mid-Term Alternative and Renewable Policy document, which will be presented to the cabinet for approval.<sup>17</sup>\n\n###### **Legislation on small hydropower**",
+          "score": 0.561,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 249,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0053",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe]\n\nGeology: Most of the hydro sites now to be developed are located in the Himalayas, which are a very young range of mountains. Even with the best of geological investigations, occurrences of shear zones and underground lakes and streams can result into serious time and cost over-runs.\n\nResettlement and Rehabilitation: Large-scale shifting of people from their traditional habitations and livelihoods can, if not handle with the necessary sensitivity and commitment, lead to a lot of discontentment and unrest, and hostility to the project itself. Apart from other socio-political implications, this is one major potential source for time over-runs leading to cost over-runs.\n\nGiven such uncertainties with major cost implications, it is very difficult for developers of hydro projects to participate in tariff-based competitive bidding. However, as per the Tariff Policy notified in January 2006, distribution\n\nutilities can procure power either through such a bidding process, or from a public sector generating company, or from the expansion of an existing project. In case of procurement of power public sector companies, the tariff would be determined by the appropriate regulator based on the capital cost. This dispensation, however, is available to the public sector only up to January 2011. Without a Power Purchase Agreement, developers would find it very difficult to achieve financial closure. Even without this problem, achieving financial closure for such high cost long gestation projects requiring long term finance, is not very easy.",
+          "score": 0.807,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe",
+          "is_table": false,
+          "token_count": 306,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0063",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe]\n\nIndependent third party verification would be done regarding adherence to the agreed timelines.\n\n(f) In order to enable the project developer to recover the costs incurred by him in obtaining the project site, as mentioned in para 5 above, he would be allowed a special incentive by way of merchant sales of up to a maximum of 40% of the saleable energy. Projects that do not conform to the prescribed time lines would however lose this incentive of merchant sales in a graded manner. With a view to ensure timely completion of these projects, delays of every\n\nsix months in the commissioning date would result in reduction of merchant sales by 5%. This condition would be operationalised by the appropriate regulator duly apportioning the Annual Fixed Charge accordingly.\n\n- (g) The same policy guidelines would be applicable to projects above 100 MW capacity, which have already been allocated by various States to the private developers, if such allocations have been made in a transparent manner and on the basis of pre determined set of criteria.\n\n- **(h)** An additional 1 % free power from the project would be provided and earmarked for a",
+          "score": 0.543,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe",
+          "is_table": true,
+          "token_count": 241,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0055",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe]\n\n###### 9.3 Finance\n\nLately, financial institutions have become much more flexible and pro-active in financing power projects, particularly hydro projects. High energy prices in a fast expanding power market have diluted their insistence on water-tight PPAs backed by Government guarantees. Institutions have reiterated that there would be no dearth of funds for projects with viable tariffs promoted by credible developers. An inter-institutional group (llG) with the MD, State Bank of India as the convenor and with representatives of other financial institutions and of the Ministry of Power has been constituted to facilitate financial closure of power projects. As opposed to thermal project, hydro projects are characterized by high capital costs but very low operational costs. Longer term finance can therefore correct the present peculiarity of high initial tariffs followed by very low subsequent tariffs.\n\nRecently, the Group of Power Ministers under the Chairmanship of the Minister of Power has constituted a Sub-Committee on Financial\n\nIssues under the Chairmanship of the Deputy Chairman, Planning Commission to examine and recommend policy measures for ensuring adequate and timely finance for power projects. The Sub<ommittee will also address the specific requirements of funding of hydro projects, and is expected to give its report soon. Composition of this Sub-Committee is atAnnexure4a.\n\n###### 9.4 River Basin Development",
+          "score": 0.604,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe",
+          "is_table": false,
+          "token_count": 285,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 197.23,
+      "generation_latency_seconds": 195.44,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 831.81
+      },
+      "completed_at": "2026-11-10T09:09:57.085995+00:00"
+    },
+    {
+      "id": "GD-04",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under which ownership modes do SHP project assets revert to the State Government free of cost, and under which mode does the developer retain ownership?",
+      "expected_output": "Under BOOT (Build, Own, Operate & Transfer), BOT (Build, Operate, Transfer), BOLT (Build, Operate, Lease, Transfer), and LROT (Lease, Rehabilitate, Operate, Transfer) modes, the entire project—including assets related to water structures and power generation—is transferred to the State Government free of cost after the specified licence period. The project can also be executed under the BOO (Build, Own, Operate) mode, which does not include a transfer clause.",
+      "actual_output": "Based on the provided engineering documentation [Source: allotmnet of shp.pdf]:\n\n*   **Modes where assets revert to the State Government:** The project may be on **Lease, Rehabilitate, Operate, Transfer (LROT)**, **Build, Own, Operate & Transfer (BOOT)**, **Build, Operate, Transfer (BOT)**, or **Build, Operate, Lease, Transfer (BOLT)** modes. For the **LROT** mode, the documentation explicitly states that after a specified period, the entire project and assets \"shall be transferred to the state government, free of cost\" [Source: allotmnet of shp.pdf]. The other modes (BOOT, BOT, BOLT) are listed under ownership modes containing \"Transfer\" [Source: allotmnet of shp.pdf].\n*   **Mode where developer retains ownership:** The project may be on **Build, Own, Operate (BOO)** mode, which is listed without a transfer condition to the state government [Source: allotmnet of shp.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0010",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]\n\n# Contd… \n\n- May be on Lease, Rehabilitate, Operate, Transfer (LROT) mode. \n\n- • In these modes, after specified period the entire project, including its assets related to water structures and power generation, shall be transferred to the state government, free of cost.\n\n# Contd… \n\n• It may be on Build, Own, Operate (BOO) mode.",
+          "score": 0.762,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Contd…",
+          "is_table": true,
+          "token_count": 108,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0009",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Ownership mode]\n\n# Ownership mode \n\n- The project may be on Build, Own, Operate & Transfer (BOOT) mode. \n\n- • May be on Build, Operate, Transfer (BOT) mode. \n\n- May be on Build, Operate, Lease, Transfer (BOLT) mode.",
+          "score": 0.753,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Ownership mode",
+          "is_table": true,
+          "token_count": 82,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1128",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nChina has a unique management system for SHP. Projects in the east connect to the grid directly while projects in the central and western regions form local grids or isolated mini-grids with their own supply areas. The projects where the local governments are the investors are more focused on social and public welfare while the projects where the community or private entities are the investors are more profit-oriented.\n\nThere are three important reasons SHP’s rapid\n\ndevelopment:<sup>15</sup>\n\n- } The Government’s implementation of favourable SHP policies, including aspects of ownership, taxes, and also incentives to attract private investments.\n\n- } The domestic supply of hydropower equipment reduced project-developing costs, which allowed for affordable hydropower systems. In the 1970s, the annual demand for hydropower equipment was approximately 200-300 MW, while the production capacity was only 100 MW. Now the annual production capacity has increased to 4,500-5,000 MW. Additionally, the technology of design and manufacture for large hydropower units are close to global standards, with added advantages in production, quality and price for medium and small hydropower equipment. This not only satisfies the domestic demand but it also engages the international market, exporting many systems abroad.\n\n- } SHP has more advantages than large hydropower. It is sustainable, requires simple engineering, short construction periods, small investments and with a lower impact on submerged losses, immigration and the environment (both ecologically and globally). Moreover, most of the SHP plants have their own local grid and supply areas, which are connectable to the national grid, allowing the local grid and national grid to mutually complement each other when necessary.",
+          "score": 0.634,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 365,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0062",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe]\n\n- (d) The tariff of the project would be decided by the appropriate Regulatory Commission. To this extent, the Tariff Policy notified in January 2006 is modified and the developer would be required to enter into long term PPAs with distribution companies subject to provisions in para 9.4.1 (g) below. While determining tariff the appropriate Regulatory Commission shall not allow as a\n\npart of the project cost the expenditure incurred or committed to be incurred by the project developer for getting the site allotted to him. The dispensation accorded under the Hydro Policy of 1998, regarding 12% free power to be provided to the host state government, will, however, be supplemented by an additional 1% in accordance with Gause (h) below. Any free power beyond 13%, would be met by the developers from their own resources and would not be a pass through in tariff.\n\n- (e) The project developer wishing to avail of this dispensation must reach the specific milestones - concurrence by CEA / States\n\nand all clearances, financial closure and award of work by January 2011, and completion of the project within 4 years thereafter. Any extension to the deadline of January, 2011, if made applicable to the CPSUs under the tariff policy, shall be applicable for the aforesaid purposes to such private hydro projects also. Large storage projects and run-of-the-river projects of capacity above 500 MW could be given suitable increase with respect to construction time. This time schedule would be determined by the appropriate regulator and must be obtained before commencement of the construction.\n\nIndependent third party verification would be done regarding adherence to the agreed timelines.",
+          "score": 0.601,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe",
+          "is_table": false,
+          "token_count": 358,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1222",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\n- } Lack of clarity in ownership of SHP projects, even each project’s provided share in the form of water royalty, local area development, assistance;\n\n- } Local and activists consider SHP the same as large hydropower for rehabilitation and resettlement issues and thus protest without realising the very low impacts from SHP;\n\n- } Mismatch in announced policy and field offices resulting in delay in clearances and execution;\n\n- } Lack of availability of discharge data;\n\nThere are several barriers for SHP development in India that vary from state to state, depending on the availability of discharge data, site, feasibility reports and clearances.\n\n- } Lack of availability of suitable trained and educated manpower for SHP plants planning and design.\n\n381\n\n###### 3.3.5 <u>Islamic Republic of Iran</u>\n\nMohammad Hajilari, Pöyry Energy AG–Iran; Oxana Lopatina, International Center on Small Hydro Power\n\n###### Key facts",
+          "score": 0.631,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 220,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Pages from dpr_guidelines for cost estimates as per CWC__b64945dd__c0049",
+          "content": "[Source: Pages from dpr_guidelines for cost estimates as per CWC.pdf | Section: Pages from dpr_guidelines for cost estimates as per CWC > 18. Estimate > 18.6.7.4Other items chargeable to buildings:]\n\n## 18.6.7.4Other items chargeable to buildings: \n\nIn addition to the cost of buildings, provision for following items is also required under this sub-head; \n\na) Land development: (Leveling and filling) \n\nb)Colony roads \n\n- c) Fencing/boundary walls, security/observation booths. \n\n- d)Service connection such as water supply, sanitation drainage and electrification. \n\n- (əLawns, gardens and plantation (other than plantation under the head M- Plantation and Environment & Ecology) \n\n- f) Retaining walls, terracing etc. \n\nThe provision for the above items may be made as per norms fixed by the State Governments. \n\n118 \n\n18.6.7.5 While planning buildings, the scope for their use after the project's construction is over, should also be considered in consultation with the other State Departments and the extra cost, if any, on this account clearly spelt out. \n\nIt is essential that labour employed on works is appropriately accommodated near the work site. Since the provision under buildings does not cover labour huts, provision for labour huts shouldbe made under theindividualworks estimates.",
+          "score": 0.559,
+          "source_file": "Pages from dpr_guidelines for cost estimates as per CWC.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Pages from dpr_guidelines for cost estimates as per CWC > 18. Estimate > 18.6.7.4Other items chargeable to buildings:",
+          "is_table": false,
+          "token_count": 296,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 207.0,
+      "generation_latency_seconds": 205.6,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 759.64
+      },
+      "completed_at": "2026-11-10T09:14:58.530047+00:00"
+    },
+    {
+      "id": "GD-05",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under what condition can an IPP legally surrender an allotted SHP site back to the State Government?",
+      "expected_output": "An IPP may surrender the allotment back to the State Government if, upon completing the Detailed Project Report (DPR) within the stipulated timeframe, it establishes on verifiable grounds that the project is not techno-economically viable.",
+      "actual_output": "An IPP may legally surrender an allotted SHP site back to the State Government (SG) if, upon completion of the Detailed Project Report (DPR) within the stipulated time frame, it has grounds to establish that the project is not techno-economically viable [Source: allotmnet of shp.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0014",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Surrender of allotment]\n\n# Surrender of allotment \n\n• The IPP may surrender the allotment back to SG if on completion of the DPR, within the stipulated time frame, it has bounds to establish that the project is not techno-economically viable.",
+          "score": 0.853,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Surrender of allotment",
+          "is_table": true,
+          "token_count": 74,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0011",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Transfer of allotment]\n\n# Transfer of allotment \n\n• Free transfer of shares will be permitted in the companies allotted projects as per the procedure laid down by SG. \n\n• IPP shall prepare and submit the DPR and all other information and make the necessary applications for obtaining the statutory clearances and approvals of the State & Central government.",
+          "score": 0.736,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Transfer of allotment",
+          "is_table": true,
+          "token_count": 86,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "allotmnet of shp__95a1c736__c0013",
+          "content": "[Source: allotmnet of shp.pdf | Section: allotmnet of shp > Contd…]\n\n# Contd… \n\n• The failure to get those will result in automatic cancellation of the allotment of the site, and forfeiture of upfront premium amounts. • No compensation would be payable to IPP’s in such instance.",
+          "score": 0.708,
+          "source_file": "allotmnet of shp.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "allotmnet of shp > Contd…",
+          "is_table": true,
+          "token_count": 68,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Lecture_1_SHP_Site_Selection_Tarun_2014_For_Pdf__f36c3839__c0002",
+          "content": "[Source: Lecture_1_SHP_Site_Selection_Tarun_2014_For_Pdf.pdf | Section: Lecture_1_SHP_Site_Selection_Tarun_2014_For_Pdf]\n\n<!-- Start of picture text -->\nSmall Hydro Power Site Selection - Topographical and Geological Consideration<br>What is Small Hydropower ?<br>Desilting<br>Forebay Headrace Tank Intake Diversion Weir<br>Penstock<br>Powerhouse<br>Tailrace<br>Stream<br><!-- End of picture text -->\n\n2\n\n9/18/2014\n\n<!-- Start of picture text -->\nSmall Hydro Power Site Selection - Topographical and Geological Consideration<br> Topography, in general is the landscape of the area.<br> It defines;<br>TopographicalConsiderations<br> the general ruggedness of the area,<br> general elevation difference within the valley and<br> steepness or gentleness of the valley slopes<br> Topography of the area is an<br>important factor.<br> It is the key component for the<br>selection of a suitable site.<br>Small Hydro Power Site Selection - Topographical and Geological Consideration<br>TopographicalConsiderations<br>Forebay<br>E l 2200 m<br>Availability of Head<br> For power generation,<br>two factors are essential;<br>Penstock<br> availability of discharge HE AD 200 m<br> head<br> Discharge is mainly controlled by;<br>Powerhouse<br> the hydrology and<br> catchment characteristics<br> Head is a function of topography of the area.<br>E l 2000 m<br> Head can be defined as the vertical elevation<br>difference between the Forebay and the Powerhouse<br>site<br><!-- End of picture text -->\n\n3\n\n9/18/2014",
+          "score": 0.614,
+          "source_file": "Lecture_1_SHP_Site_Selection_Tarun_2014_For_Pdf.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Lecture_1_SHP_Site_Selection_Tarun_2014_For_Pdf",
+          "is_table": false,
+          "token_count": 417,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "CLEARANCES__fcbc3cd4__c0001",
+          "content": "[Source: CLEARANCES.pdf | Section: CLEARANCES]\n\n<u>CLEARANCES FOR SHP</u>",
+          "score": 0.63,
+          "source_file": "CLEARANCES.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "CLEARANCES",
+          "is_table": true,
+          "token_count": 22,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1221",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\n- } SHP sites of over 8,000 MW capacity have been allotted to private sector for their development.\n\n- } Power banking (a concept of utilizing the electricity from the grid by the IPP for its use from one season’s rainy period to other seasons i.e. dry period) is permitted by many states for a period of few months to one year.\n\n- } Buy back of SHP is generally based on the guidelines issued by the Central Electricity Regulatory Commission (CERC), with variations given by the\n\n###### **Renewable energy policy**\n\n380\n\n3.3\n\nrespective State Electricity Regulatory Commissions (SERCs).\n\n- } Some states provide other concessions such as lease of land, exemption from electricity duty and entry tax on power generation equipment.\n\n- } Some states do not levy any water charges known as water regulatory while some levy it as a percentage of electricity tariffs.\n\n- } Some states have prescribed the minimum quantum of power produced from renewable sources, renewable purchase obligation (RPO) to be purchased by State Distribution Licensee varying from 1 to 10 per cent in incremental manners.\n\n- } Some states have imposed minimum environmental flow during lean season and monitoring is done by automatic devices, including real-time data on the web.\n\n###### **Barriers to small hydropower development**\n\nThese barriers may be summarized as follows:\n\n- } Long waiting periods for project licenses, clearances, in obtaining permissions or finances;\n\n- } Lack of involvement of local people;\n\n- } Lack of awareness and legal tools with the state government to regulate minimum flows in the streams;\n\n- } Lack of power evacuation infrastructure;\n\n- } Lack of clarity in ownership of SHP projects, even each project’s provided share in the form of water royalty, local area development, assistance;",
+          "score": 0.608,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": false,
+          "token_count": 379,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 105.9,
+      "generation_latency_seconds": 104.76,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 680.8
+      },
+      "completed_at": "2026-11-10T09:16:44.427344+00:00"
+    },
+    {
+      "id": "GD-06",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under the EIA Notification 2006, how are hydroelectric projects categorized into Category A and Category B, and what happens if a state lacks a constituted SEIAA or SEAC?",
+      "expected_output": "Under the EIA Notification 2006, River Valley/Hydroelectric projects are classified into Category A if they involve >= 50 MW hydroelectric power generation or >= 10,000 ha of culturable command area, requiring prior clearance from the Central Government (MoEF) via the Expert Appraisal Committee (EAC). Category B covers projects < 50 MW and >= 25 MW (or < 10,000 ha culturable command area), requiring clearance from the State Environment Impact Assessment Authority (SEIAA) based on State EAC (SEAC) recommendations. In the absence of a duly constituted SEIAA or SEAC, a Category B project is treated as a Category A project.",
+      "actual_output": "Based on the provided engineering documentation regarding the EIA Notification 2006:\n\n**Categorization of Hydroelectric Projects:**\nProjects are categorized into Category ‘A’ and Category ‘B’ based on power generation capacity and culturable command area [Source: EIA and related Investigations.pdf]:\n*   **Category A:** Projects with hydroelectric power generation of **>= 50 MW** or a culturable command area of **>= 10,000 ha**.\n*   **Category B:** Projects with hydroelectric power generation of **< 50 MW (specifically >= 25 MW)** or a culturable command area of **< 10,000 ha**.\n\n**Consequence of Lacking SEIAA or SEAC:**\nIn the absence of a duly constituted State Environment Impact Assessment Authority (SEIAA) or State Expert Appraisal Committee (SEAC), a Category ‘B’ project shall be treated as a **Category ‘A’ project** [Source: EIA and related Investigations.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0006",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Environmental impact assessment and related investigations** > STEPS** > ENVIRONMENTAL IMPACT ASSESSMENT NOTIFICATION, 2006**]\n\n#### **ENVIRONMENTAL IMPACT ASSESSMENT NOTIFICATION, 2006** \n\n- **Requirements of prior Environmental Clearance (EC):** \n\n- **Certain projects or activities shall require prior environmental clearance from concerned regulatory authority,  referred to be as Central Government in MOEF for matters falling under Category ‘A’  and at State level State Environment Impact Assessment Authority (SEIAA) for matters falling under Category ‘B’  before any construction work, or preparation of land by the project management except for securing the land, is started on the project or activity:** \n\n**ENVIRONMENTAL IMPACT ASSESSMENT NOTIFICATION, 2006(cont)** \n\n#####  **LIST OF PROJECTS OR ACTIVITIES REQUIRING PRIOR ENVIRONMENTAL CLEARANCE** \n\n **River Valley projects** \n\n **Category A (i)**  **50 MW hydroelectric power generation;(ii)**  **10,000 ha. of culturable command area** \n\n **Category B (i) < 50 MW**  **25 MW hydroelectric power generation;(ii) < 10,000 ha. of culturable command area**",
+          "score": 0.791,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Environmental impact assessment and related investigations** > STEPS** > ENVIRONMENTAL IMPACT ASSESSMENT NOTIFICATION, 2006**",
+          "is_table": true,
+          "token_count": 294,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0007",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Categorization of projects and activities]\n\n## Categorization of projects and activities \n\n- Projects broadly categorized in 2 categories - A and B, based on the spatial extent of potential impacts and potential impacts on human health and natural and man made resources. \n\n- All Category ‘A’, project shall require prior environmental clearance from the Central Government (MoEF) on the recommendations of an Expert Appraisal Committee (EAC) to be constituted by Central Government \n\n- All Category ‘B’ projects will require prior environmental clearance from the State/UT Environment Impact Assessment Authority (SEIAA). \n\n   - SEIAA shall base its decision on the recommendations of State EAC    (SEAC) to be constituted for in this notification. - In absence of a duly constituted SEIAA or SEAC, a Category ‘B’ project shall be treated as a Category ‘A’ project;",
+          "score": 0.79,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Categorization of projects and activities",
+          "is_table": true,
+          "token_count": 199,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0023",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Application for Prior EC > RESOURCES NEEDED FOR EIA**]\n\n### **RESOURCES NEEDED FOR EIA** \n\n Qualified Multi disciplinary Team  Data about project and surrounding eco system  Analytical Instruments - models \n\n Institutional arrangements \n\n##### **REQUIREMENT OF EIA FOR SMALL HYDROPOWER PROJECTS** \n\n- EIA is an activity designed to identify, predict and describe in appropriate terms the primary and secondary changes due to a proposed action (policies, plans, programmes and projects). \n\n- EIA is required not only for a particular hydropower project but also for a set of projects (existing and proposed) under a plan or a programme",
+          "score": 0.635,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Application for Prior EC > RESOURCES NEEDED FOR EIA**",
+          "is_table": true,
+          "token_count": 164,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Financing of SHPs__ef9f6e6d__c0037",
+          "content": "[Source: Financing of SHPs.pdf | Section: Financing of SHPs > Non Performing Asset Management]\n\n# Non Performing Asset Management\n\n65\n\n##### **NPA Management - Norms**\n\n A project is classified as NPA where: a) An asset, in respect of which, interest and/ or principal has remained overdue for **a period of more than two quarters** on the Balance Sheet date b) In case of multiple exposure/loans to single borrower/beneficiary when any of the loans financed by IREDA becomes a non-performing asset.\n\n##### **Cont’d..**\n\n- **Exclusion of notified calamities period** : Interest and/ or installments not paid on account of natural calamities (notified by the respective State Government or the Central Government), the period during which these notified calamities affect the repayment capacity/cash flows of the borrower, or 2 years from the date of such notification, whichever is earlier (affected period)\n\n- **Projects under litigation** : In the event that the borrower is regularly making payments as per the directions of the Hon’ble High Court, the said account shall continue to be classified in the same category and not be downgraded further till the case is sub-judice.\n\n###### **NPA Management- Asset Classification**\n\n######  Categories of NPA\n\n**a) Sub-standard Asset** : A sub-standard asset would be one, which has <u>remained NPA for a period less than or equal to 18 months.</u>\n\n**b) Doubtful Asset** : An asset would be classified as doubtful if it has remained in the sub-standard category for a period exceeding <u>18 months.</u>",
+          "score": 0.621,
+          "source_file": "Financing of SHPs.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Financing of SHPs > Non Performing Asset Management",
+          "is_table": false,
+          "token_count": 347,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0030",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Application for Prior EC > SEISMIC STUDIES**]\n\n### **SEISMIC STUDIES** \n\nFor Small Hydro Electric Projects Seismic studies are not carried out individually. \n\nSeismic data is obtained from literature and recent studies of nearby major projecs. Seismic coefficient is derived theoretically and used in designing of structres",
+          "score": 0.608,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Application for Prior EC > SEISMIC STUDIES**",
+          "is_table": true,
+          "token_count": 85,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0008",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Categorization of projects and activities > Screening, Scoping and Appraisal Committees]\n\n### Screening, Scoping and Appraisal Committees \n\n- EAC and SEAC shall be reconstituted every three years \n\n- Authorised members of the EAC and SEAC may inspect any site(s) connected with the project with prior notice of at least seven days to the applicant \n\n- EAC and SEACs shall function on the principle of collective responsibility. Chairperson shall endeavour to reach a consensus - if consensus cannot be reached, view of majority shall prevail.",
+          "score": 0.609,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Categorization of projects and activities > Screening, Scoping and Appraisal Committees",
+          "is_table": false,
+          "token_count": 133,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 74.13,
+      "generation_latency_seconds": 72.66,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 380.81
+      },
+      "completed_at": "2026-11-10T09:17:58.557693+00:00"
+    },
+    {
+      "id": "GD-07",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the operational rules governing the Expert Appraisal Committee (EAC) and State EAC (SEAC) regarding tenure, site inspections, and decision-making?",
+      "expected_output": "The EAC and SEAC must be reconstituted every three years. Authorized committee members may inspect any project site(s) after giving at least seven days' prior notice to the applicant. Both committees function on the principle of collective responsibility; the Chairperson endeavors to reach a consensus, but if consensus cannot be achieved, the view of the majority prevails.",
+      "actual_output": "Based on the provided engineering documentation, the operational rules governing the Expert Appraisal Committee (EAC) and State EAC (SEAC) are as follows:\n\n*   **Tenure:** Both the EAC and SEAC shall be reconstituted every three years [Source: EIA  and related Investigations.pdf].\n*   **Site Inspections:** Authorised members of the EAC and SEAC may inspect any site(s) connected with the project provided there is prior notice of at least seven days to the applicant [Source: EIA  and related Investigations.pdf].\n*   **Decision-making:** The committees shall function on the principle of collective responsibility. The Chairperson shall endeavour to reach a consensus; if consensus cannot be reached, the view of the majority shall prevail [Source: EIA  and related Investigations.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0008",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Categorization of projects and activities > Screening, Scoping and Appraisal Committees]\n\n### Screening, Scoping and Appraisal Committees \n\n- EAC and SEAC shall be reconstituted every three years \n\n- Authorised members of the EAC and SEAC may inspect any site(s) connected with the project with prior notice of at least seven days to the applicant \n\n- EAC and SEACs shall function on the principle of collective responsibility. Chairperson shall endeavour to reach a consensus - if consensus cannot be reached, view of majority shall prevail.",
+          "score": 0.846,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Categorization of projects and activities > Screening, Scoping and Appraisal Committees",
+          "is_table": true,
+          "token_count": 133,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0007",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Categorization of projects and activities]\n\n## Categorization of projects and activities \n\n- Projects broadly categorized in 2 categories - A and B, based on the spatial extent of potential impacts and potential impacts on human health and natural and man made resources. \n\n- All Category ‘A’, project shall require prior environmental clearance from the Central Government (MoEF) on the recommendations of an Expert Appraisal Committee (EAC) to be constituted by Central Government \n\n- All Category ‘B’ projects will require prior environmental clearance from the State/UT Environment Impact Assessment Authority (SEIAA). \n\n   - SEIAA shall base its decision on the recommendations of State EAC    (SEAC) to be constituted for in this notification. - In absence of a duly constituted SEIAA or SEAC, a Category ‘B’ project shall be treated as a Category ‘A’ project;",
+          "score": 0.547,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Categorization of projects and activities",
+          "is_table": true,
+          "token_count": 199,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "presentation-on-salient-features-of-the-electricity-act-2003-1231332387635957-1_2__c6bde35d__c0010",
+          "content": "[Source: presentation-on-salient-features-of-the-electricity-act-2003-1231332387635957-1_2.ppt | Location: Slide/Page 9 | Section: presentation-on-salient-features-of-the-electricity-act-2003-1231332387635957-1_2 > Slide 9: Regulatory Commissions/Appellate Tribunal]\n\n## Slide 9: Regulatory Commissions/Appellate Tribunal\n\n- 9\n- State Electricity Regulatory Commission to be constituted within six months. (Section 82)\n- Provision for Joint Commission by more than one State/UT. (Section 83)\n- Provision for constitution of Appellate Tribunal consisting of Chairman and three Members. (Section 110, 112)\n- Appellate Tribunal to hear appeals against the orders of CERC/SERC, and also to exercise general supervision and control over the Central/State Commissions. (Section 111)\n- Appeal against the orders of Appellate Tribunal to lie before the Supreme Court. (Section 125)\n- Appellate Tribunal considered necessary to-\n- Reduce litigation and delay in decisions through High Court.\n- Provide technical expertise in decision on appeals.",
+          "score": 0.514,
+          "source_file": "presentation-on-salient-features-of-the-electricity-act-2003-1231332387635957-1_2.ppt",
+          "file_type": "PowerPoint (legacy)",
+          "page_or_slide": 9,
+          "breadcrumb": "presentation-on-salient-features-of-the-electricity-act-2003-1231332387635957-1_2 > Slide 9: Regulatory Commissions/Appellate Tribunal",
+          "is_table": true,
+          "token_count": 249,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "GPS and GIS basics__6b997fa7__c0037",
+          "content": "[Source: GPS and GIS basics.pdf | Section: GPS and GIS basics > GIS Software Packages > Software for GIS: other players]\n\n- **Vector representation of an object is an attempt to represent the object as exactly as possible.  The coordinate space is assumed to be continuous, not quantised as with the raster space, allowing all positions, lengths, and dimensions to be defined precisely.**\n\n62\n\n<!-- Start of picture text -->\nKnowledge based Expert System<br>USER<br>HUMAN<br>EXPERT<br>USER<br>INTERFACE<br>RULES<br>KNOWLEDG<br>RULES INFERENCE<br>ACQUISITION & ENGINE<br>FACTS<br>FACTS EXPIANATIONMODUL<br>KNOWLEDGE BASE<br>LITERATURE<br>COMPONENTS OF PROPOSED EXPERT<br><!-- End of picture text -->\n\n63\n\nGIS Database Management for Planning of SHP\n\n- Source identification\n\n- Site selection\n\n- Environmental constraints\n\n- Digital Terrain Modelling (DTM) for slope and aspect\n\n- Users community for SHP\n\n- Existing Transmission line network\n\n- Runoff modeliing\n\n- Ranking of the site\n\n64",
+          "score": 0.651,
+          "source_file": "GPS and GIS basics.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "GPS and GIS basics > GIS Software Packages > Software for GIS: other players",
+          "is_table": false,
+          "token_count": 238,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "EIA  and related Investigations__77975723__c0021",
+          "content": "[Source: EIA  and related Investigations.pdf | Section: EIA  and related Investigations > Application for Prior EC > EIS**]\n\n### **EIS** \n\n A gist of the whole exercise for clearance and for general public",
+          "score": 0.491,
+          "source_file": "EIA  and related Investigations.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "EIA  and related Investigations > Application for Prior EC > EIS**",
+          "is_table": true,
+          "token_count": 50,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1286",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\n- } Principles for granting rights and enforcing obligations.\n\nThe Electricity Law defines the roles of the Ministry of Mines and Energy (MME) as a policy maker, the Electricity Authority of Cambodia (EAC) as a regulator and supervisor and Rural Electricity Enterprises (REEs) as electricity service providers. The MME is responsible for the planning and development of power projects through granting study rights and concessions for power generation to the REEs and Independent Power Producers (IPPs), development of related policies and strategies, promotion of the use of indigenous energy resources, planning of electricity export and import as well as subsidies to specific classes of customers. The EAC is responsible for the control and regulation of the provision of electricity services, licences for the provision of electricity power services and tariffs.\n\nElectricité du Cambodge (EDC) is a state-owned limited liability company under the control of the MME and the Ministry of Economy and Finance (MEF) and is authorized by Royal Decree in 1996. In 2002 the EDC acquired the consolidated license from the EAC. EDC is responsible for electricity generation, transmission and distribution as well as electricity imports from and exports to neighbouring countries.<sup>11</sup>\n\nEDC is the largest REEs. Other private REEs, such as Community Electricity Cambodia (CEC), are allowed to provide electricity to both the national grid and off-grid communities. With a large share of electricity imported, Cambodian electricity tariffs are among the highest in the region (Table 2). With the development of large hydropower potentials and additional coal\n\n399\n\n<mark>TABLE 1</mark>\n\nActual and planned electricity tariffs in Cambodia 2010 – 2020",
+          "score": 0.608,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": false,
+          "token_count": 367,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 61.03,
+      "generation_latency_seconds": 59.68,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 310.47
+      },
+      "completed_at": "2026-11-10T09:18:59.588157+00:00"
+    },
+    {
+      "id": "GD-08",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Walk through the four sequential stages required to obtain Forest Clearance for a small hydro project in India.",
+      "expected_output": "1. Application to District Forest Officer (DFO): Submit the application form with required maps, certificates, and documents involving multiple agencies. 2. Forest Valuation & Alternate Land Identification: Conduct a detailed evaluation of forest loss (quantified in monetary terms) and prepare a detailed compensatory afforestation scheme. 3. State Government Clearance: Following DFO approval, obtain clearances across five to six levels of State Government officials. 4. Central Government Clearance: Forward the file to the regional Ministry of Forest official, with final clearance granted by the Ministry of Forest in Delhi upon receipt of the State Government's compliance report.",
+      "actual_output": "The provided engineering documentation does not contain sufficient data to answer this query. While the documentation mentions a \"Three-stage clearance system\" for projects generally [Source: Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf] and describes Forest Clearance steps involving District, State, and Central levels [Source: CLEARANCES.pdf], it does not explicitly enumerate four sequential stages specifically for obtaining Forest Clearance.",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "Hydro_Energy_Sector_in_India_The_Past_Present_and___d2392108__c0041",
+          "content": "[Source: Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf | Section: Hydro_Energy_Sector_in_India_The_Past_Present_and_ > Hydro Energy Sector in India: The Past, Present and Future Challenges > Hydro Energy Sector in India: The Past, Present and Future Challenges** > Capacity Addition Scenario 11th Five Year Plan (2007-12)_**<sup>**8**</sup>]\n\n**_Steps taken from time to time to accelerate hydropower projects in India_**\n\n- Clearances of projects with a ‘‘Three-stage clearance system’’<sup>9</sup>\n\nA three-stage clearance system has been set up to enable relatively faster and hindrance-free clearance of suitable projects and includes survey, investigation and pre-construction activities. The three-stage clearance system works as follows:\n\nStage I: Survey and preparation of pre-feasibility reports\n\nStage II: Detailed investigation, preparation of Detailed Project Report (DPR) and pre-construction activity including land acquisition\n\nStage III: Execution of the project after investment decision through PIB/CCEA\n\n(Small hydropower projects up to 25 MW can be set up in private sector without central government’s involvement. Techno-economic clearance needs to be obtained from CEA if the estimated cost of the project exceeds INR 2500 million and/or there are inter-state issues involved).",
+          "score": 0.848,
+          "source_file": "Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Hydro_Energy_Sector_in_India_The_Past_Present_and_ > Hydro Energy Sector in India: The Past, Present and Future Challenges > Hydro Energy Sector in India: The Past, Present and Future Challenges** > Capacity Addition Scenario 11th Five Year Plan (2007-12)_**<sup>**8**</sup>",
+          "is_table": true,
+          "token_count": 288,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "CLEARANCES__fcbc3cd4__c0006",
+          "content": "[Source: CLEARANCES.pdf | Section: CLEARANCES > <u>FOREST CLEARANCE</u> > FOREST CLEARANCE]\n\n## FOREST CLEARANCE \n\n\n\n<!-- Start of picture text -->\nApplication to District Forest Forest Valuation & alternate State Government Clearance Central Government Clearance<br>Officer land Identification<br>• Anumber of documents, • Avery detailed study • Post clearance from the • After the state government<br>certificates, maps to be required on evaluation District Forest officer, clearance, the file is sent to<br>attached with application for loss of forest. clearances are required the regional Ministry of<br>form from five to six level state Forest official<br>• Detailed afforestation government officials • The final clearance is<br>• Anumber of agencies<br>involved in the approval scheme prepared given by the Ministry of<br>Forest in Delhi<br>process<br><!-- End of picture text -->\n\nThe analysis ofthe cases studies reveals that Forest clearances, Land acquisitiol formalities and Techno Economic Clearances consume the most time and effort \n\n\n\n<!-- Start of picture text -->\nHigh<br>Land<br>Forest<br>Acquisition<br>Decreasing Level<br>Techno<br>of Criticality Pollution Economic<br>CEA<br>Financial<br>Publicatien Water Commitment<br>Low<br>Other<br>Clearances<br>Effort<br>Required<br>Time<br>Low<br>High<br><!-- End of picture text -->",
+          "score": 0.725,
+          "source_file": "CLEARANCES.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "CLEARANCES > <u>FOREST CLEARANCE</u> > FOREST CLEARANCE",
+          "is_table": true,
+          "token_count": 296,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "CLEARANCES__fcbc3cd4__c0005",
+          "content": "[Source: CLEARANCES.pdf | Section: CLEARANCES > <u>FOREST CLEARANCE</u>]\n\n# <u>FOREST CLEARANCE</u> \n\n- Size of the forest land required depends on the land required for the project, right of way and clearance between conductors and trees. \n\n- Losses are to be quantified and expressed in money. \n\n- R&R requires payment of cost for residence and occupation in addition to which 1.5 times the amount he would have earned in 2 years had he not been shifted. \n\n- After receiving the compliance report from the state govt. , complete clearance is issued.",
+          "score": 0.99,
+          "source_file": "CLEARANCES.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "CLEARANCES > <u>FOREST CLEARANCE</u>",
+          "is_table": false,
+          "token_count": 132,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0133",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia]\n\n|'St<br>~.~1&~~~1&~<br>.jg;<br>1<br>~~~!f~~~l~~l<br>~~_I~1O·1&!1&t~<br>~t<br>~'E~~t41t1&1~!1l'<br>1&<br>GJ~~t~~iit\"f'<br>~I<br>~~ji~1&1&~~'T~!<br>\"~~1&)<br>1&<br>·iti~~~~t~!it<br>r&1O<br>~Jf!~t1&~~<br>~<br>11!i~~!t~1&i\"~t<br>!~~:!l~1&~'t1l'~<br>r&~otW<br>I!fiji{~!fif!<br>I<br>\"W~J~~tt!1&-!~'§'.<br>1&!<br>r&~~1&~iI!~l<br>~~<br>~~1&jg~ts'1&1&1&f<br>1&i1&r&<br>.~~~i<br>~1l'f~~<br>!1&i!f!!~~:ii1&t:<br>~.~<br>tt!~~1&~~:@:<br>1l'<br>10<br>~1&.<br>.~~<br>.I.<br>~PE.hiiit~~tfP<br>~~I';w;<br>~.~1&~i~~t1l'<br>.~~<br>~~1&!f1l'!ir~'i1&!10\"~<br>§I!i!i!til!iJ1t<br>E<br>E:<br>E<br>E|If~<br>~i1&<br>~_1&~<br>~~<br>~wi<br>!!~1&<br>~~<br>!<br>1&~<br>$:~~I<br>]~<br>1&<br>'1l'<br>jg!l~<br> <br>~<br>~<br>13\"~<br>~1&~~<br>~<br>~<br>~~t~:~§<br>j<br>~<br>l1Or,g<br>!<br>J¥<br>ti!i~1~<br>!:<br>~<br>ft<br>f~!~<br>i~<br>!<br>10<br>~i<br>~~,,~<br>I*~<br>i<br>t<br>~~.<br>~1&t~<br>~~<br>~_I<br>i~~!tl<br><€1t;<br>~<br><ilO~<br>1&~<br>~~t~<br>~i<br>Ii;-<br>.~tr<br>~~<br>~~<br>~<br>dti'[I1&$101&_~1l'<br>~~<br>~<br>~<br>~t1~!i~~~!1&!.~<br>~iji~.~!~1&t~<br>~_1_it\"<br>-'=-!J¥<br>.~~~~~~~~t1&~~<br>i1&1;<br>~<br>~w~~!I<br>dt'tI<br> 1<J;L,f~1<~~10~I~.~~<br> .~If~10.~~_i_.[f-;r.~j_1_~:;~~<br> ~~1~1&!~Iif!~~~:!~<br>  !!I! !i.~_l!_it§~!·iii<br>G<br>g<br>EE<br>c-<br>o<br>E<br>E|\n|---|---|",
+          "score": 0.706,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia",
+          "is_table": true,
+          "token_count": 919,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "AK - Hydrology of Ungauged Catchment__127653ce__c0020",
+          "content": "[Source: AK - Hydrology of Ungauged Catchment.pdf | Section: AK - Hydrology of Ungauged Catchment > <mark>Software Tools for Discharge  Assessment</mark>** > Regional  Flow  Regimes  Estimation for Small Hydropower Assessment in Himachal Pradesh** > DATA**]\n\n<!-- Start of picture text -->\nHIMACHAL PRADESH<br>Forest Cover Map<br>Project REFRESHA<br>Regional flow regimes estimatior<br>for small hydro assessment<br>Alternate Hydro Energy Centre,<br>University of Roorkee with<br>HimUrja H.P. State Govt. Agency<br>and<br>Institute of Hydrology, U.K.<br>File: AHEC/Refresha/April 2000<br>Scale<br>20 Kilometers<br><!-- End of picture text -->\n\n<!-- Start of picture text -->\n76 π7 78 79<br>Himachal Pradesh<br>33<br>ΔN<br>Kyetang<br>Khoksar<br>Charamshale<br>32<br>Jogindenager<br>Hamirpur<br>Legend<br>Kalpa<br>Litiology.shpAluvium Karsog Rampur<br>Bihalal (Salkhala Group)Batal Formation Biaspur<br>Blaini Group<br>Chamba (Salkhala Group)<br>Chaur-Kainchwa Granitoids<br>Delhoisie-Mand-Karsog also Rohtang Granitoids<br>Giumal - Chikkim FormationFormations. Kuling Group, Salooni Formetion SHMLEA<br>31 Kakara ForamtionJutogh Group<br>Kharsali Granitoid<br>Krdl (intra-Krol) Group<br>Kunzam La. Thango and Takche FormationsKullu Group Geological Map of HP<br>Lliang Group, Kalhel Fomation Project REFRESHA<br>Marjir Formation<br>Nako Granitoid Regional flow regimes estimation<br>Pan(al volcanics (in Saiooni), Muth, Lipak-Po GanmiachidamShal-Decban-Larj Groups for small hydro assessment<br>Shimia and Janusar Groups Alternate Hydro Energy Centre,<br>Sur GupShimla and Janusar GroupsShimla and Janusar Groups University of Roorkee with<br>Swalk Group Himurja HP State Govt. Agency<br>Spiti Fomation With<br>Sundemagar Group with Mandi Deria volcanics; Dhanagad: Rampur Group with Banar Volcanics:<br>Tal Group Institute of Hydrology, U.K.<br>Vaiketta GroupTandi Group File: AHEC/REFRESHA/Oct.15'1999<br><!-- End of picture text -->\n\n<!-- Start of picture text -->\n78<br>Landuse Map of<br>Himachal Pradesh<br><!-- End of picture text -->",
+          "score": 0.671,
+          "source_file": "AK - Hydrology of Ungauged Catchment.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "AK - Hydrology of Ungauged Catchment > <mark>Software Tools for Discharge  Assessment</mark>** > Regional  Flow  Regimes  Estimation for Small Hydropower Assessment in Himachal Pradesh** > DATA**",
+          "is_table": true,
+          "token_count": 626,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro power development__521727ce__c0023",
+          "content": "[Source: hydro power development.pdf | Section: hydro power development > Law  and Order  Problems** > PRIVATE  SECTOR DEVELOPMENT IN INDIA** > Steps to be Taken up for Development of Balance Potential**]\n\n#### **Steps to be Taken up for Development of Balance Potential** \n\n- **State Govts. are required to take up pro- active** \n\n- **role by making allotment of balance schemes to serious developers.** \n\n- **Extensive state of art Survey & Investigation and** \n\n- **Regular monitoring of preparation of DPR required at State Govt./Central Govt. level to have Bankable DPRs.** \n\n- **The Project specific problem being faced by   the** \n\n- **developer to be identified and resolved on priority.** • **MOEF needs to have a strict timeline for taking decision in respect of Environment, Forest and 25** \n\n- **Wildlife clearance**\n\n#### **Steps to be Taken up for Development of Balance Potential** \n\n- **Multipurpose Hydro Power Projects are needed for** \n\n- **water and Power Security and their importance needs to be highlighted.** \n\n- **Development of Infrastructure  (Roads and** \n\n- **Bridges ) required at full pace** \n\n- **Extensive Local Area Development needed  in order** \n\n- **to make locals compete for Hydro Power Development in their area.** \n\n**26** \n\nThankyou! 市何乐 \n\n市何乐 cea \n\n\n\n<!-- Start of picture text -->\n27<br><!-- End of picture text -->",
+          "score": 0.579,
+          "source_file": "hydro power development.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro power development > Law  and Order  Problems** > PRIVATE  SECTOR DEVELOPMENT IN INDIA** > Steps to be Taken up for Development of Balance Potential**",
+          "is_table": false,
+          "token_count": 317,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 291.57,
+      "generation_latency_seconds": 290.2,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 450.63
+      },
+      "completed_at": "2026-11-10T09:23:51.162858+00:00"
+    },
+    {
+      "id": "GD-09",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the key provisions of the Government of India's Policy on Hydro Power Development (1998, revised 2008) regarding local area development and state responsibilities?",
+      "expected_output": "The Government of India's Hydro Power Development Policy (announced August 1998, revised November 2008) mandates 1% free power from the project matched by a 1% contribution from the State Government for local area development to benefit the affected population. It also stipulates that concerned State Governments/developers must secure timely Environment & Forest (E&F) clearances for held-up projects, and places responsibility on the State Government to resolve land acquisition and local law-and-order agitations.",
+      "actual_output": "Based on the provided engineering documentation, the key provisions of the Government of India's Policy on Hydro Power Development (announced in August 1998 and revised in November 2008) regarding local area development and state responsibilities are as follows:\n\n*   **Local Area Development Support:** The policy mandates that 1% of free power is provided with a matching 1% support from the State government specifically for local area development to the affected local population [Source: AK-Overview of SHP Development.pdf].\n*   **State Government Responsibilities:** The concerned State Government is responsible for resolving issues such as local agitation (law & order) and land acquisition. Additionally, for projects held up for environment and forest clearance, the concerned State Government/developer must obtain timely Environment and Forest (E&F) clearances [Source: AK-Overview of SHP Development.pdf].\n*   **Jurisdiction and Oversight:** Hydropower development is the responsibility of state governments as water is a subject of state governments in India. The Central Government advises on hydropower matters and plays the role of an overall river basin planner [Source: WSHPDR_2016.pdf].",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "AK-Overview of SHP Development__c5191250__c0029",
+          "content": "[Source: AK-Overview of SHP Development.pdf | Section: AK-Overview of SHP Development]\n\n- Small hydro is the focus area of MNRE and the programme is mainly private sector driven.\n\n- For remote rural electrification micro hydro projects are considered as one of the options for electrification.\n\n###### **GOI POLICY ON HYDRO DEVELOPMENT**\n\n- In Aug 1998, the Government of India announced a Policy on ‘Hydro Power Development’ and revised in Nov.2008.\n\n- Hydro is used to supplement the base load provided by thermal power plants.\n\n- Central Electricity Authority has issued various hydro related reports and guidelines\n\n###### **GOI POLICY ON HYDROPOWER DEVELOPMENT**\n\n- Projects held up for environment and forest clearance, concerned State Govt./developer to get the timely E&F clearances.\n\n- 1% of free power with a matching 1% support from State government for local area development to the affected local population.\n\n- Problems such as local agitation (law & order), land acquisition etc. need be resolved by concerned State Government.\n\n###### **HYDROPOWER DEVELOPMENT**\n\n###### **12**<sup>**th**</sup> **Plan Target for Hydro Power Generation**",
+          "score": 0.931,
+          "source_file": "AK-Overview of SHP Development.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "AK-Overview of SHP Development",
+          "is_table": true,
+          "token_count": 251,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1220",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nTo enable the project developer in the hydropower sector to achieve a reasonable and quick return on investment, merchant sale of up to a maximum of 40 per cent of the saleable energy has been allowed. The Government of India provides subsidies for the development of SHP for government, society and private sectors in different proportions depending on the location, degree of difficulty and installed capacity.\n\n###### **Legislation on small hydropower**\n\nWater is a subject of state governments in India, and hence hydropower development is the responsibility of state governments. The Central Government advises on the hydropower matters and plays the role of an overall river basin planner and arbitrator. The MNRE has issued guidelines to the state governments for developing policies for renewable energy development, and especially for SHP. The Indian Electricity Act 2003 has special provisions to encourage the development of renewable energy and rural electrification. A new Renewable Energy Act 2015 has been drafted by MNRE and is under consideration by the Indian Parliament.<sup>5</sup>\n\nThe main features of the SHP and or renewable energy policies (different in different states) of the state government are summarized below:\n\n- } Twenty-four states namely Arunachal Pradesh, Andhra Pradesh, Assam, Bihar, Chhattisgarh, Gujarat, Haryana, Himachal Pradesh, Jammu and Kashmir, Karnataka, Kerala, Madhya Pradesh, Maharashtra, Meghalaya, Mizoram, Orissa, Punjab, Rajasthan, Sikkim, Tamil Nadu, Tripura, Uttarakhand, Uttar Pradesh and West Bengal have announced policies for setting up commercial SHP projects through private sector participation. The facilities available in the states include wheeling of power produced, banking, buy-back of power and facility for third party sale.",
+          "score": 0.778,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 383,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Hydro_Energy_Sector_in_India_The_Past_Present_and___d2392108__c0031",
+          "content": "[Source: Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf | Section: Hydro_Energy_Sector_in_India_The_Past_Present_and_ > Hydro Energy Sector in India: The Past, Present and Future Challenges > Hydro Energy Sector in India: The Past, Present and Future Challenges** > National Policy (1998) on Hydropower_**<sup>5</sup>]\n\n### **_National Policy (1998) on Hydropower_**<sup>5</sup>\n\nWith an aim to accelerate the development of hydropower, Ministry of Power (MoP), Government of India, introduced the National Policy on Hydropower Development in 1998. The policy document has identified and responded to the major issues and barriers. The objectives of the National Policy document on Hydro Power Development, 1998 are as follows ( _as stated in the document_ ):\n\n_3455,_ 5810 and 550 MW respectively, the government at the centre pushed forward all-round efforts. The 11th Five Year Plan aimed subsequently at a capacity addition of 18,781 MW in the hydropower sector with the same vigour. Accordingly, an assurance to speed up steps such as execution of all CEA-cleared projects, update and clear pending detailed project reports of all identified schemes, etc., ensued. Small and mini hydro projects are especially viable for remote and hilly areas where extension of grid system is comparatively uneconomical _\"_ .\n\nIn 2001, the CEA introduced a ranking study which prioritized and ranked the future executable projects. As per the study, 399 hydro schemes with an aggregate installed capacity of 106910 MW were ranked in A, B & C categories depending upon their _inter se_ attractiveness. This was followed by a 50,000 MW hydro initiative in which preparation of PreFeasibility Reports (PFRs) of 162 projects was taken up by CEA through various agencies. The PFRs for all these projects (with the first year tariff less than INR 2.50/kWh) were identified for preparation of Detailed Project Report (DPR). The governments in the centre and states aimed to realize 100% hydropower potential of the country by 2025-26 with the new liberal measures spelt out in the policy.",
+          "score": 0.692,
+          "source_file": "Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Hydro_Energy_Sector_in_India_The_Past_Present_and_ > Hydro Energy Sector in India: The Past, Present and Future Challenges > Hydro Energy Sector in India: The Past, Present and Future Challenges** > National Policy (1998) on Hydropower_**<sup>5</sup>",
+          "is_table": false,
+          "token_count": 480,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0132",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia]\n\n## ~I **[:he <!:JoLette of** ~ndia \n\nEXTRAORDINARY \n\n'ITTT 1-131l'S I PART I-Section **I** ~ \"IT ~\"\"f\\l,,, \n\nl'UBLlSHIW BY AUTHORITY \n\nu. 1231 ~~ , mmm-, lIlTf 31, 2008~ 11 , 1930 No. 1231 NEW DELHI, MONDAY, MARCH 31 , 21lO8!CHAlTRA 11 ,1930 \n\nferqo ti~IM<l \n\n~ \n\n~ fu;ffi, 31 1ll'l, 2008 \n\n'!fI_ ~_23/2/2005-3fR ~ 3ff'{ «<uti IV)- fuj<r~, 2003 q%)- EIRT 3 <f; ~ <f; 3i<r<f<r ~ -;frf<r ilIf?t,!f<td cw-'r ~ \"fRCI <f; <f\\il1I?I (OIt1I\"1I~UO \"fTlT-1 ~ I -<i ~CfiI~ld ~ ~ <f; ~ ~ ~O 23.02.2005-3lR '1\"6 3lR ~ III) ~ 6 ~ 2006 -<i f.'rHf ~ fi1>q \"IT<f ~ I \n\ntftq;- -.oor <f; W 5_1 <f; at<r,y r..\"1 ~ Rild lft'WI' urr-.n 'flIT _t:_ \n\n\"'ffiif ~ 'GI<'f fuj<r q~\"~\\iI'11 'G/r ~ <lUll <f; f.ni?rur /~ CI'I<'fi qiq';fi .,. <IT. <f; ~CfiltlCfi't1\\ q;'r ..rcrr ~f.!Il\",l q%)Cfi14f.!1 \"'ll G'1 amnfur (i[flfd <f; 3l\\\"IR 1R ~ 3WWr am ~ f.'Imfur ~ \"CfiT fitct><;q ir>rr ~ f.!I \"'1 r<:r Ritd ml q;'r wr <IR fWrr \\iITdT _t_ I \n\n- (Cfi) ~ 3WWr ~ _t_ ~ -q-Cfi ~ ~-~ >Ifil»rr 3l'I'1'Fr <f; W'ITd\" ~ <lUll <RCfiR am ~CfiltlCfi't1\\ q;'r q~\"~\\iI'11 ~ ~ f<mrr lfIIT _t_ I >Ifil»rr \"CfiT lIW! <d'{ ~ al5df tg f.'rHf '11'1Gu;if <f; 3l\\\"IR 1R ir'1r ~ Ilffr ~ f.'r<r<;r 'l\"'< am lIf'ft ~ f<l-<fm 19'1dI, \"tIllT'1 ~ q%)3Wti~ill<'1Cfi q~\"'I\\iI'1131l q;'r ~CfiRrd cw-'r \"CfiT fcMr ~ c-f--3lTcR Cfi14f.!1 \"'ll G'1 ~ q;'r wr cw-'r <Il'r ~ ~ I ~ <d'{ 1R $r{;r -q-Cfi ~ ~ ~,,4'lc~ ~ 13% .t ~ f.'r:~ fuj<r, <lUll ~ q;'r >rGR q%)- ~ ~ 'lI.fiGI;fI 311!lCIT 3lftr'1 '!fTdT'l ~ <f; 3l\\\"IR 1R ~ ~ <Il'r \\iIfI? I \n\n**...** EJ",
+          "score": 0.764,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia",
+          "is_table": true,
+          "token_count": 911,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0046",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe]\n\n- the State Government, the Central Government, or such other agencies as it may deem appropriate, that an adequate study has been made of the optimum location of dams and other river-works;\n\n- (b) the proposed scheme meets the norms regarding dam design and safety.\n\nFor all other projects not covered by (a) and (b) above the limit is Rs. 500 crore.\n\nThe above provisions are applicable to all hydroelectric projects irrespective of State/ CPSUs/IPPs.\n\nMinistry of Water Resources / Central Water Commission examine the following aspects of hydro electric schemes:-\n\nml~\n\n- Hydraulic Structures for hydropower\n\n- VVater~anagement\n\n- Flood Control\n\n- Darn Safety\n\n- Regulation and development of inter-state rivers and river basins\n\n- VVater laws legislation\n\n- International water laws\n\n- The matter regarding rivers common to India and neighbouring countries : Join River Commission for Bangladesh and India, Indus VVaterTreaty, Indus Commission.\n\nAccordingly, DPR of hydro electric projects are sent to Central VVater Commission (CVVC) for\n\nexamination on above aspects. Geological aspects of hydro electric projects are examined by Geological Survey of India.\n\n###### **ii) National Water Policy- 2005:**\n\nThe Government has brought out a National VVater Policy in the year 2005, which inter-alia, envisages that water is a prime national resource, the basic need and a precious national asset. Planning development and management of water resources need to be governed by national perspective. It has further been stipulated in the Policy that in the planning and operation of system, water allocation priority should broadly be in the order of drinking water,\n\nirrigation, hydro power, ecology, agro industries and non agriculture industries, navigation and otheruses.",
+          "score": 0.631,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe",
+          "is_table": false,
+          "token_count": 384,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "hydro policy__a5f3443f__c0133",
+          "content": "[Source: hydro policy.pdf | Section: hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia]\n\n|'St<br>~.~1&~~~1&~<br>.jg;<br>1<br>~~~!f~~~l~~l<br>~~_I~1O·1&!1&t~<br>~t<br>~'E~~t41t1&1~!1l'<br>1&<br>GJ~~t~~iit\"f'<br>~I<br>~~ji~1&1&~~'T~!<br>\"~~1&)<br>1&<br>·iti~~~~t~!it<br>r&1O<br>~Jf!~t1&~~<br>~<br>11!i~~!t~1&i\"~t<br>!~~:!l~1&~'t1l'~<br>r&~otW<br>I!fiji{~!fif!<br>I<br>\"W~J~~tt!1&-!~'§'.<br>1&!<br>r&~~1&~iI!~l<br>~~<br>~~1&jg~ts'1&1&1&f<br>1&i1&r&<br>.~~~i<br>~1l'f~~<br>!1&i!f!!~~:ii1&t:<br>~.~<br>tt!~~1&~~:@:<br>1l'<br>10<br>~1&.<br>.~~<br>.I.<br>~PE.hiiit~~tfP<br>~~I';w;<br>~.~1&~i~~t1l'<br>.~~<br>~~1&!f1l'!ir~'i1&!10\"~<br>§I!i!i!til!iJ1t<br>E<br>E:<br>E<br>E|If~<br>~i1&<br>~_1&~<br>~~<br>~wi<br>!!~1&<br>~~<br>!<br>1&~<br>$:~~I<br>]~<br>1&<br>'1l'<br>jg!l~<br> <br>~<br>~<br>13\"~<br>~1&~~<br>~<br>~<br>~~t~:~§<br>j<br>~<br>l1Or,g<br>!<br>J¥<br>ti!i~1~<br>!:<br>~<br>ft<br>f~!~<br>i~<br>!<br>10<br>~i<br>~~,,~<br>I*~<br>i<br>t<br>~~.<br>~1&t~<br>~~<br>~_I<br>i~~!tl<br><€1t;<br>~<br><ilO~<br>1&~<br>~~t~<br>~i<br>Ii;-<br>.~tr<br>~~<br>~~<br>~<br>dti'[I1&$101&_~1l'<br>~~<br>~<br>~<br>~t1~!i~~~!1&!.~<br>~iji~.~!~1&t~<br>~_1_it\"<br>-'=-!J¥<br>.~~~~~~~~t1&~~<br>i1&1;<br>~<br>~w~~!I<br>dt'tI<br> 1<J;L,f~1<~~10~I~.~~<br> .~If~10.~~_i_.[f-;r.~j_1_~:;~~<br> ~~1~1&!~Iif!~~~:!~<br>  !!I! !i.~_l!_it§~!·iii<br>G<br>g<br>EE<br>c-<br>o<br>E<br>E|\n|---|---|",
+          "score": 0.76,
+          "source_file": "hydro policy.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "hydro policy > P08 Hydpe > ~I **[:he <!:JoLette of** ~ndia",
+          "is_table": true,
+          "token_count": 919,
+          "worker_source": "hybrid(dense_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 105.54,
+      "generation_latency_seconds": 103.8,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 338.55
+      },
+      "completed_at": "2026-11-10T09:25:36.706559+00:00"
+    },
+    {
+      "id": "GD-10",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What fiscal incentives, tax exemptions, and regulatory mechanisms support renewable power deployment in India?",
+      "expected_output": "India's renewable energy support framework includes: (1) Fiscal & Tax Incentives: 100% Excise Duty exemption on many RE project components, a concessional 5% Customs Duty on selected components, a 10-year tax holiday, Accelerated Depreciation (AD), and Generation Based Incentives (GBI). (2) Regulatory Obligations & Tariffs: Renewable Purchase Obligations (RPOs) mandated under the Electricity Act 2003 and National Tariff Policy (adopted by 26 SERCs), Renewable Energy Certificates (RECs) to meet RPOs, State-level RE policies, and Feed-in/Preferential Tariffs to improve project bankability.",
+      "actual_output": "Based strictly on the provided engineering documentation, the following fiscal incentives, tax exemptions, and regulatory mechanisms support renewable power deployment in India:\n\n### Fiscal Incentives & Tax Exemptions [Source: AK-Overview of SHP Development.pdf]\n*   **Excise Duty:** 100% exemption for many RE project components.\n*   **Customs Duty:** Concessional duty of 5% for selected RE project components.\n*   **Tax Holiday:** 10-year tax holiday.\n*   **Depreciation:** Accelerated Depreciation (AD).\n*   **Generation Incentive:** Generation-based incentives are available.\n\n### Regulatory Mechanisms [Source: AK-Overview of SHP Development.pdf]\n*   **RPOs & RECs:** Renewable Purchase Obligations (RPOs) are mandated by the Electricity Act 2003 and NTP, adopted by 26 SERCs; a REC mechanism was launched to fulfil RPO obligations.\n*   **Tariffs:** Feed-in Tariffs (FiT) or Preferential Tariffs are utilized.\n*   **State Policies:** State-level renewable and solar policies are implemented with significant capacities under these policies.\n\n### Additional Support [Source: AK-Overview of SHP Development.pdf]\n*   **Enablers:** Low cost, long tenure capital; Transmission Grid (Inter & Intra-State); Policy & Regulatory Framework; Improvement in Financial Health of DISCOMs.\n*   **Land/Infrastructure:** Waste & Barren Land utilization is identified as an enabler.\n\n*Note: The provided documentation does not contain specific details on transmission access costs, land acquisition policies, or utility-specific incentives beyond those listed above for India.*",
+      "retrieved_chunks": [
+        {
+          "chunk_id": "AK-Overview of SHP Development__c5191250__c0026",
+          "content": "[Source: AK-Overview of SHP Development.pdf | Section: AK-Overview of SHP Development]\n\n36\n\n###### **Road Map for Renewable Power by 2022**\n\n<!-- Start of picture text -->\n175 GW<br>10 GW 5 GW<br>100 GW 60 GW<br>Solar Wind Biomass Small Hydro<br><!-- End of picture text -->\n\n###### **Road Map for Solar Power by 2022**\n\n<!-- Start of picture text -->\n100 GW<br><!-- End of picture text -->\n\n<!-- Start of picture text -->\n20 GW 10 GW 30 GW 40 GW<br><!-- End of picture text -->\n\n**20 GW**\n\nSolar Park\n\nUnemployed Youth/Farmers\n\nGovt./States/ Solar Rooftop Private/Others\n\n###### **Enablers identified for 175 GW**\n\n- Waste & Barren Land\n\n- Low Cost, Long Tenure Capital\n\n- Transmission Grid (Inter & Intra-State)\n\n- Policy & Regulatory Framework\n\n- Improvement in Financial Health of DISCOMs\n\n###### **Support Mechanism for Renewable Power In India**\n\n###### State RE policies\n\na. State level renewable and solar policies b. Significant capacities under state policies\n\nDemand supply  gap to continue to affect power availability\n\nExemptions and other incentives\n\n- a. Expected to increase in coming 2-3 years due to lack of present investments in power sector\n\n- a. 100% exemption in Excise Duty for many RE project components.\n\n- b. Concessional Customs Duty of 5% for selected RE project components\n\n- c. 10 year tax holiday\n\n###### RPOs & RECs\n\nAccelerated Depreciation (AD) and Generation based incentive\n\nFeed in Tariffs/ Preferential Tariffs\n\n- a. RPOs are mandated by the Electricity Act 2003 and NTP b. RPOs adopted by 26 SERCs\n\n- c. REC mechanism launched to fulfil the RPO obligations\n\n- a. Key instrument for success of wind in India\n\n- a. Preferred by developers because it enhances project bankability.\n\nb. Introduced by almost all states for RE technologies\n\n40\n\n###### **Technology Status - Wind**\n\n- **Technology trends towards up-scaling of wind turbine size**",
+          "score": 0.789,
+          "source_file": "AK-Overview of SHP Development.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "AK-Overview of SHP Development",
+          "is_table": true,
+          "token_count": 453,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c0220",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016]\n\n- } The Government provides transmission access to all power projects at its own cost.\n\n- } Transmission line and road access to eligible projects.\n\n- } Provision of road access, and all infrastructures needed to develop projects.\n\n- } Generous fiscal and non-fiscal incentives including tax exemptions on power equipment.\n\n- } The Government acquires land for power projects at its cost or compensates private developers for land acquisition.\n\n- } Direct operating cost support by paying for fuel imports/equipment rental or exempting import tax.\n\n- } Capital Expenditure support by seeking external funds as well as funds allocation from budget.\n\nOther indirect subsidies such as feed-in tariffs (FIT) for eligible generation technologies is being considered and consultant studies are being reviewed to determine appropriate tariff levels, especially for small hydropower (SHP) and other renewable energy sources.\n\nThe Rwanda Utilities Regulatory Authority (RURA) is the industry regulator responsible for setting and approving electricity tariffs, in consultation with the Ministry. Other key functions of RURA include the following:\n\n- } Conducting all technical regulatory activities for the power production, transmission and distribution sectors;\n\n- } Issuing permits and licences to firms that satisfy licensing requirements;\n\n- } Monitoring, evaluating and ensuring the quality of the technical services provided by the electric utility;\n\n- } Ensure both compliance to the adopted standards and a fair competition between electricity operators;\n\n- } Promote the utilization of renewable electrical energy resources in rural areas.",
+          "score": 0.99,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016",
+          "is_table": false,
+          "token_count": 307,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1350",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nSource: Various<sup>16,17,18</sup>\n\nDevelopers of renewable energy can also benefit from fiscal incentives provided by the REL including:\n\n- } Seven years Income Tax Holiday (ITH);\n\n- } Ten year duty-free importation of renewable energy machinery, equipment, and materials;\n\n- } 1.5 per cent special realty tax rates on equipment and machinery;\n\n- } Seven years net operating loss carry-over;\n\n- } 10 per cent corporate tax rate after ITH;\n\n- } Accelerated depreciation;\n\n- } 0 per cent VAT;\n\n- } Tax exemption on carbon credits;\n\n419\n\n- } 100 per cent tax credit on domestic capital equipment and services;\n\nfor SHP development translating into significant risk for developers and investors.\n\n- } Exemption from the Universal Charge;\n\n- } Government share at 1 per cent of the gross income of renewable energy developers.\n\nLending banks are also becoming more receptive of renewable energy project financing due to the positive reputation and social acceptance it brings. Banks known to offer renewable project financing include: Banco de Oro (BDO), Bank of the Philippine Islands (BPI), Philippine National Bank (PNB) and the Development Bank of the Philippines (DBP).\n\n###### **Legislation on small hydropower**\n\nIn 1991, the re-established democratic Congress enacted the mini-hydropower Incentives Act (Republic Act 7156), limiting incentives to run-of-river plants, defined as those utilizing the ‘kinetic energy of falling or running water’, and those with capacity ranges from 101 kW to 10 MW.<sup>20</sup>\n\n###### **Barriers to small hydropower development**",
+          "score": 0.648,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 362,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "Feed in Tariff -__a6493050__c0011",
+          "content": "[Source: Feed in Tariff -.pdf | Section: Feed in Tariff - > Components of Feed-in-Policy > FEED-IN TARIFFS ARE SUCCESSFUL** > FiT: EU RESEARCH FINDINGS**]\n\n### **FiT: EU RESEARCH FINDINGS** \n\n- FiTs are more effective at stimulating domestic **job creation** than other RE policies \n\n- FiTs are lower risk (and lower cost) than tradable REC markets \n\n- FiTs create more dynamic RE markets with more rapid RE growth \n\n- have highest RE deployment effectiveness \n\n- have highest job creation growth, and the highest economic benefits tied to industry, manufacturing, and service sector development \n\n- have counter-intuitively delivered lower cost RE generation than countries employing “competitive” policies \n\n##### **FISCAL AND OTHER SUPPORT INCENTIVES** \n\n- **Direct production incentives/Generation Based Incentive** \n\n- **Investment subsidies** \n\n- **Low-interest loans** \n\n- **Loan guarantees** \n\n- **Flexible/accelerated depreciation schemes** \n\n- **Investment or production tax exemptions** \n\n##### **POLICIES TO REDUCE ADMINISTRATIVE AND GRID BARRIERS** \n\n- One stop authorization \n\n- Response period and approval rates \n\n• Pre-planning \n\n- Increase grid capacity \n\n• Transparent grid connection procedure",
+          "score": 0.99,
+          "source_file": "Feed in Tariff -.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "Feed in Tariff - > Components of Feed-in-Policy > FEED-IN TARIFFS ARE SUCCESSFUL** > FiT: EU RESEARCH FINDINGS**",
+          "is_table": false,
+          "token_count": 270,
+          "worker_source": "hybrid(bm25_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c1261",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Asia**]\n\nSource: IAE<sup>19</sup>\n\nNote: An asterisk (*) indicates Upfront Tariff by NEPRA. Double asterisks (**) indicate data is not country-specific.\n\nMaturity Phase for competitive growth (January 2015 onwards).<sup>16</sup>\n\nThe Mid-Term Policy provides the following general incentives:\n\n- } Mandatory purchase of electricity; and\n\n- } Guaranteed grid connection.\n\nSpecific incentives for independent power producers (IPP) of alternative and renewable energy (ARE) include:\n\n- } Simplified generation licensing procedure;\n\n- } Simplified land and site access; and\n\n- } Security package: guaranteed purchase of all power and payment, facilitated acquisition of carbon credits.\n\nDue to the significance of the renewable energy policy and its consequences on the future of the renewable energy sector, AEDB held stakeholders’ consultation workshops at provincial and national levels. Stakeholders’ comments and concerns are being addressed and incorporated to finalize the Mid-Term Alternative and Renewable Policy document, which will be presented to the cabinet for approval.<sup>17</sup>\n\n###### **Legislation on small hydropower**",
+          "score": 0.613,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Asia**",
+          "is_table": true,
+          "token_count": 249,
+          "worker_source": "hybrid(dense_retriever)"
+        },
+        {
+          "chunk_id": "WSHPDR_2016__8a2019e5__c0814",
+          "content": "[Source: WSHPDR_2016.pdf | Section: WSHPDR_2016 > Americas**]\n\nSources: WSHPDR 2013,<sup>11</sup> CIF,<sup>4</sup> IJHD<sup>12</sup> Note: The comparison is between data from WSHPDR 2013 and WSHPDR 2016.\n\n###### **Renewable energy policy**\n\nThe 1998 Legal Framework and Reforms of the Energy Sector Law and its Incentives Law for Renewable Energy Generation have provided incentives for the development of renewable energy. Coupled with Decrees No. 85-89 and No. 267-98, they promote the implementation of renewable energy plants via mechanisms such as tax breaks or tariffs equivalent to short-term marginal costs experienced by the system.<sup>4</sup> In 2007, the Honduran Government issued Decree No. 70-2007 (the Law to Promote Electricity Generation by Renewable Resources), implementing a preferential tax policy and a preferential sales policy for natural and juridical persons who develop and operate renewable energy projects according to the Act 81 of the Environment General Law.<sup>5</sup> It grants additional benefits such as tax exemptions in the forms of import duty and income tax, and improvements in Power Purchase Agreements signed with ENEE to operators who generate electricity from renewable resources.\n\nWith all these initiatives, the Government of Honduras",
+          "score": 0.763,
+          "source_file": "WSHPDR_2016.pdf",
+          "file_type": "PDF",
+          "page_or_slide": null,
+          "breadcrumb": "WSHPDR_2016 > Americas**",
+          "is_table": false,
+          "token_count": 295,
+          "worker_source": "hybrid(bm25_retriever)"
+        }
+      ],
+      "total_chunks_retrieved": 6,
+      "latency_seconds": 39.15,
+      "generation_latency_seconds": 37.66,
+      "architecture": "Plain-RAG (Single-Shot Direct Retrieval + Generation)",
+      "agentic_comparison": {
+        "agentic_circuit_breaker_tripped": false,
+        "agentic_latency_seconds": 1224.69
+      },
+      "completed_at": "2026-11-10T09:26:15.861432+00:00"
     }
   ]
 }

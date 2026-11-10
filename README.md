@@ -332,7 +332,7 @@ To solve this, the system implements an in-memory **Okapi BM25 Sparse Keyword Re
 - **Decision Contract**:
   - If `is_retrieval_sufficient == True` → Route to `generator` node.
   - If `is_retrieval_sufficient == False` AND `cycle_count < MAX_CYCLES` (default: 1 in `.env`, max: 3) → Route to `feedback_agent` with `missing_aspects` and `critique`.
-  - If `is_retrieval_sufficient == False` AND `cycle_count >= MAX_CYCLES` → Route to `generator` / `fallback` (circuit breaker).
+  - If `is_retrieval_sufficient == False` AND `cycle_count >= MAX_CYCLES` → Route to `generator` (attempts best-effort synthesis with available evidence; the subsequent `generation_guardrail` node inspects groundedness and trips the fallback circuit breaker if ungrounded).
 
 #### 2. Offline Evaluation Metrics Framework (Free-Tier LLM-as-a-Judge)
 - **Module**: `src/evals/evaluate_offline_with_llm.py`
@@ -494,48 +494,65 @@ To measure the exact trade-offs of agentic reflection versus traditional retriev
 | **Multi-Hop / Tabular Synthesis** | Frequently misses cross-document facts | High coverage via Orchestrator scatter-gather | Agentic RAG scores 90% on multi-hop cross-document synthesis |
 
 ```powershell
-# Run Plain-RAG baseline on golden dataset
-python -m src.evals.run_plain_rag_baseline --limit 5 --retriever hybrid
+# Run Plain-RAG baseline on golden dataset (capped at 10 cases)
+python -m src.evals.run_plain_rag_baseline --limit 10 --retriever hybrid
+
+# Evaluate Plain-RAG results with LLM judge
+python src/evals/evaluate_offline_with_llm.py --input src/evals/plain_rag_answers_and_chunks.json --output src/evals/plain_rag_evaluation_report.json --no-resume
 ```
 
-##### Empirical Head-to-Head Benchmark: Plain-RAG vs. Agentic RAG (Cases GD-01 & GD-02)
+##### Empirical Head-to-Head Benchmark: Plain-RAG vs. Agentic RAG (10 Policy Cases: GD-01 to GD-10)
 
-The table below contrasts the empirical results evaluated by the multi-provider LLM judge (`gemini-2.5-flash`) on [`src/evals/plain_rag_answers_and_chunks.json`](src/evals/plain_rag_answers_and_chunks.json) vs. [`src/evals/generated_answers_and_chunks.json`](src/evals/generated_answers_and_chunks.json):
+The table below contrasts the empirical results evaluated by the multi-provider LLM judge (`gemini-2.5-flash`) across the first 10 golden benchmark cases (`GD-01` to `GD-10`) in [`src/evals/plain_rag_answers_and_chunks.json`](src/evals/plain_rag_answers_and_chunks.json) vs. [`src/evals/generated_answers_and_chunks.json`](src/evals/generated_answers_and_chunks.json):
+
+| Metric / Dimension | Plain-RAG Baseline (10 Cases) | Multi-Agent RAG (Same 10 Cases) | Trade-Off & Engineering Analysis |
+| :--- | :---: | :---: | :--- |
+| **Faithfulness Score** | **0.9000 (90.0%)** | 0.8800 (88.0%) | Plain-RAG is slightly more concise; Agentic RAG's generator occasionally attempts extra synthetic formulas (e.g. eligibility equations). |
+| **Answer Relevancy** | **0.9000 (90.0%)** | 0.8400 (84.0%) | Plain-RAG produces shorter, direct answers with less background narrative boilerplate. |
+| **Context Precision** | 0.5780 (57.8%) | **0.6850 (68.5%)** | **Agentic Precision Advantage**: Planner query decomposition and targeted worker filtering improve retrieval signal-to-noise. |
+| **Context Recall** | 0.9100 (91.0%) | **0.9550 (95.5%)** | **Agentic Recall Advantage**: Multi-agent scatter-gather recovers cross-document facts that single-shot retrieval misses. |
+| **Median Latency (p50)**| **105.7s (~1.8m)** | 500.1s (~8.3m) | **Plain-RAG is 4.73× faster** by executing a single LLM inference without reflection overhead. |
+| **Mean Latency** | **134.0s (~2.2m)** | 583.2s (~9.7m) | Consistent ~4.4× mean speedup across all 10 policy queries. |
+| **Query Hallucination Rate** | **1 / 10 (10.0%)** | 4 / 10 (40.0%) | Plain-RAG's sole defect was an overly conservative refusal (`GD-08`), whereas Agentic RAG had minor ungrounded formula derivations. |
+
+##### Case-by-Case Deep Dive: GD-01 & GD-02 Comparative Analysis
 
 | Metric / Dimension | GD-01 (Plain-RAG) | GD-01 (Agentic RAG) | GD-02 (Plain-RAG) | GD-02 (Agentic RAG) | Engineering Analysis & Key Finding |
 | :--- | :---: | :---: | :---: | :---: | :--- |
 | **Query Type** | Multi-part Policy & Licensing | Multi-part Policy & Licensing | Focused Single-Hop Policy | Focused Single-Hop Policy | GD-01 requires cross-document facts; GD-02 is concentrated |
-| **Context Recall** | **0.00 (0.0%)** | **0.70 (70.0%)** | **1.00 (100%)** | **1.00 (100%)** | **Retrieval Collapse in Plain-RAG**: Single-shot retrieval completely missed the required criteria for all 3 allotment methods. Agentic RAG's Planner decomposed the query and achieved 70% recall. |
-| **Context Precision** | **0.10 (10.0%)** | **0.70 (70.0%)** | 0.75 (75.0%) | **0.90 (90.0%)** | Plain-RAG suffered heavy context pollution (0.10), while Agentic RAG maintained high signal-to-noise. |
-| **Faithfulness Score** | 1.00 (Abstained) | 0.75 (75.0%) | **1.00 (100%)** | **1.00 (100%)** | Plain-RAG scored 1.00 on GD-01 by refusing to answer; both scored 100% on GD-02. |
-| **Answer Relevancy** | 1.00 (Refusal) | 0.65 (65.0%) | **1.00 (100%)** | **1.00 (100%)** | On GD-02, both provided exact, concise policy answers. |
-| **Execution Latency** | **173.4s** | 549.5s | **58.1s** | 305.2s | Plain-RAG is **~3× to 5.2× faster** by skipping multi-agent coordination. |
-| **Generation Outcome** | **Abstained (Data Missing)** | **Synthesized Comparison** | **Answered Directly** | **Answered with Verification** | **The Agentic Trade-Off**: For simple single-hop lookups (GD-02), Plain-RAG is sufficient and 5× faster. But for complex multi-part questions (GD-01), Plain-RAG experiences total retrieval failure, whereas Agentic RAG successfully synthesizes the answer. |
+| **Context Recall** | **0.50 (50.0%)** | **0.70 (70.0%)** | **1.00 (100%)** | **1.00 (100%)** | **Cross-Doc Coverage Gap**: With typo-tolerant retrieval, Plain-RAG successfully located the 3 methods (50% recall), but missed preference scenarios spread across other documents. Agentic RAG decomposed the query across multiple documents to reach 70% recall. |
+| **Context Precision** | 0.60 (60.0%) | **0.70 (70.0%)** | 0.60 (60.0%) | **0.90 (90.0%)** | Agentic RAG maintained higher signal-to-noise through targeted query planning and metadata filtering. |
+| **Faithfulness Score** | **1.00 (100%)** | 0.75 (75.0%) | **1.00 (100%)** | **1.00 (100%)** | Plain-RAG scored 1.00 on both by adhering strictly to chunks; Agentic RAG scored 0.75 on GD-01 due to an ungrounded qualification formula. |
+| **Answer Relevancy** | **1.00 (100%)** | 0.65 (65.0%) | **1.00 (100%)** | **1.00 (100%)** | On GD-02, both provided exact, concise policy answers. |
+| **Execution Latency** | **208.4s** | 549.5s | **50.2s** | 305.2s | Plain-RAG is **~3× to 6× faster** by executing a single LLM inference without multi-agent coordination. |
+| **Generation Outcome** | **Identified 3 Methods** | **Synthesized Comparison** | **Answered Directly** | **Answered with Verification** | **The Agentic Trade-Off**: For simple single-hop lookups (GD-02), Plain-RAG is sufficient and ~6× faster. For distributed multi-part questions (GD-01), Agentic RAG is necessary to gather cross-document criteria. |
 
 ###### Qualitative Case Study: Why the Pipelines Diverged
 
 1. **Query GD-01 (Multi-part Policy & Licensing)**:
    - **User Query**: *"What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?"*
-   - **Vanilla / Plain-RAG Outcome**:
-     - **Result**: **Total Retrieval Collapse (Recall: 0.00, Precision: 0.10)**.
-     - **Actual Output**: *"The provided engineering documentation does not contain sufficient data to answer this query."*
-     - **Root Cause**: Single-shot retrieval retrieved generic hydro policy chunks that mentioned site allotment in passing but completely missed the required clauses explaining the 3 allotment methods (Competitive Bidding, MoU, Swiss Model) and when each is preferred. Because the model had no data, it correctly abstained (earning a technical 1.0 for not hallucinating, but 0.0 for utility).
+   - **The Retrieval Bug Investigation (`allotmnet of shp.pdf`)**:
+     - In initial testing, Plain-RAG scored **0.00 recall** and abstained. Forensic investigation revealed this was **not an inherent limit of RAG, but a filename typo bug**: the source document on disk is literally misspelled as `allotmnet of shp.pdf` (transposition of 'm' and 'n').
+     - Because strict string matching failed (`"allotment" in "allotmnet of shp.pdf" == False`), the exact name boost did not fire. The crucial chunk (`Site allotment/license`) was pushed down to rank #7, just 1 rank outside `top_k=6`.
+     - Implementing **typo-tolerant Damerau-Levenshtein entity matching** in [`src/ingestion/bm25_retriever.py`](src/ingestion/bm25_retriever.py) restored `Site allotment/license` to rank #2, elevating Plain-RAG Context Recall from **0.00 to 0.50 (50%)**.
+   - **Vanilla / Plain-RAG Outcome (With Typo Fix)**:
+     - **Result**: **Recall: 0.50, Precision: 0.60, Faithfulness: 1.00, Relevancy: 1.00 (Latency: 208.4s)**.
+     - **Actual Output**: Clean 3-bullet list identifying (1) **Bidding process**, (2) **MoU method**, and (3) **Swiss model of defence** [Source: `allotmnet of shp.pdf`]. It accurately acknowledged that the retrieved chunks did not contain specific preference criteria for the bidding or Swiss models.
    - **Multi-Agent Hierarchical RAG Outcome**:
-     - **Result**: **Context Recall jumped to 0.70 (70%)** with **Context Precision at 0.70 (70%)**.
-     - **Actual Output**: The **Planner Agent** decomposed the question into targeted sub-queries, retrieving chunks across `allotmnet of shp.pdf` and `hydro policy.pdf`. The **Synthesizer** synthesized a complete 4-section engineering brief with a structured comparative matrix covering Bidding, MoU, and Swiss Challenge.
-     - **Judge Note**: Faithfulness was scored at **0.75** because the generator attempted to fabricate a pseudo-mathematical threshold formula for developer qualification (`$$\text{Eligibility Status} = \dots$$`) that was not in the source text.
+     - **Result**: **Context Recall reached 0.70 (70%)** with **Context Precision at 0.70 (70%)**.
+     - **Why Agentic RAG Scored Higher Recall**: The question asked two parts: (a) the three methods, and (b) *when each is preferred*. While the method names reside in `allotmnet of shp.pdf`, the policy preference rationale resides in `hydro policy.pdf` and `WSHPDR_2016.pdf`. Plain-RAG's single-shot top-6 could not span all three documents, whereas the **Planner Agent** decomposed the question into parallel sub-queries, retrieving chunks across all relevant documents to synthesize the complete comparison.
+     - **Faithfulness Note**: Faithfulness was scored at **0.75** because the generator attempted to formulate a pseudo-mathematical threshold formula for developer qualification (`$$\text{Eligibility Status} = \dots$$`) not explicitly present in the source text.
 
 2. **Query GD-02 (Focused Single-Hop Policy)**:
    - **User Query**: *"During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?"*
    - **Vanilla / Plain-RAG Outcome**:
-     - **Result**: **Flawless Execution (Recall: 1.00, Precision: 0.75, Faithfulness: 1.00, Relevancy: 1.00)**.
-     - **Execution Latency**: **58.1 seconds** (**~5.2× faster** than Agentic RAG).
+     - **Result**: **Flawless Execution (Recall: 1.00, Precision: 0.60, Faithfulness: 1.00, Relevancy: 1.00)**.
+     - **Execution Latency**: **50.2 seconds** (**~6.1× faster** than Agentic RAG's 305.2s).
      - **Actual Output**: Clean 2-bullet answer directly quoting `allotmnet of shp.pdf` (ties broken by gradation list based on prequalification criteria; site allotted to government agency if no bids received twice).
    - **Multi-Agent Hierarchical RAG Outcome**:
-     - **Result**: **Recall: 1.00, Precision: 0.90, Faithfulness: 1.00, Relevancy: 1.00**.
-     - **Execution Latency**: **305.2 seconds**.
+     - **Result**: **Recall: 1.00, Precision: 0.90, Faithfulness: 1.00, Relevancy: 1.00 (Latency: 305.2s)**.
      - **Actual Output**: Complete 4-section engineering brief with executive summary, comparison matrix, regulatory provisions, and risk mitigation.
-   - **Engineering Conclusion**: For focused, single-hop factual retrieval, Plain-RAG is optimal and avoids multi-agent coordination overhead. For distributed or multi-part questions requiring cross-document synthesis, Agentic RAG is necessary to prevent total retrieval collapse.
+   - **Engineering Conclusion**: For focused, single-hop factual retrieval, Plain-RAG is optimal and avoids multi-agent coordination overhead (~50s vs ~300s). For distributed, multi-part questions requiring cross-document synthesis, Agentic RAG's planner decomposition is essential to bridge the cross-document coverage gap.
 
 #### Critical Failure Analysis: The 26.4% Hallucination Rate & Weakest Categories
 
@@ -630,7 +647,7 @@ python src/evals/evaluate_offline_with_llm.py --mode auto --delay 2.0
 | **Hyperscale Acceleration**| NVIDIA H100 SXM5 | *Estimated Projection* | 80 GB | 5120-bit HBM3 | 3,350 GB/s | ~180–230 tok/s | ~4–5s | ~6–9s |
 
 #### 3. Enterprise Production Benefits on 24 GB / 32 GB / 64 GB+ (Theoretical Projections)
-1. **Projected $5\times$ to $15\times$ Latency Reduction**: Based on memory bandwidth scaling, upgrading from a 128-bit mobile bus (224 GB/s) to high-bandwidth memory (1,008 to 3,350 GB/s) is projected to reduce total end-to-end multi-agent execution time from **~2 minutes down to an estimated 8–15 seconds** (theoretical projection).
+1. **Projected $5\times$ to $15\times$ Latency Reduction**: Based on memory bandwidth scaling, upgrading from a 128-bit mobile bus (224 GB/s) to enterprise high-bandwidth memory (1,008 to 3,350 GB/s) is projected to reduce total end-to-end multi-agent execution time from the **~8–16 minute range observed on consumer laptop GPUs down to an estimated 30–60 seconds (or 8–15 seconds with concurrent continuous batching via vLLM / TensorRT-LLM)** (theoretical projection).
 2. **Zero Host RAM Paging**: 24 GB+ VRAM provides abundant headroom for full 32k context lengths, multi-turn session history, and full FP16 KV caches with zero PCIe bus offloading.
 3. **Concurrent Multi-Agent Parallelism**: High-capacity GPUs allow setting `OLLAMA_NUM_PARALLEL=4` (or deploying with vLLM / TensorRT-LLM PagedAttention continuous batching), enabling Planner, Orchestrator, narrative workers, tabular workers, and guardrails to run simultaneously without queue serialization.
 

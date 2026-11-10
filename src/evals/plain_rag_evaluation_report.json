@@ -1,25 +1,25 @@
 {
   "metadata": {
     "evaluation_mode": "auto",
-    "total_cases_evaluated": 2,
-    "hallucination_rate_percent": 0.0,
+    "total_cases_evaluated": 10,
+    "hallucination_rate_percent": 10.0,
     "provider_model_usage": {
-      "gemini:gemini-2.5-flash": 2
+      "gemini:gemini-2.5-flash": 10
     }
   },
   "aggregate_metrics": {
-    "average_faithfulness": 1.0,
-    "average_answer_relevancy": 1.0,
-    "average_context_precision": 0.6,
-    "average_context_recall": 0.75
+    "average_faithfulness": 0.9,
+    "average_answer_relevancy": 0.9,
+    "average_context_precision": 0.578,
+    "average_context_recall": 0.91
   },
   "category_breakdown": {
     "Single-Hop Policy & Licensing": {
-      "test_cases": 2,
-      "avg_faithfulness": 1.0,
-      "avg_answer_relevancy": 1.0,
-      "avg_context_precision": 0.6,
-      "avg_context_recall": 0.75
+      "test_cases": 10,
+      "avg_faithfulness": 0.9,
+      "avg_answer_relevancy": 0.9,
+      "avg_context_precision": 0.578,
+      "avg_context_recall": 0.91
     }
   },
   "detailed_results": [
@@ -62,6 +62,166 @@
       "retrieved_chunks_count": 6,
       "circuit_breaker_tripped": false,
       "latency_seconds": 50.23
+    },
+    {
+      "id": "GD-03",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What is the mandatory policy timeline for an Independent Power Producer (IPP) to achieve financial closure, and what are the penalties for non-compliance?",
+      "actual_output": "Based strictly on the provided engineering documentation:\n\n**Mandatory Policy Timeline for Financial Closure**\n*   An Independent Power Producer (IPP) shall achieve financial closure within **12 months** from the date of receipt of all statutory approvals and clearances given by the states and central Governments [Source: allotmnet of shp.pdf].\n*   In specific policy contexts, concurrence of CEA, financial closure, award of work, and long-term PPA were required to be completed by **31.12.2010** [Source: hydro policy.pdf].\n\n**Penalties for Non-Compliance**\n*   The documentation does not explicitly specify a distinct penalty solely for missing the financial closure deadline. However, regarding compliance with project timelines generally:\n    *   Delays in the commissioning date result in a **reduction of merchant sales incentive by 5%** for every six months of delay [Source: hydro policy.pdf].\n    *   Projects that do not conform to prescribed timelines lose this merchant sales incentive in a graded manner [Source: hydro policy.pdf].\n*   The documentation notes that achieving financial closure without a Power Purchase Agreement is very difficult, implying the PPA is a critical prerequisite for financing [Source: hydro policy.pdf].",
+      "expected_output": "An IPP must achieve financial closure—defined as firm commitments for financing the entire project—within 12 months from the date of receiving all statutory approvals and clearances from the State and Central Governments. Failure to achieve financial closure within this window results in automatic cancellation of the site allotment and forfeiture of the upfront premium amounts, with no compensation payable to the IPP.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.75,
+        "context_recall_score": 0.6,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is entirely faithful to the provided context, accurately extracting the timeline and correctly stating that specific penalties for financial closure non-compliance are not explicitly detailed. The answer is highly relevant to the query. However, the retrieved context itself is incomplete as it misses the specific penalty for financial closure non-compliance mentioned in the ground truth, leading to a lower context recall score. Some retrieved chunks were also less precise to the core question.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 197.23
+    },
+    {
+      "id": "GD-04",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under which ownership modes do SHP project assets revert to the State Government free of cost, and under which mode does the developer retain ownership?",
+      "actual_output": "Based on the provided engineering documentation [Source: allotmnet of shp.pdf]:\n\n*   **Modes where assets revert to the State Government:** The project may be on **Lease, Rehabilitate, Operate, Transfer (LROT)**, **Build, Own, Operate & Transfer (BOOT)**, **Build, Operate, Transfer (BOT)**, or **Build, Operate, Lease, Transfer (BOLT)** modes. For the **LROT** mode, the documentation explicitly states that after a specified period, the entire project and assets \"shall be transferred to the state government, free of cost\" [Source: allotmnet of shp.pdf]. The other modes (BOOT, BOT, BOLT) are listed under ownership modes containing \"Transfer\" [Source: allotmnet of shp.pdf].\n*   **Mode where developer retains ownership:** The project may be on **Build, Own, Operate (BOO)** mode, which is listed without a transfer condition to the state government [Source: allotmnet of shp.pdf].",
+      "expected_output": "Under BOOT (Build, Own, Operate & Transfer), BOT (Build, Operate, Transfer), BOLT (Build, Operate, Lease, Transfer), and LROT (Lease, Rehabilitate, Operate, Transfer) modes, the entire project—including assets related to water structures and power generation—is transferred to the State Government free of cost after the specified licence period. The project can also be executed under the BOO (Build, Own, Operate) mode, which does not include a transfer clause.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.33,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is entirely faithful to the provided context, accurately identifying the ownership modes for asset transfer and developer retention. It directly addresses all aspects of the user query. However, the retrieved context contained a significant amount of irrelevant information, leading to a low context precision score.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 207.0
+    },
+    {
+      "id": "GD-05",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under what condition can an IPP legally surrender an allotted SHP site back to the State Government?",
+      "actual_output": "An IPP may legally surrender an allotted SHP site back to the State Government (SG) if, upon completion of the Detailed Project Report (DPR) within the stipulated time frame, it has grounds to establish that the project is not techno-economically viable [Source: allotmnet of shp.pdf].",
+      "expected_output": "An IPP may surrender the allotment back to the State Government if, upon completing the Detailed Project Report (DPR) within the stipulated timeframe, it establishes on verifiable grounds that the project is not techno-economically viable.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.2,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is perfectly faithful to the retrieved context and directly addresses the user's query. However, the context precision is low because only one out of six retrieved chunks was relevant to the specific question, with the others being noise. All necessary information for the answer was present in the relevant chunk.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 105.9
+    },
+    {
+      "id": "GD-06",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Under the EIA Notification 2006, how are hydroelectric projects categorized into Category A and Category B, and what happens if a state lacks a constituted SEIAA or SEAC?",
+      "actual_output": "Based on the provided engineering documentation regarding the EIA Notification 2006:\n\n**Categorization of Hydroelectric Projects:**\nProjects are categorized into Category ‘A’ and Category ‘B’ based on power generation capacity and culturable command area [Source: EIA and related Investigations.pdf]:\n*   **Category A:** Projects with hydroelectric power generation of **>= 50 MW** or a culturable command area of **>= 10,000 ha**.\n*   **Category B:** Projects with hydroelectric power generation of **< 50 MW (specifically >= 25 MW)** or a culturable command area of **< 10,000 ha**.\n\n**Consequence of Lacking SEIAA or SEAC:**\nIn the absence of a duly constituted State Environment Impact Assessment Authority (SEIAA) or State Expert Appraisal Committee (SEAC), a Category ‘B’ project shall be treated as a **Category ‘A’ project** [Source: EIA and related Investigations.pdf].",
+      "expected_output": "Under the EIA Notification 2006, River Valley/Hydroelectric projects are classified into Category A if they involve >= 50 MW hydroelectric power generation or >= 10,000 ha of culturable command area, requiring prior clearance from the Central Government (MoEF) via the Expert Appraisal Committee (EAC). Category B covers projects < 50 MW and >= 25 MW (or < 10,000 ha culturable command area), requiring clearance from the State Environment Impact Assessment Authority (SEIAA) based on State EAC (SEAC) recommendations. In the absence of a duly constituted SEIAA or SEAC, a Category B project is treated as a Category A project.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.6,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is completely faithful to the retrieved context and directly addresses all aspects of the user's query. However, the retrieved context contained several irrelevant chunks (e.g., NPA management, seismic studies), which lowered the context precision score. All information required for the answer was present in the relevant chunks.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 74.13
+    },
+    {
+      "id": "GD-07",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the operational rules governing the Expert Appraisal Committee (EAC) and State EAC (SEAC) regarding tenure, site inspections, and decision-making?",
+      "actual_output": "Based on the provided engineering documentation, the operational rules governing the Expert Appraisal Committee (EAC) and State EAC (SEAC) are as follows:\n\n*   **Tenure:** Both the EAC and SEAC shall be reconstituted every three years [Source: EIA  and related Investigations.pdf].\n*   **Site Inspections:** Authorised members of the EAC and SEAC may inspect any site(s) connected with the project provided there is prior notice of at least seven days to the applicant [Source: EIA  and related Investigations.pdf].\n*   **Decision-making:** The committees shall function on the principle of collective responsibility. The Chairperson shall endeavour to reach a consensus; if consensus cannot be reached, the view of the majority shall prevail [Source: EIA  and related Investigations.pdf].",
+      "expected_output": "The EAC and SEAC must be reconstituted every three years. Authorized committee members may inspect any project site(s) after giving at least seven days' prior notice to the applicant. Both committees function on the principle of collective responsibility; the Chairperson endeavors to reach a consensus, but if consensus cannot be achieved, the view of the majority prevails.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.2,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is perfectly faithful to the retrieved context and completely relevant to the user query. All information provided is directly supported by Chunk 1. However, the retrieved context includes a significant amount of irrelevant information (Chunks 2, 3, 4, 5, 6), which severely impacts the context precision score.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 61.03
+    },
+    {
+      "id": "GD-08",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "Walk through the four sequential stages required to obtain Forest Clearance for a small hydro project in India.",
+      "actual_output": "The provided engineering documentation does not contain sufficient data to answer this query. While the documentation mentions a \"Three-stage clearance system\" for projects generally [Source: Hydro_Energy_Sector_in_India_The_Past_Present_and_.pdf] and describes Forest Clearance steps involving District, State, and Central levels [Source: CLEARANCES.pdf], it does not explicitly enumerate four sequential stages specifically for obtaining Forest Clearance.",
+      "expected_output": "1. Application to District Forest Officer (DFO): Submit the application form with required maps, certificates, and documents involving multiple agencies. 2. Forest Valuation & Alternate Land Identification: Conduct a detailed evaluation of forest loss (quantified in monetary terms) and prepare a detailed compensatory afforestation scheme. 3. State Government Clearance: Following DFO approval, obtain clearances across five to six levels of State Government officials. 4. Central Government Clearance: Forward the file to the regional Ministry of Forest official, with final clearance granted by the Ministry of Forest in Delhi upon receipt of the State Government's compliance report.",
+      "scores": {
+        "faithfulness_score": 0.0,
+        "answer_relevancy_score": 0.0,
+        "context_precision_score": 0.8,
+        "context_recall_score": 1.0,
+        "hallucination_detected": true,
+        "reasoning": "The AI incorrectly states that the documentation does not contain sufficient data to answer the query. Chunk 2 explicitly outlines the four sequential stages for Forest Clearance, which directly addresses the user's question and matches the ground truth. The AI's refusal to answer is a significant failure.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 291.57
+    },
+    {
+      "id": "GD-09",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What are the key provisions of the Government of India's Policy on Hydro Power Development (1998, revised 2008) regarding local area development and state responsibilities?",
+      "actual_output": "Based on the provided engineering documentation, the key provisions of the Government of India's Policy on Hydro Power Development (announced in August 1998 and revised in November 2008) regarding local area development and state responsibilities are as follows:\n\n*   **Local Area Development Support:** The policy mandates that 1% of free power is provided with a matching 1% support from the State government specifically for local area development to the affected local population [Source: AK-Overview of SHP Development.pdf].\n*   **State Government Responsibilities:** The concerned State Government is responsible for resolving issues such as local agitation (law & order) and land acquisition. Additionally, for projects held up for environment and forest clearance, the concerned State Government/developer must obtain timely Environment and Forest (E&F) clearances [Source: AK-Overview of SHP Development.pdf].\n*   **Jurisdiction and Oversight:** Hydropower development is the responsibility of state governments as water is a subject of state governments in India. The Central Government advises on hydropower matters and plays the role of an overall river basin planner [Source: WSHPDR_2016.pdf].",
+      "expected_output": "The Government of India's Hydro Power Development Policy (announced August 1998, revised November 2008) mandates 1% free power from the project matched by a 1% contribution from the State Government for local area development to benefit the affected population. It also stipulates that concerned State Governments/developers must secure timely Environment & Forest (E&F) clearances for held-up projects, and places responsibility on the State Government to resolve land acquisition and local law-and-order agitations.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 0.7,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's answer is perfectly faithful to the retrieved context and fully addresses the user query, including all specific provisions from the ground truth and an additional relevant point about state jurisdiction. All necessary information for the ground truth was present in the context. However, the overall retrieved context contained some irrelevant chunks, which slightly reduced the context precision score.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 105.54
+    },
+    {
+      "id": "GD-10",
+      "category": "Single-Hop Policy & Licensing",
+      "query": "What fiscal incentives, tax exemptions, and regulatory mechanisms support renewable power deployment in India?",
+      "actual_output": "Based strictly on the provided engineering documentation, the following fiscal incentives, tax exemptions, and regulatory mechanisms support renewable power deployment in India:\n\n### Fiscal Incentives & Tax Exemptions [Source: AK-Overview of SHP Development.pdf]\n*   **Excise Duty:** 100% exemption for many RE project components.\n*   **Customs Duty:** Concessional duty of 5% for selected RE project components.\n*   **Tax Holiday:** 10-year tax holiday.\n*   **Depreciation:** Accelerated Depreciation (AD).\n*   **Generation Incentive:** Generation-based incentives are available.\n\n### Regulatory Mechanisms [Source: AK-Overview of SHP Development.pdf]\n*   **RPOs & RECs:** Renewable Purchase Obligations (RPOs) are mandated by the Electricity Act 2003 and NTP, adopted by 26 SERCs; a REC mechanism was launched to fulfil RPO obligations.\n*   **Tariffs:** Feed-in Tariffs (FiT) or Preferential Tariffs are utilized.\n*   **State Policies:** State-level renewable and solar policies are implemented with significant capacities under these policies.\n\n### Additional Support [Source: AK-Overview of SHP Development.pdf]\n*   **Enablers:** Low cost, long tenure capital; Transmission Grid (Inter & Intra-State); Policy & Regulatory Framework; Improvement in Financial Health of DISCOMs.\n*   **Land/Infrastructure:** Waste & Barren Land utilization is identified as an enabler.\n\n*Note: The provided documentation does not contain specific details on transmission access costs, land acquisition policies, or utility-specific incentives beyond those listed above for India.*",
+      "expected_output": "India's renewable energy support framework includes: (1) Fiscal & Tax Incentives: 100% Excise Duty exemption on many RE project components, a concessional 5% Customs Duty on selected components, a 10-year tax holiday, Accelerated Depreciation (AD), and Generation Based Incentives (GBI). (2) Regulatory Obligations & Tariffs: Renewable Purchase Obligations (RPOs) mandated under the Electricity Act 2003 and National Tariff Policy (adopted by 26 SERCs), Renewable Energy Certificates (RECs) to meet RPOs, State-level RE policies, and Feed-in/Preferential Tariffs to improve project bankability.",
+      "scores": {
+        "faithfulness_score": 1.0,
+        "answer_relevancy_score": 1.0,
+        "context_precision_score": 1.0,
+        "context_recall_score": 1.0,
+        "hallucination_detected": false,
+        "reasoning": "The AI's response is perfectly aligned with the retrieved context, accurately listing all fiscal incentives, tax exemptions, and regulatory mechanisms for India. It correctly filtered out information pertaining to other countries or general statements, demonstrating excellent precision and recall from the relevant chunk.",
+        "evaluator_provider": "gemini",
+        "evaluator_model": "gemini-2.5-flash"
+      },
+      "retrieved_chunks_count": 6,
+      "circuit_breaker_tripped": false,
+      "latency_seconds": 39.15
     }
   ]
 }

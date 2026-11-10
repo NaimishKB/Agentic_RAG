@@ -260,10 +260,32 @@ def run_baseline_benchmark(
     engine = PlainRAGEngine(retriever_mode=retriever_mode)
 
     results: list[dict[str, Any]] = []
-    total_time = 0.0
+    completed_ids: set[str] = set()
+
+    # Load existing results to support graceful resumption
+    if output_file.exists():
+        try:
+            with open(output_file, "r", encoding="utf-8") as f:
+                prev_data = json.load(f)
+                for r in prev_data.get("results", []):
+                    if r.get("actual_output"):
+                        results.append(r)
+                        completed_ids.add(r["id"])
+            if completed_ids:
+                logger.info(f"Loaded {len(completed_ids)} existing results from {output_file}; will resume remaining.")
+        except Exception as e:
+            logger.warning(f"Could not load previous output for resume ({e}); starting fresh.")
+            results = []
+            completed_ids = set()
+
+    total_time = sum(r.get("latency_seconds", 0.0) for r in results)
 
     for idx, case in enumerate(test_cases, 1):
         cid = case.get("id", f"case_{idx}")
+        if cid in completed_ids:
+            logger.debug(f"[{idx}/{len(test_cases)}] Skipping already completed {cid}")
+            continue
+
         query = case.get("query", "")
         category = case.get("category", "General")
         logger.info(f"[{idx}/{len(test_cases)}] Executing Plain-RAG for {cid} ({category}): '{query[:60]}...'")
@@ -292,7 +314,23 @@ def run_baseline_benchmark(
                 "completed_at": datetime.now(timezone.utc).isoformat(),
             }
             results.append(result_entry)
+            completed_ids.add(cid)
             total_time += out["total_latency"]
+
+            # Save progress after every test case so progress is never lost
+            output_payload = {
+                "metadata": {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "architecture": "Plain-RAG Baseline (No Planner, No CRAG, No Feedback Loops)",
+                    "total_cases_evaluated": len(results),
+                    "retriever_mode": retriever_mode,
+                    "average_latency_seconds": round(total_time / len(results), 2) if results else 0,
+                },
+                "results": results,
+            }
+            output_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(output_file, "w", encoding="utf-8") as f:
+                json.dump(output_payload, f, indent=2, ensure_ascii=False)
 
         except Exception as e:
             logger.error(f"[{cid}] Failed: {e}")
