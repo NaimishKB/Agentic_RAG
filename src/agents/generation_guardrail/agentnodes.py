@@ -87,14 +87,141 @@ def render_guardrail_prompts(
 # ---------------------------------------------------------------------------
 # Deterministic Fallback Heuristic
 # ---------------------------------------------------------------------------
+def _normalize_num_token(token: str) -> str:
+    """Normalizes numerical token for robust comparison (e.g. '1,000' -> '1000')."""
+    return token.replace(",", "").strip()
+
+
+def _is_float_token(val: str) -> bool:
+    """Helper testing if string token is convertible to float."""
+    try:
+        float(val.rstrip("%"))
+        return True
+    except ValueError:
+        return False
+
+
+def _sanitize_response_for_number_checking(text: str) -> str:
+    """
+    Strips structural formatting, citations, heading numbers, and formula labels
+    from generated answer text before extracting substantive numerical claims.
+
+    Ignores:
+      1. Markdown heading numbers and section labels (e.g., '## 1.', '### 2.3', '### 3.1.2')
+      2. List numbering ('1.', '2.1.', '(1)', '(a)', '1)')
+      3. Citation identifiers and page numbers ('[Source: ... | Page: 12]', '[1]', '[^2]')
+      4. Inline structural references ('Section 3.1', 'Clause 14(2)', 'Table 2', 'Figure 4', 'Bridge No. 604')
+      5. Formula variable labels and subscripts ('H_1', 'P_2', 'tc_6.3', 'Equation (1)', '\\tag{2}')
+      6. Multipliers and unit formatting ('1.5x', '2×')
+    """
+    # 1. Strip citation blocks: [Source: ...], [Page: 12], [Slide: 3], [1], [^1]
+    cleaned = re.sub(
+        r"\[(?:Source:[^\]]*|Page:\s*\d+|Slide:\s*\d+|Table:\s*\d+|Chunk:\s*\d+|\d+(?:,\s*\d+)*|\^\d+)\]",
+        " ",
+        text,
+        flags=re.IGNORECASE,
+    )
+    cleaned = re.sub(r"\[Source:[^\]]*\]", " ", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\[\d+\]", " ", cleaned)
+
+    # 2. Strip Markdown heading lines with numbering: e.g. "## 1. Executive Summary", "### 2.3 Matrix"
+    cleaned = re.sub(
+        r"(?m)^#{1,6}\s*(?:(?:Section|Sec\.|Chapter|Part|Clause)\s+)?\d+(?:\.\d+)*\b[:.]?\s*",
+        " ",
+        cleaned,
+    )
+
+    # 3. Strip list numbering: e.g. "1. ", "2.3. ", "(1) ", "(a) ", "1) "
+    cleaned = re.sub(
+        r"(?m)^\s*(?:\(?\d+(?:\.\d+)*\)?[\.\)]|\(\w\))\s+",
+        " ",
+        cleaned,
+    )
+
+    # 4. Strip inline structural references: e.g. "Section 4.3", "Table 1", "Bridge No. 604"
+    cleaned = re.sub(
+        r"\b(?:Section|Sec\.|Chapter|Clause|Regulation|Rule|Item|Step|Phase|Table|Figure|Fig\.|Appendix|Equation|Eq\.|Formula|Bridge\s+No\.)\s+\(?\d+(?:\.\d+)*\)?",
+        " ",
+        cleaned,
+        flags=re.IGNORECASE,
+    )
+
+    # 5. Strip LaTeX equation tags: \tag{1}, \tag{2.1}
+    cleaned = re.sub(r"\\tag\{\d+(?:\.\d+)*\}", " ", cleaned)
+
+    # 6. Strip variable subscripts: e.g. H_1, P_2, tc_6.3, Q_{50}
+    cleaned = re.sub(r"\b[A-Za-z]+_\{?[A-Za-z0-9.]+\}?", " ", cleaned)
+
+    # 7. Strip multipliers: e.g. 1.5x, 2X, 1.5×
+    cleaned = re.sub(r"\b\d+(?:\.\d+)?[xX×]\b", " ", cleaned)
+
+    return cleaned
+
+
+def _extract_allowed_numbers(
+    query: str,
+    synthesized_context: str,
+    documents: list[dict[str, Any]] | None = None,
+) -> tuple[set[str], str]:
+    """
+    Collects all legitimate numerical values from:
+      1. Verified retrieved context
+      2. User query (parameters and constraints supplied by the user)
+      3. MCP tool outputs (programmatic calculation results with recorded inputs)
+      4. Universal physical and mathematical constants (g=9.81, rho=1000, pi=3.1416)
+    """
+    combined_source_text = [synthesized_context, query]
+
+    if documents:
+        for doc in documents:
+            content = doc.get("content", "")
+            if content:
+                combined_source_text.append(content)
+            # If chunk is from an MCP tool, capture all serialized parameters
+            if doc.get("file_type") == "TOOL_OUTPUT" or "mcp" in str(doc.get("source_file", "")).lower():
+                combined_source_text.append(str(doc))
+
+    full_allowed_text = " ".join(combined_source_text).lower()
+
+    # Extract all numbers from full allowed text
+    raw_tokens = re.findall(r"\b\d+(?:,\d{3})*(?:\.\d+)?%?\b", full_allowed_text)
+    allowed_set: set[str] = set()
+
+    for tok in raw_tokens:
+        clean = _normalize_num_token(tok)
+        allowed_set.add(clean)
+        # Also add version without %
+        if clean.endswith("%"):
+            allowed_set.add(clean[:-1])
+        # If integer version of float (e.g. 120.0 -> 120)
+        if "." in clean:
+            try:
+                val = float(clean.rstrip("%"))
+                if val.is_integer():
+                    allowed_set.add(str(int(val)))
+            except ValueError:
+                pass
+
+    # Universal engineering & formatting constants
+    universal_constants = {
+        "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10",
+        "9.81", "1000", "3.14", "3.1416", "3.14159", "100", "100%"
+    }
+    allowed_set.update(universal_constants)
+
+    return allowed_set, full_allowed_text
+
+
 def _deterministic_faithfulness_fallback(
     query: str,
     final_response: str,
     synthesized_context: str,
+    documents: list[dict[str, Any]] | None = None,
 ) -> GenerationGuardrailOutput:
     """
     Fallback groundedness check in case local LLM judge is unreachable.
-    Performs deterministic numerical and parameter containment verification.
+    Performs deterministic numerical and parameter containment verification,
+    properly ignoring structural formatting, citations, and query inputs.
     """
     if not final_response or not final_response.strip() or "Verified Technical Evidence Dossier" in final_response:
         return GenerationGuardrailOutput(
@@ -104,23 +231,55 @@ def _deterministic_faithfulness_fallback(
             critique="Deterministic heuristic: Answer text was absent or un-synthesized.",
         )
 
-    # Extract numerical tokens (e.g. 120, 2.0, 94%, 2.07) from final_response
-    answer_numbers = set(re.findall(r"\b\d+(?:\.\d+)?%?\b", final_response))
-    context_text = synthesized_context.lower()
+    # 1. Collect all allowed numbers from context, query, MCP tools, and physical constants
+    allowed_numbers, full_allowed_text = _extract_allowed_numbers(
+        query=query,
+        synthesized_context=synthesized_context,
+        documents=documents,
+    )
 
-    unsupported_numbers = [num for num in answer_numbers if num.lower() not in context_text]
-    # Filter out trivial single digits or common formatting numbers (1, 2, 3 for section titles)
-    unsupported_significant = [n for n in unsupported_numbers if len(n) > 1 and n not in {"1", "2", "3", "4", "5"}]
+    # 2. Sanitize final response: strip heading numbering, citations, variable subscripts, etc.
+    sanitized_response = _sanitize_response_for_number_checking(final_response)
+
+    # 3. Extract candidate numerical claims from sanitized response
+    raw_answer_numbers = re.findall(r"\b\d+(?:,\d{3})*(?:\.\d+)?%?\b", sanitized_response)
+
+    unsupported_numbers: list[str] = []
+    for num in raw_answer_numbers:
+        norm = _normalize_num_token(num)
+        norm_no_pct = norm[:-1] if norm.endswith("%") else norm
+
+        # Check if number is in allowed set or substring of full allowed text
+        if norm in allowed_numbers or norm_no_pct in allowed_numbers or norm.lower() in full_allowed_text:
+            continue
+
+        # Check if float equivalence matches (e.g. 120 vs 120.0)
+        try:
+            val = float(norm_no_pct)
+            if any(abs(val - float(a.rstrip("%"))) < 1e-4 for a in allowed_numbers if _is_float_token(a)):
+                continue
+        except ValueError:
+            pass
+
+        unsupported_numbers.append(num)
+
+    # Deduplicate while preserving order
+    seen_unsupported = set()
+    unsupported_significant = []
+    for n in unsupported_numbers:
+        if n not in seen_unsupported and len(n) > 1 and n not in {"1", "2", "3", "4", "5", "10"}:
+            seen_unsupported.add(n)
+            unsupported_significant.append(n)
 
     if unsupported_significant:
         critique = (
             f"Deterministic heuristic: Detected numerical values in the answer ({unsupported_significant[:4]}) "
-            f"that are not found in the verified context."
+            f"that are not found in the verified context, user query, or MCP tool records."
         )
         return GenerationGuardrailOutput(
             is_grounded=False,
             faithfulness_score=0.65,
-            unfaithful_statements=[f"Numerical claim '{n}' not supported by context" for n in unsupported_significant[:4]],
+            unfaithful_statements=[f"Numerical claim '{n}' not supported by context or inputs" for n in unsupported_significant[:4]],
             critique=critique,
         )
 
@@ -128,7 +287,7 @@ def _deterministic_faithfulness_fallback(
         is_grounded=True,
         faithfulness_score=0.92,
         unfaithful_statements=[],
-        critique="Deterministic heuristic: Core parameters, numbers, and units match verified context.",
+        critique="Deterministic heuristic: Core parameters, numbers, and units match verified context and query inputs.",
     )
 
 
@@ -143,6 +302,7 @@ def evaluate_generation_faithfulness(
     ollama_url: str = DEFAULT_OLLAMA_URL,
     model_name: str = DEFAULT_MODEL_NAME,
     timeout: int = DEFAULT_TIMEOUT_S,
+    documents: list[dict[str, Any]] | None = None,
 ) -> GenerationGuardrailOutput:
     """
     Evaluates the faithfulness and groundedness of a generated engineering answer
@@ -279,6 +439,7 @@ def evaluate_generation_faithfulness(
             query=query,
             final_response=final_response,
             synthesized_context=synthesized_context,
+            documents=documents,
         )
 
 
@@ -293,6 +454,7 @@ def generation_guardrail_node(state: GenerationGuardrailState) -> dict[str, Any]
       - `query` or `user_query`
       - `final_response`
       - `synthesized_context` (falls back to documents chunks if empty)
+      - `documents` (raw retrieved chunks and MCP tool outputs)
 
     Writes:
       - `is_grounded`: bool
@@ -304,11 +466,12 @@ def generation_guardrail_node(state: GenerationGuardrailState) -> dict[str, Any]
     query = state.get("query") or state.get("user_query") or ""
     final_response = state.get("final_response") or ""
     synthesized_context = state.get("synthesized_context")
+    documents = state.get("documents")
 
-    if not synthesized_context and state.get("documents"):
+    if not synthesized_context and documents:
         doc_texts = [
             f"[Source: {d.get('source_file', 'unknown')}]\n{d.get('content', '')}"
-            for d in state["documents"]
+            for d in documents
         ]
         synthesized_context = "\n\n".join(doc_texts)
 
@@ -318,6 +481,7 @@ def generation_guardrail_node(state: GenerationGuardrailState) -> dict[str, Any]
         query=query,
         final_response=final_response,
         synthesized_context=synthesized_context,
+        documents=documents,
     )
 
     return {

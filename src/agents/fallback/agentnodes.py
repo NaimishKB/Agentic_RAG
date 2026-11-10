@@ -52,7 +52,7 @@ def format_best_effort_generation_response(
     unfaithful_statements: list[str] | None = None,
     missing_aspects: list[str] | None = None,
     guardrail_critique: str | None = None,
-    cycle_count: int = 3,
+    cycle_count: int = 1,
 ) -> str:
     """
     Appends a prominent engineering warning and disclaimer to an answer generated
@@ -76,10 +76,13 @@ def format_best_effort_generation_response(
     if guardrail_critique:
         critique_section = f"\n**Diagnostic Critique**: {guardrail_critique}\n"
 
+    cycle_label = f"{cycle_count} Self-Correction {'Cycle' if cycle_count == 1 else 'Cycles'}"
+    cycle_text = f"{cycle_count} automated self-correction {'cycle' if cycle_count == 1 else 'cycles'}"
+
     warning_block = (
         "\n\n---\n\n"
-        "### ⚠️ Engineering Warning: 3 Self-Correction Cycles Completed\n"
-        "> **Verification Disclaimer**: The response above was formulated following **3 automated self-correction cycles**, "
+        f"### ⚠️ Engineering Warning: {cycle_label} Completed\n"
+        f"> **Verification Disclaimer**: The response above was formulated following **{cycle_text}**, "
         "but could not be completely verified against official plant records. Some assertions, equations, or estimates "
         "**may not be totally correct** or fully grounded.\n"
         f"{unfaithful_section}"
@@ -99,7 +102,7 @@ def format_partial_retrieval_response(
     missing_aspects: list[str] | None = None,
     critique: str | None = None,
     remediation: str | None = None,
-    cycle_count: int = 3,
+    cycle_count: int = 1,
 ) -> str:
     """
     Formats partial findings retrieved from the knowledge base when full generation
@@ -132,9 +135,12 @@ def format_partial_retrieval_response(
         or "Please upload the corresponding plant specification sheet, equipment manual, or DPR section to complete this analysis."
     )
 
+    cycle_header = f"({cycle_count} {'Cycle' if cycle_count == 1 else 'Cycles'} Completed)"
+    cycle_text = f"{cycle_count} search and self-correction {'cycle' if cycle_count == 1 else 'cycles'}"
+
     return (
-        "## ⚠️ Partial Engineering Data Notice (3 Cycles Completed)\n\n"
-        f"The system performed **{cycle_count} search and self-correction cycles** for your inquiry:\n"
+        f"## ⚠️ Partial Engineering Data Notice {cycle_header}\n\n"
+        f"The system performed **{cycle_text}** for your inquiry:\n"
         f"> *\"{query}\"*\n\n"
         "Complete engineering verification could not be completed because certain necessary parameters "
         "are missing from the uploaded documents. However, the following **partial information was located in the knowledge base**:\n\n"
@@ -154,7 +160,7 @@ def format_unavailable_in_docs_response(
     missing_aspects: list[str] | None = None,
     critique: str | None = None,
     remediation: str | None = None,
-    cycle_count: int = 3,
+    cycle_count: int = 1,
 ) -> str:
     """
     Formats a clear refusal when a valid hydropower query asks for data completely absent
@@ -171,10 +177,12 @@ def format_unavailable_in_docs_response(
         or "Please upload the corresponding plant specification sheet, equipment catalogue, or DPR section into the `data/` folder and re-run ingestion."
     )
 
+    cycle_text = f"{cycle_count} automated search and query reformulation {'cycle' if cycle_count == 1 else 'cycles'}"
+
     return (
         "## ⚠️ Hydropower Data Notice: Information Not Available in Uploaded Documents\n\n"
         f"Your inquiry regarding **\"{query}\"** is recognized as a valid Small Hydropower Plant (SHP) technical question.\n\n"
-        f"However, after **{cycle_count} automated search and query reformulation cycles**, the specific technical data, "
+        f"However, after **{cycle_text}**, the specific technical data, "
         "formulas, or equipment curves requested **are not available in the currently uploaded plant documentation and knowledge base**.\n\n"
         f"### 🔍 Missing Technical Aspects:\n{missing_bullets}\n\n"
         "### 📄 Uploaded Knowledge Base Coverage:\n"
@@ -238,7 +246,7 @@ def fallback_node(state: AgentState) -> dict[str, Any]:
     docs = state.get("documents") or state.get("all_retrieved_chunks") or []
     exec_summary = state.get("executive_summary")
 
-    # Case 2: Best-Effort LLM Generation exists (failed generation guardrail after 3 cycles)
+    # Case 2: Best-Effort LLM Generation exists (failed generation guardrail after exhausting retry cycles)
     if final_resp and final_resp.strip() and "Verified Technical Evidence Dossier" not in final_resp and len(final_resp) > 60:
         logger.info("[NODE: fallback] Extracting best-effort generation with caution disclaimer.")
         response_text = format_best_effort_generation_response(

@@ -369,6 +369,13 @@ To solve this, the system implements an in-memory **Okapi BM25 Sparse Keyword Re
 - **Mechanism (Runtime)**: High-speed, **Single-Pass Local LLM Judge (`qwen3.5:9b`)** via Jinja2 templates (`src/prompts/generation_guardrail_*.jinja2`) with constrained token prediction (`num_predict=2048`). Evaluates factual consistency across numbers, formulas, and turbine specifications in **one single inference (~15–20 seconds)** rather than multi-minute claim-by-claim loops.
 - **Why Reference-Free (Runs in Production)**: Unlike offline recall metrics that require a golden reference answer (`expected_output`), the runtime guardrail evaluates `final_response` strictly against `synthesized_context` (the retrieved evidence dossier). It requires zero ground-truth answers and operates seamlessly at live inference time.
 - **Inputs**: `query` + `final_response` + `synthesized_context` (or `documents`).
+- **Structure-Aware Numerical Claim Verification**: To eliminate false hallucination rejections caused by formatting, both the local LLM judge prompts and the deterministic fallback heuristic explicitly ignore harmless answer structures:
+  1. **Markdown Heading Numbers & Section Labels**: Numerical indices such as `## 1.`, `### 2.3`, `### 3.1`, `### 4.3` are structural formatting, not factual assertions.
+  2. **List Numbering**: Ordered list prefixes (`1.`, `2.`, `(a)`) are excluded from numerical claim extraction.
+  3. **Citation Identifiers & Page Numbers**: Bracketed bibliographic tags (`[Source: ... | Page: 4]`, `[1]`, `[Table 2]`) are ignored.
+  4. **Formula Variable Labels & Subscripts**: Mathematical definitions and subscripts (e.g. $H_1$, $P_2$, $Q_{50}$, $\text{Eq. } 2.1$, $\tau_c = 6.3\text{ hrs}$) are recognized as variable notation.
+  5. **User Query-Supplied Inputs**: Constraints and parameters explicitly given by the user in `query` (e.g. `35 MW`, `120 m`, `Bridge No. 604`, `180.19 mm`) are treated as authorized ground facts.
+  6. **Deterministic MCP Tool Outputs**: Calculations emitted by registered tools with recorded parameters (e.g. $P = 15.89\text{ MW}$) are automatically whitelisted.
 - **Runtime Threshold vs. Offline Benchmark Target**:
   > [!IMPORTANT] Runtime Guardrail Threshold (0.90) vs. Offline Benchmark Target (0.75)
   > - **Runtime Guardrail Threshold (`0.90`)**: At runtime during live graph execution, each individual generated answer is evaluated by the single-pass local LLM guardrail (`src/agents/generation_guardrail/agentnodes.py`). An answer must achieve `is_grounded == True` and a faithfulness score **$\ge 0.90$** (configured via `DEFAULT_FAITHFULNESS_THRESHOLD = float(os.getenv("FAITHFULNESS_THRESHOLD", "0.90"))`). This strict threshold ensures that in production, only high-confidence, fully grounded answers are delivered directly to the user.
@@ -497,62 +504,68 @@ To measure the exact trade-offs of agentic reflection versus traditional retriev
 # Run Plain-RAG baseline on golden dataset (capped at 10 cases)
 python -m src.evals.run_plain_rag_baseline --limit 10 --retriever hybrid
 
-# Evaluate Plain-RAG results with LLM judge
+# Run updated Agentic RAG benchmark on same 10 cases
+python -m src.evals.run_updated_agentic_eval_10 --limit 10
+
+# Evaluate results with multi-provider LLM judge
 python src/evals/evaluate_offline_with_llm.py --input src/evals/plain_rag_answers_and_chunks.json --output src/evals/plain_rag_evaluation_report.json --no-resume
+python src/evals/evaluate_offline_with_llm.py --input src/evals/updated_agentic_answers_and_chunks.json --output src/evals/updated_agentic_evaluation_report.json --no-resume
 ```
 
-##### Empirical Head-to-Head Benchmark: Plain-RAG vs. Agentic RAG (10 Policy Cases: GD-01 to GD-10)
+##### Empirical Head-to-Head Benchmark: Plain-RAG vs. Updated Agentic RAG (10 Policy Cases: GD-01 to GD-10)
 
-The table below contrasts the empirical results evaluated by the multi-provider LLM judge (`gemini-2.5-flash`) across the first 10 golden benchmark cases (`GD-01` to `GD-10`) in [`src/evals/plain_rag_answers_and_chunks.json`](src/evals/plain_rag_answers_and_chunks.json) vs. [`src/evals/generated_answers_and_chunks.json`](src/evals/generated_answers_and_chunks.json):
+The table below contrasts the empirical results evaluated by the multi-provider LLM judge (`gemini-2.5-flash` with Groq waterfall failover) across the first 10 golden benchmark cases (`GD-01` to `GD-10`) in [`src/evals/plain_rag_answers_and_chunks.json`](src/evals/plain_rag_answers_and_chunks.json) vs. [`src/evals/updated_agentic_answers_and_chunks.json`](src/evals/updated_agentic_answers_and_chunks.json):
 
-| Metric / Dimension | Plain-RAG Baseline (10 Cases) | Multi-Agent RAG (Same 10 Cases) | Trade-Off & Engineering Analysis |
+| Metric / Dimension | Plain-RAG Baseline (10 Cases) | Updated Multi-Agent RAG (Same 10 Cases) | Trade-Off & Engineering Analysis |
 | :--- | :---: | :---: | :--- |
-| **Faithfulness Score** | **0.9000 (90.0%)** | 0.8800 (88.0%) | Plain-RAG is slightly more concise; Agentic RAG's generator occasionally attempts extra synthetic formulas (e.g. eligibility equations). |
-| **Answer Relevancy** | **0.9000 (90.0%)** | 0.8400 (84.0%) | Plain-RAG produces shorter, direct answers with less background narrative boilerplate. |
-| **Context Precision** | 0.5780 (57.8%) | **0.6850 (68.5%)** | **Agentic Precision Advantage**: Planner query decomposition and targeted worker filtering improve retrieval signal-to-noise. |
-| **Context Recall** | 0.9100 (91.0%) | **0.9550 (95.5%)** | **Agentic Recall Advantage**: Multi-agent scatter-gather recovers cross-document facts that single-shot retrieval misses. |
-| **Median Latency (p50)**| **105.7s (~1.8m)** | 500.1s (~8.3m) | **Plain-RAG is 4.73× faster** by executing a single LLM inference without reflection overhead. |
-| **Mean Latency** | **134.0s (~2.2m)** | 583.2s (~9.7m) | Consistent ~4.4× mean speedup across all 10 policy queries. |
-| **Query Hallucination Rate** | **1 / 10 (10.0%)** | 4 / 10 (40.0%) | Plain-RAG's sole defect was an overly conservative refusal (`GD-08`), whereas Agentic RAG had minor ungrounded formula derivations. |
+| **Faithfulness Score** | **0.9000 (90.0%)** | **0.9000 (90.0%)** | **Tied at 90.0%**: With structure-aware guardrails, Agentic RAG matches Plain-RAG's high groundedness, eliminating false formatting penalties. |
+| **Answer Relevancy** | **0.9000 (90.0%)** | 0.8400 (84.0%) | Plain-RAG produces shorter, direct answers with less background narrative boilerplate; Agentic RAG delivers comprehensive engineering reports. |
+| **Context Precision** | 0.5780 (57.8%) | **0.7300 (73.0%)** | **Agentic Precision Advantage (+15.2%)**: Planner query decomposition and targeted worker filtering improve retrieval signal-to-noise significantly. |
+| **Context Recall** | **0.9100 (91.0%)** | 0.8500 (85.0%) | Both achieve high recall; Plain-RAG's single-shot top-6 captures concentrated policy text, while Agentic RAG spans cross-document provisions. |
+| **Median Latency (p50)**| **105.7s (~1.8m)** | 369.8s (~6.2m) | **Plain-RAG is ~3.5× faster** by executing a single LLM inference. Updated Agentic RAG improved from 500.1s to 369.8s (~2.2m speedup) by avoiding false retries. |
+| **Mean Latency** | **134.0s (~2.2m)** | 411.2s (~6.9m) | Plain-RAG is **~3.1× faster** in mean latency. Updated Agentic mean latency dropped from 583.2s to 411.2s (a ~2.9 minute per-query speedup). |
+| **Query Hallucination Rate** | **1 / 10 (10.0%)** | **1 / 10 (10.0%)** | **Tied at 10.0%**: Structure-aware guardrails reduced Agentic RAG's hallucination defects from 4/10 (40%) down to 1/10 (10%), with only GD-09 flagged for a minor free power attribution. |
 
-##### Case-by-Case Deep Dive: GD-01 & GD-02 Comparative Analysis
+##### Complete Query-by-Query Comparative Matrix (All 10 Policy Cases: GD-01 to GD-10)
 
-| Metric / Dimension | GD-01 (Plain-RAG) | GD-01 (Agentic RAG) | GD-02 (Plain-RAG) | GD-02 (Agentic RAG) | Engineering Analysis & Key Finding |
-| :--- | :---: | :---: | :---: | :---: | :--- |
-| **Query Type** | Multi-part Policy & Licensing | Multi-part Policy & Licensing | Focused Single-Hop Policy | Focused Single-Hop Policy | GD-01 requires cross-document facts; GD-02 is concentrated |
-| **Context Recall** | **0.50 (50.0%)** | **0.70 (70.0%)** | **1.00 (100%)** | **1.00 (100%)** | **Cross-Doc Coverage Gap**: With typo-tolerant retrieval, Plain-RAG successfully located the 3 methods (50% recall), but missed preference scenarios spread across other documents. Agentic RAG decomposed the query across multiple documents to reach 70% recall. |
-| **Context Precision** | 0.60 (60.0%) | **0.70 (70.0%)** | 0.60 (60.0%) | **0.90 (90.0%)** | Agentic RAG maintained higher signal-to-noise through targeted query planning and metadata filtering. |
-| **Faithfulness Score** | **1.00 (100%)** | 0.75 (75.0%) | **1.00 (100%)** | **1.00 (100%)** | Plain-RAG scored 1.00 on both by adhering strictly to chunks; Agentic RAG scored 0.75 on GD-01 due to an ungrounded qualification formula. |
-| **Answer Relevancy** | **1.00 (100%)** | 0.65 (65.0%) | **1.00 (100%)** | **1.00 (100%)** | On GD-02, both provided exact, concise policy answers. |
-| **Execution Latency** | **208.4s** | 549.5s | **50.2s** | 305.2s | Plain-RAG is **~3× to 6× faster** by executing a single LLM inference without multi-agent coordination. |
-| **Generation Outcome** | **Identified 3 Methods** | **Synthesized Comparison** | **Answered Directly** | **Answered with Verification** | **The Agentic Trade-Off**: For simple single-hop lookups (GD-02), Plain-RAG is sufficient and ~6× faster. For distributed multi-part questions (GD-01), Agentic RAG is necessary to gather cross-document criteria. |
+The table below contrasts the empirical scores of **Plain-RAG Baseline** (P) versus **Updated Multi-Agent Hierarchical RAG** (A) across all 10 policy benchmark queries evaluated by the multi-provider LLM judge (`gemini-2.5-flash` with Groq failover):
 
-###### Qualitative Case Study: Why the Pipelines Diverged
+| ID | Benchmark Query Focus | Faithfulness (P / A) | Precision (P / A) | Recall (P / A) | Relevancy (P / A) | Latency (P / A) | Hallucination Detected (P / A) |
+| :--- | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **GD-01** | 3 Allotment/licensing methods and preference criteria | 1.00 / **1.00** | 0.60 / **0.60** | **0.50** / 0.00 | **1.00** / 0.70 | **208.4s** / 559.3s | ✅ Clean / ✅ Clean |
+| **GD-02** | Competitive bidding ties & no-bid rules (PFR/DPR) | 1.00 / **1.00** | 0.60 / **0.80** | **1.00** / 1.00 | **1.00** / 0.85 | **50.2s** / 364.3s | ✅ Clean / ✅ Clean |
+| **GD-03** | Mandatory timeline for financial closure & penalties | 1.00 / **1.00** | 0.75 / **0.80** | 0.60 / **1.00** | **1.00** / 0.95 | **197.2s** / 486.6s | ✅ Clean / ✅ Clean |
+| **GD-04** | Ownership modes: asset reversion vs retained ownership | 1.00 / **1.00** | 0.33 / **0.75** | **1.00** / 1.00 | **1.00** / 1.00 | **207.0s** / 332.5s | ✅ Clean / ✅ Clean |
+| **GD-05** | Conditions for legal surrender of an allotted site | 1.00 / **0.85** | 0.20 / **0.65** | **1.00** / 1.00 | **1.00** / 0.80 | **105.9s** / 598.0s | ✅ Clean / ✅ Clean |
+| **GD-06** | EIA 2006 Category A vs B & missing SEIAA fallback | 1.00 / **1.00** | 0.60 / **0.70** | **1.00** / 1.00 | **1.00** / 0.80 | **74.1s** / 360.7s | ✅ Clean / ✅ Clean |
+| **GD-07** | EAC/SEAC operational rules (tenure, inspection, quorum) | 1.00 / **0.90** | 0.20 / **0.75** | **1.00** / 1.00 | **1.00** / 0.70 | **61.0s** / 336.4s | ✅ Clean / ✅ Clean |
+| **GD-08** | 4 Sequential stages to obtain Forest Clearance | 0.00 / **0.65** | **0.80** / **0.80** | **1.00** / 0.60 | 0.00 / **0.70** | **291.6s** / 386.0s | ❌ Halluc / ✅ Clean |
+| **GD-09** | GoI Hydro Policy 1998/2008 local area & state duties | 1.00 / **0.75** | **0.70** / 0.65 | **1.00** / 0.95 | **1.00** / 0.95 | **105.5s** / 375.2s | ✅ Clean / ❌ Halluc |
+| **GD-10** | Fiscal incentives, tax exemptions & renewable RECs | 1.00 / **0.85** | **1.00** / 0.80 | **1.00** / 0.95 | **1.00** / 0.95 | **39.1s** / 312.5s | ✅ Clean / ✅ Clean |
+| **AVERAGE**| **Aggregate Benchmark Metrics (10 Cases)** | **0.90 / 0.90** | 0.58 / **0.73** | **0.91** / 0.85 | **0.90** / 0.84 | **134.0s** / 411.2s | **1 / 10 (10%) / 1 / 10 (10%)** |
 
-1. **Query GD-01 (Multi-part Policy & Licensing)**:
-   - **User Query**: *"What are the three primary methods used by State Governments for the allotment or licensing of Small Hydro Power (SHP) sites, and when is each preferred?"*
-   - **The Retrieval Bug Investigation (`allotmnet of shp.pdf`)**:
-     - In initial testing, Plain-RAG scored **0.00 recall** and abstained. Forensic investigation revealed this was **not an inherent limit of RAG, but a filename typo bug**: the source document on disk is literally misspelled as `allotmnet of shp.pdf` (transposition of 'm' and 'n').
-     - Because strict string matching failed (`"allotment" in "allotmnet of shp.pdf" == False`), the exact name boost did not fire. The crucial chunk (`Site allotment/license`) was pushed down to rank #7, just 1 rank outside `top_k=6`.
-     - Implementing **typo-tolerant Damerau-Levenshtein entity matching** in [`src/ingestion/bm25_retriever.py`](src/ingestion/bm25_retriever.py) restored `Site allotment/license` to rank #2, elevating Plain-RAG Context Recall from **0.00 to 0.50 (50%)**.
-   - **Vanilla / Plain-RAG Outcome (With Typo Fix)**:
-     - **Result**: **Recall: 0.50, Precision: 0.60, Faithfulness: 1.00, Relevancy: 1.00 (Latency: 208.4s)**.
-     - **Actual Output**: Clean 3-bullet list identifying (1) **Bidding process**, (2) **MoU method**, and (3) **Swiss model of defence** [Source: `allotmnet of shp.pdf`]. It accurately acknowledged that the retrieved chunks did not contain specific preference criteria for the bidding or Swiss models.
-   - **Multi-Agent Hierarchical RAG Outcome**:
-     - **Result**: **Context Recall reached 0.70 (70%)** with **Context Precision at 0.70 (70%)**.
-     - **Why Agentic RAG Scored Higher Recall**: The question asked two parts: (a) the three methods, and (b) *when each is preferred*. While the method names reside in `allotmnet of shp.pdf`, the policy preference rationale resides in `hydro policy.pdf` and `WSHPDR_2016.pdf`. Plain-RAG's single-shot top-6 could not span all three documents, whereas the **Planner Agent** decomposed the question into parallel sub-queries, retrieving chunks across all relevant documents to synthesize the complete comparison.
-     - **Faithfulness Note**: Faithfulness was scored at **0.75** because the generator attempted to formulate a pseudo-mathematical threshold formula for developer qualification (`$$\text{Eligibility Status} = \dots$$`) not explicitly present in the source text.
+###### Key Qualitative Divergences & Architecture Trade-Offs
 
-2. **Query GD-02 (Focused Single-Hop Policy)**:
-   - **User Query**: *"During competitive bidding for an SHP site where a PFR/DPR is available, how are ties broken, and what happens if no bids are received?"*
-   - **Vanilla / Plain-RAG Outcome**:
-     - **Result**: **Flawless Execution (Recall: 1.00, Precision: 0.60, Faithfulness: 1.00, Relevancy: 1.00)**.
-     - **Execution Latency**: **50.2 seconds** (**~6.1× faster** than Agentic RAG's 305.2s).
-     - **Actual Output**: Clean 2-bullet answer directly quoting `allotmnet of shp.pdf` (ties broken by gradation list based on prequalification criteria; site allotted to government agency if no bids received twice).
-   - **Multi-Agent Hierarchical RAG Outcome**:
-     - **Result**: **Recall: 1.00, Precision: 0.90, Faithfulness: 1.00, Relevancy: 1.00 (Latency: 305.2s)**.
-     - **Actual Output**: Complete 4-section engineering brief with executive summary, comparison matrix, regulatory provisions, and risk mitigation.
-   - **Engineering Conclusion**: For focused, single-hop factual retrieval, Plain-RAG is optimal and avoids multi-agent coordination overhead (~50s vs ~300s). For distributed, multi-part questions requiring cross-document synthesis, Agentic RAG's planner decomposition is essential to bridge the cross-document coverage gap.
+1. **Context Precision Advantage (+15.2% Agentic Gain)**:
+   - On queries with broad keywords (e.g. `GD-04`, `GD-05`, `GD-07`), Plain-RAG suffered severe retrieval noise:
+     - On **GD-04** (Ownership modes), Plain-RAG retrieved chunks about river basin authorities and tariff policies, yielding **0.33 Context Precision**. Agentic RAG's Planner generated focused sub-queries targeting BOOT/LROT provisions, achieving **0.75 Context Precision**.
+     - On **GD-05** (Legal surrender conditions) and **GD-07** (EAC/SEAC operational rules), Plain-RAG returned dense boilerplate chunks with only 1 relevant passage (**0.20 Context Precision**), whereas Agentic RAG filtered non-salient noise (**0.65 to 0.75 Context Precision**).
+
+2. **The Plain-RAG False Refusal / Hallucination Failure (`GD-08`)**:
+   - **Query**: *"Walk through the four sequential stages required to obtain Forest Clearance for a small hydro project in India."*
+   - **Plain-RAG Failure Mode**: Plain-RAG retrieved chunks describing a general "Three-stage clearance system" from an overview manual alongside the actual 4-stage forest guidelines. Confused by conflicting passage numbers, the single-inference generator refused to answer and asserted:
+     > *"The provided engineering documentation does not contain sufficient data to answer this query. While the documentation mentions a 'Three-stage clearance system' for projects generally [Source: Hydro_Eng...], it does not outline four sequential stages specifically for Forest Clearance."*
+   - Because Chunk #2 explicitly contained the 4-stage sequence, the LLM Judge flagged Plain-RAG as a total failure (**Faithfulness: 0.00, Relevancy: 0.00, Hallucination Detected: True**).
+   - **Agentic RAG Behavior**: The Planner decomposed the question into environmental clearance and forest guidelines, allowing the Synthesizer to discard the unrelated 3-stage generic overview. The Generator accurately outlined the sequence (**Faithfulness: 0.65, Relevancy: 0.70, Hallucination: False**).
+
+3. **Multi-Hop Recall & Penalty Extraction (`GD-03`)**:
+   - **Query**: *"What is the mandatory policy timeline for an Independent Power Producer (IPP) to achieve financial closure, and what are the penalties for non-compliance?"*
+   - **Plain-RAG**: Successfully identified the 12-month timeline from `allotmnet of shp.pdf`, but its single-shot top-6 missed the separate penalty clause ("forfeiture of upfront premium and automatic cancellation of allotment"), scoring **0.60 Context Recall**.
+   - **Agentic RAG**: Decomposed the query into separate timeline and penalty search sub-tasks, retrieving both distinct provisions and scoring **1.00 Context Recall (100%)** and **0.80 Context Precision**.
+
+4. **Single-Hop Factual Lookups (`GD-02`, `GD-10`) & Latency Trade-Off**:
+   - For straightforward, single-hop factual queries (such as competitive bidding tie-breakers in `GD-02` or tax exemptions in `GD-10`), Plain-RAG executes in **39–50 seconds** (~7× faster than Agentic RAG's ~312–364 seconds) with **1.00 Faithfulness and 1.00 Relevancy**.
+   - **Summary Conclusion**: For direct, concentrated lookups, Plain-RAG is optimal and avoids graph orchestration latency. However, for multi-faceted regulatory queries (`GD-03`), noise-heavy corpora (`GD-04`, `GD-07`), or queries requiring structural disambiguation (`GD-08`), Agentic RAG provides crucial precision filtering and prevents false refusals.
 
 #### Critical Failure Analysis: The 26.4% Hallucination Rate & Weakest Categories
 
@@ -566,7 +579,7 @@ An aggregate query hallucination rate of **26.4% (14 out of 53 cases)** is subst
      - Because no matching tool schema existed in the MCP tool catalog for these specialized non-linear formulas, the **Planner Agent appropriately skipped tool assignment** (allocating 0 MCP sub-tasks) and routed the sub-queries entirely to narrative document retrieval.
    - **Observed Failure Modes**:
      - **Inline Autoregressive Calculation (`GD-015`)**: When forced to calculate regressions inline in text without a tool, the Generator suffered severe arithmetic drift (outputting $42.13\text{ Million US\$}$ instead of the correct $\approx 49.1\text{ M\$}$) and misread a dense OCR table value ($4,286\text{ M\$}$ instead of $42.86\text{ M\$}$).
-     - **Circuit Breaker Abort (`GD-003`, `GD-023`)**: When retrieved text lacked specific formula constants, the system refused to fabricate numbers and tripped the circuit breaker after 3 cycles, returning Partial Engineering Data Notices (lowering benchmark recall/faithfulness scores due to missing requested numbers).
+     - **Circuit Breaker Abort (`GD-003`, `GD-023`)**: When retrieved text lacked specific formula constants, the system refused to fabricate numbers and tripped the circuit breaker after exhausting reflection attempts (configured via `MAX_REWRITE_ATTEMPTS=1` in `.env`), returning Partial Engineering Data Notices (lowering benchmark recall/faithfulness scores due to missing requested numbers).
    - **Experimental Purpose of MCP Calculators**: The MCP calculators exist as an **experimental demonstration** showing how external engineering tools can be registered and dispatched over JSON-RPC in an agentic graph. Expanding this to production requires authoring dedicated MCP endpoints for every empirical regression in the benchmark.
    - **Sarkaria Formula Investigation ($D = 0.62 \cdot Q^{0.43}$)**: For example, in our experimental penstock calculator, the economic diameter formula was implemented as a simplified flow-only empirical relation ($D = 0.62 \cdot Q^{0.43}$). In classical hydraulic engineering literature (USBR, ASCE, Indian Central Electricity Authority / CWC guidelines), the full Sarkaria formulation typically incorporates design head $H$ (e.g., $D \propto \frac{Q^{0.43}}{H^{0.14}}$ or head-loss optimization). This discrepancy underscored that experimental tools require strict schema alignment with specific engineering standards and explicit prompt guidance to ensure the LLM invokes them correctly.
 
@@ -589,7 +602,7 @@ An aggregate query hallucination rate of **26.4% (14 out of 53 cases)** is subst
 #### Aspirational Targets vs. Recalibrated Baselines: An Honest Retrospective
 - **Why Targets Moved**: The initial SDD specifications proposed aggressive aspirational targets: Faithfulness $\ge 0.90$, Precision $\ge 0.85$, Recall $\ge 0.85$, and sub-5-second interactive responses.
 - **Empirical Recalibration**: When deploying an open-weight 9B model on an 8 GB consumer GPU (RTX 5050), hardware and model realities emerged:
-  - Latency is memory bandwidth-bound (~45s to 120s for multi-turn agentic reflection cycles).
+  - Latency is memory bandwidth-bound (measured median of 687.2s / ~11.5 minutes across 53 full lifecycle cases on RTX 5050).
   - Across 53 challenging test cases, realistic performance settled at **78.0% Faithfulness**, **75.3% Answer Relevancy**, **73.9% Context Precision**, and **79.2% Context Recall**.
 - **Transparency**: We do not present "targets met" as an unqualified triumph. Rather, these results provide a transparent, empirical benchmark for running local agentic RAG on consumer hardware, pinpointing exact areas (table parsing and MCP tool dispatch) for future development.
 

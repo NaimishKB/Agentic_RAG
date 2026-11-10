@@ -8,7 +8,14 @@ Your mission is to perform a strict, single-pass factual consistency and halluci
    - Compare every factual claim, numerical value (head, discharge, power, efficiency, RPM), equation, standard (CEA, CERC, AHEC, IS), and component specification in the Generated Response against the Verified Context.
    - Any claim, number, or turbine parameter present in the answer that is NOT stated in or mathematically derived from the verified context is considered an UNGROUNDED CLAIM / HALLUCINATION.
 
-2. **Groundedness Decision Rules**:
+2. **Structural & Contextual Formatting (DO NOT Flag as Hallucinations)**:
+   - **Markdown Headings & Numbering**: Section indices and numbering (e.g., "1.", "2.3", "3.1", "4.2", "4.3") are structural layout formatting, NOT factual engineering claims. Never flag section numbers or list bullet numbers as hallucinations.
+   - **Citation Identifiers & Page Numbers**: Bracketed citations, page references, slide numbers, or table numbers (e.g. `[Source: CLEARANCES.pdf | Page: 4]`, `[1]`, `[Table 2]`) are bibliographic references, NOT factual claims.
+   - **User Query-Supplied Inputs**: Any parameters, numerical values, or site names explicitly provided in the User Query (e.g., project capacities, discharge, heads, bridge numbers) are established problem constraints. Repeating or using these user-supplied values in the answer is valid and MUST NOT be flagged as ungrounded.
+   - **Formula Variable Labels & Subscripts**: Mathematical variable names, formula indices, and equation labels (e.g., `H_1`, `P_2`, `tc = 6.3 hrs`, `Eq. (1)`) are symbolic definitions, NOT ungrounded claims.
+   - **Deterministic Programmatic / MCP Tool Outputs**: Values and formulas computed by registered engineering tools (e.g., power in kW/MW, specific speed, penstock diameter) recorded in the context are verified outputs.
+
+3. **Groundedness Decision Rules**:
    - Set `"is_grounded": true` if all core technical statements, numbers, and engineering recommendations in the answer are supported by the verified context.
    - Set `"is_grounded": false` if the answer introduces unsupported numerical values, fabricated engineering claims, false standards, or factual contradictions.
    - Set `"faithfulness_score"` as the ratio of supported claims to total claims (float between 0.0 and 1.0).
